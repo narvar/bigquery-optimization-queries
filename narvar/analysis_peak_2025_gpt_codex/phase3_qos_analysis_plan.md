@@ -36,7 +36,7 @@ SELECT 'rolling_07d', TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY), CURREN
 | Dataset | Usage | Filters |
 | --- | --- | --- |
 | `narvar-data-lake.doitintl_cmp_bq.cloudaudit_googleapis_com_data_access` | Primary job facts | Reuse Phase 2 filters (non-null principals, exclude dry runs, script job child ids, include `include_child_jobs` hook for future). |
-| `narvar-data-lake.analytics.consumer_classification_overrides` | Consumer labels | Join on `principal_email` to resolve overrides. |
+| `narvar-data-lake.analytics.consumer_classification_overrides` | Consumer labels | Join on `principal_email` to resolve overrides (now includes `MONITOR_USERS` alongside retailer, hub, automation, internal). |
 | `narvar-data-lake.analytics.consumer_classification_staging` *(future table)* | Optional materialized view from Phase 2 staging | If materialized, reduces repeated heavy scans. |
 | `narvar-data-lake.INFORMATION_SCHEMA.JOBS_BY_PROJECT` *(optional)* | Queue times, slot reservation info | Required for wait time: `reservation_id`, `parent_job_id`, `total_slot_ms`, `start_time`, `end_time`, `creation_time`. |
 | Reservation metadata (`bq-narvar-admin` project) | Reservation capacity | Pull `capacity_commitments`, `reservations`, `assignments` to compare concurrency vs. slot allocation. |
@@ -52,7 +52,7 @@ SELECT 'rolling_07d', TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY), CURREN
    - Compute rolling baseline (median + MAD) per classification and flag buckets > baseline + k*MAD.
    - Collapse adjacent spike buckets into events, capturing duration, max/avg slot usage, queue times, and classification mix.
    - Output tables `qos_spikes_<window>` and `qos_spike_mix_<window>`.
-4. Extend notebook visualizations: time-series with spike overlays, classification mix bars, KPI summary (spikes per week, % slot hours in spikes, etc.).
+4. Extend notebook visualizations: time-series with spike overlays, classification mix bars, KPI summary (spikes per week, % slot hours in spikes, external SLA >60s breach rates, etc.).
 5. Annotate incidents by joining metrics to change calendar and reservation assignment events.
 
 ## 4. TODO Tracking

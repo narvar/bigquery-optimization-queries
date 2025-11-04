@@ -107,6 +107,7 @@ heuristics AS (
     a.last_seen_ts,
     CASE
       WHEN rs.retailer_moniker IS NOT NULL THEN 'RETAILER'
+      WHEN STARTS_WITH(LOWER(COALESCE(a.job_project_id, '')), 'monitor') THEN 'MONITOR_USERS'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'(looker|metabase|monitor|analytics-api|messaging|n8n)') THEN 'HUB_SERVICE'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'(airflow|composer|gke|compute@developer|iam\\.gserviceaccount\\.com)') THEN 'AUTOMATION'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'@narvar\\.com$') THEN 'INTERNAL_USER'
@@ -114,6 +115,7 @@ heuristics AS (
     END AS classification_type,
     CASE
       WHEN rs.retailer_moniker IS NOT NULL THEN rs.retailer_moniker
+      WHEN STARTS_WITH(LOWER(COALESCE(a.job_project_id, '')), 'monitor') THEN 'MONITOR_PROJECT'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'looker') THEN 'LOOKER'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'metabase') THEN 'METABASE'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'monitor') THEN 'MONITOR'
@@ -130,6 +132,7 @@ heuristics AS (
     rs.retailer_moniker,
     IF(rs.retailer_moniker IS NOT NULL, 'HEURISTIC_RETAILER',
       CASE
+        WHEN STARTS_WITH(LOWER(COALESCE(a.job_project_id, '')), 'monitor') THEN 'HEURISTIC_MONITOR'
         WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'(looker|metabase|monitor|analytics-api|messaging|n8n)') THEN 'HEURISTIC_SERVICE'
         WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'(airflow|composer|gke|compute@developer|iam\\.gserviceaccount\\.com)') THEN 'HEURISTIC_AUTOMATION'
         WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'@narvar\\.com$') THEN 'HEURISTIC_EMPLOYEE'

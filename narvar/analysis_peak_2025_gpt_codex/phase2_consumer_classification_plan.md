@@ -26,7 +26,7 @@ Create reusable dimensions that map every BigQuery job principal to a business-f
 | `principal_email` | STRING | Audit logs | Unique identifier (service account, user).
 | `billing_project_id` | STRING | Audit logs | Owning billing project.
 | `job_project_id` | STRING | Audit logs | Target project (where tables reside).
-| `classification_type` | STRING | Derived | ENUM: `RETAILER`, `HUB_SERVICE`, `AUTOMATION`, `INTERNAL_USER`, `UNKNOWN`.
+| `classification_type` | STRING | Derived | ENUM: `RETAILER`, `MONITOR_USERS`, `HUB_SERVICE`, `AUTOMATION`, `INTERNAL_USER`, `UNKNOWN`.
 | `classification_subtype` | STRING | Derived | Retailer moniker, application name, environment (prod/qa), etc.
 | `retailer_moniker` | STRING | Derived | Map when classification type is `RETAILER` or job project tied to retailer dataset.
 | `source_confidence` | STRING | Derived | `AUTO`, `MANUAL_OVERRIDE`, `HEURISTIC`.
@@ -41,9 +41,12 @@ Create reusable dimensions that map every BigQuery job principal to a business-f
    - **Manual overrides**: join to curated table (`analytics.consumer_classification_overrides`) maintained by Analytics Eng.
    - **Retailer detection**:
      - Map when principal email follows pattern `<retailer>-*@(narvar|external)` or job project matches retailer-specific project/dataset names (need curated crosswalk, e.g., from `reporting.manual_retailer_categories`).
-   - **Hub services**:
-     - Regex match on known services (`looker`, `metabase`, `monitor`, `messaging`, `analytics-api`, `airflow`, `gke`).
-     - Associate to business owner + environment.
+  - **Monitor projects**:
+    - Treat any job project whose ID starts with `monitor` (e.g., `monitor-0006f9c-us-prod`) as `MONITOR_USERS`.
+    - Subtype recorded as `MONITOR_PROJECT`; confidence flag = `HEURISTIC_MONITOR` unless overridden.
+  - **Hub services**:
+    - Regex match on shared analytics services (`looker`, `metabase`, `analytics-api`, `messaging`, `n8n`).
+    - Associate to business owner + environment.
    - **Automation / Infrastructure**:
      - Domain `iam.gserviceaccount.com` with project prefixes (e.g., `narvar-ml-prod`, `dtpl-mgmt-prod`).
    - **Internal users**:

@@ -21,7 +21,7 @@ Projected timeline assumes kickoff in Nov 2025 with PRD sign-off by mid-Sep 20
 
 ## Phase 2 — Consumer Classification Framework (Weeks 2–4)
 - Build canonical mappings:
-  - Monitor projects ↔ retailers (hash-based logic via `reporting.t_return_details`).
+  - Monitor projects (`monitor-*`) flagged as `MONITOR_USERS` to expose health of platform observability workloads.
   - Hub services (e.g., `looker-prod@narvar-data-lake.iam.gserviceaccount.com`) and other shared accounts.
   - Automated processes (Composer, Airflow, CDP) from repository metadata.
   - Internal users via Metabase access logs; define fallback if user-level detail unavailable.

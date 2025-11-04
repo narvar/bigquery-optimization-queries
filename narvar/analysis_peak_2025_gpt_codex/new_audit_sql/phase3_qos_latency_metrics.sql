@@ -97,6 +97,7 @@ classified AS (
     m.total_slot_ms,
     COALESCE(o.classification_type,
              CASE
+               WHEN STARTS_WITH(LOWER(COALESCE(m.job_project_id, '')), 'monitor') THEN 'MONITOR_USERS'
                WHEN REGEXP_CONTAINS(LOWER(m.principal_email), r'(looker|metabase|monitor|analytics-api|messaging|n8n)') THEN 'HUB_SERVICE'
                WHEN REGEXP_CONTAINS(LOWER(m.principal_email), r'(airflow|composer|gke|compute@developer|iam\\.gserviceaccount\\.com)') THEN 'AUTOMATION'
                WHEN REGEXP_CONTAINS(LOWER(m.principal_email), r'@narvar\\.com$') THEN 'INTERNAL_USER'
@@ -116,6 +117,8 @@ SELECT
   COUNT(*) AS job_count,
   SUM(total_slot_ms) AS total_slot_ms,
   SUM(run_seconds) AS total_run_seconds,
+  SUM(CASE WHEN total_seconds > 60 THEN 1 ELSE 0 END) AS jobs_over_60s,
+  SAFE_DIVIDE(SUM(CASE WHEN total_seconds > 60 THEN 1 ELSE 0 END), COUNT(*)) AS pct_jobs_over_60s,
   SAFE_DIVIDE(SUM(total_slot_ms), NULLIF(SUM(run_seconds), 0) * 1000) AS avg_active_slots,
   AVG(queue_seconds) AS avg_queue_seconds,
   AVG(run_seconds) AS avg_run_seconds,
@@ -128,7 +131,8 @@ SELECT
   APPROX_QUANTILES(run_seconds, 101)[SAFE_OFFSET(99)] AS p99_run_seconds,
   APPROX_QUANTILES(total_seconds, 101)[SAFE_OFFSET(50)] AS p50_total_seconds,
   APPROX_QUANTILES(total_seconds, 101)[SAFE_OFFSET(90)] AS p90_total_seconds,
-  APPROX_QUANTILES(total_seconds, 101)[SAFE_OFFSET(99)] AS p99_total_seconds
+  APPROX_QUANTILES(total_seconds, 101)[SAFE_OFFSET(99)] AS p99_total_seconds,
+  MAX(total_seconds) AS max_total_seconds
 FROM
   classified
 GROUP BY
