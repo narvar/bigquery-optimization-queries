@@ -1,0 +1,1004 @@
+[
+  [
+    {
+      "bucket_ts": "2025-10-27 23:40:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "4",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "7388",
+      "sum_total_seconds": "7388",
+      "total_slot_ms": "1080171219",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:00:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "228",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "5283",
+      "sum_total_seconds": "5322",
+      "total_slot_ms": "430032184",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:00:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "64",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "4977",
+      "sum_total_seconds": "4986",
+      "total_slot_ms": "1195609037",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:10:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "421",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "4470",
+      "sum_total_seconds": "4519",
+      "total_slot_ms": "364074833",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:10:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "286",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "1510",
+      "sum_total_seconds": "1549",
+      "total_slot_ms": "58103897",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:10:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "177",
+      "sum_total_seconds": "179",
+      "total_slot_ms": "2147774",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:10:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "4",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "1",
+      "sum_total_seconds": "1",
+      "total_slot_ms": "2039",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:20:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "424",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "9136",
+      "sum_total_seconds": "9222",
+      "total_slot_ms": "830612869",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:20:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "293",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "3393",
+      "sum_total_seconds": "3410",
+      "total_slot_ms": "663331174",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:20:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "1",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "41",
+      "sum_total_seconds": "42",
+      "total_slot_ms": "4270979",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:20:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "1",
+      "sum_total_seconds": "2",
+      "total_slot_ms": "1949",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:30:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "526",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "5057",
+      "sum_total_seconds": "5142",
+      "total_slot_ms": "492606799",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:30:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "487",
+      "sum_queue_seconds": "1",
+      "sum_run_seconds": "1442",
+      "sum_total_seconds": "1490",
+      "total_slot_ms": "34987858",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:30:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "13934",
+      "sum_total_seconds": "13934",
+      "total_slot_ms": "2012302018",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:40:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "552",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "14464",
+      "sum_total_seconds": "14562",
+      "total_slot_ms": "1263812091",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:40:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "341",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "3284",
+      "sum_total_seconds": "3311",
+      "total_slot_ms": "597133953",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:40:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "169",
+      "sum_total_seconds": "170",
+      "total_slot_ms": "1833649",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:40:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "2",
+      "sum_total_seconds": "2",
+      "total_slot_ms": "170396",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:50:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "304",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "3561",
+      "sum_total_seconds": "3609",
+      "total_slot_ms": "241148018",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:50:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "324",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "1039",
+      "sum_total_seconds": "1086",
+      "total_slot_ms": "74866454",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 00:50:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "21",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "48",
+      "sum_total_seconds": "52",
+      "total_slot_ms": "702826",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:00:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "496",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "3166",
+      "sum_total_seconds": "3237",
+      "total_slot_ms": "95519812",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:00:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "293",
+      "sum_queue_seconds": "1",
+      "sum_run_seconds": "17604",
+      "sum_total_seconds": "17655",
+      "total_slot_ms": "1999646770",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:00:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "11",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "40",
+      "sum_total_seconds": "41",
+      "total_slot_ms": "452370",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:10:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "326",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "7691",
+      "sum_total_seconds": "7717",
+      "total_slot_ms": "385973456",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:10:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "202",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "5925",
+      "sum_total_seconds": "5944",
+      "total_slot_ms": "237540757",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:10:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "267",
+      "sum_total_seconds": "268",
+      "total_slot_ms": "1866157",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:20:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "493",
+      "sum_queue_seconds": "1",
+      "sum_run_seconds": "1531",
+      "sum_total_seconds": "1606",
+      "total_slot_ms": "61944469",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:20:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "334",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "13206",
+      "sum_total_seconds": "13245",
+      "total_slot_ms": "470082630",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:20:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "1",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "165",
+      "sum_total_seconds": "165",
+      "total_slot_ms": "4791030",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:20:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "1",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "0",
+      "sum_total_seconds": "0",
+      "total_slot_ms": "156",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:30:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "420",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "4621",
+      "sum_total_seconds": "4685",
+      "total_slot_ms": "292212566",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:30:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "267",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "3609",
+      "sum_total_seconds": "3639",
+      "total_slot_ms": "335338134",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:30:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "7",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "0",
+      "sum_total_seconds": "0",
+      "total_slot_ms": "19327",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:40:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "559",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "3815",
+      "sum_total_seconds": "3898",
+      "total_slot_ms": "252639547",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:40:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "244",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "3491",
+      "sum_total_seconds": "3506",
+      "total_slot_ms": "675474427",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:40:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "169",
+      "sum_total_seconds": "169",
+      "total_slot_ms": "2211488",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:40:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "17",
+      "sum_queue_seconds": "1",
+      "sum_run_seconds": "16",
+      "sum_total_seconds": "21",
+      "total_slot_ms": "1584206",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:50:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "341",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "6329",
+      "sum_total_seconds": "6386",
+      "total_slot_ms": "703369998",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:50:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "158",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "1151",
+      "sum_total_seconds": "1178",
+      "total_slot_ms": "88074244",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 01:50:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "5",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "7",
+      "sum_total_seconds": "7",
+      "total_slot_ms": "114422",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:00:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "428",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "5525",
+      "sum_total_seconds": "5568",
+      "total_slot_ms": "436963618",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:00:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "147",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "3282",
+      "sum_total_seconds": "3305",
+      "total_slot_ms": "713650552",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:00:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "16",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "31",
+      "sum_total_seconds": "33",
+      "total_slot_ms": "497975",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:10:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "448",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "6823",
+      "sum_total_seconds": "6879",
+      "total_slot_ms": "429489696",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:10:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "76",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "2896",
+      "sum_total_seconds": "2903",
+      "total_slot_ms": "771997174",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:10:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "169",
+      "sum_total_seconds": "170",
+      "total_slot_ms": "2058831",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:10:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "14",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "10",
+      "sum_total_seconds": "10",
+      "total_slot_ms": "336811",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:20:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "498",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "3713",
+      "sum_total_seconds": "3777",
+      "total_slot_ms": "331465488",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:20:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "207",
+      "sum_queue_seconds": "1",
+      "sum_run_seconds": "2473",
+      "sum_total_seconds": "2501",
+      "total_slot_ms": "431099738",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:20:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "1",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "51",
+      "sum_total_seconds": "51",
+      "total_slot_ms": "4371476",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:20:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "1",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "0",
+      "sum_total_seconds": "0",
+      "total_slot_ms": "971",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:30:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "668",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "2869",
+      "sum_total_seconds": "2976",
+      "total_slot_ms": "368097847",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:30:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "285",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "1058",
+      "sum_total_seconds": "1080",
+      "total_slot_ms": "145381693",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:30:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "1",
+      "sum_total_seconds": "1",
+      "total_slot_ms": "19708",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:40:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "655",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "2265",
+      "sum_total_seconds": "2351",
+      "total_slot_ms": "269752339",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:40:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "331",
+      "sum_queue_seconds": "1",
+      "sum_run_seconds": "3131",
+      "sum_total_seconds": "3154",
+      "total_slot_ms": "961469850",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:40:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "171",
+      "sum_total_seconds": "172",
+      "total_slot_ms": "1744955",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:40:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "11",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "10",
+      "sum_total_seconds": "12",
+      "total_slot_ms": "238987",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:50:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "478",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "2371",
+      "sum_total_seconds": "2425",
+      "total_slot_ms": "308466538",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 02:50:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "299",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "866",
+      "sum_total_seconds": "905",
+      "total_slot_ms": "128015294",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:00:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "455",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "4124",
+      "sum_total_seconds": "4168",
+      "total_slot_ms": "358384068",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:00:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "309",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "2196",
+      "sum_total_seconds": "2225",
+      "total_slot_ms": "612234669",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:00:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "4",
+      "sum_total_seconds": "4",
+      "total_slot_ms": "109558",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:10:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "584",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "6170",
+      "sum_total_seconds": "6234",
+      "total_slot_ms": "444194450",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:10:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "236",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "2476",
+      "sum_total_seconds": "2501",
+      "total_slot_ms": "573569047",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:10:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "178",
+      "sum_total_seconds": "180",
+      "total_slot_ms": "2089411",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:10:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "6",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "19",
+      "sum_total_seconds": "21",
+      "total_slot_ms": "618612",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:20:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "343",
+      "sum_queue_seconds": "2",
+      "sum_run_seconds": "3847",
+      "sum_total_seconds": "3887",
+      "total_slot_ms": "450605259",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:20:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "140",
+      "sum_queue_seconds": "1",
+      "sum_run_seconds": "1689",
+      "sum_total_seconds": "1713",
+      "total_slot_ms": "148550504",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:20:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "1",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "47",
+      "sum_total_seconds": "47",
+      "total_slot_ms": "4285372",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:20:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "1",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "0",
+      "sum_total_seconds": "0",
+      "total_slot_ms": "179",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:30:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "528",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "5338",
+      "sum_total_seconds": "5414",
+      "total_slot_ms": "534147341",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:30:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "352",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "2160",
+      "sum_total_seconds": "2187",
+      "total_slot_ms": "527733237",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:30:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "1",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "0",
+      "sum_total_seconds": "0",
+      "total_slot_ms": "1059",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:40:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "756",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "5542",
+      "sum_total_seconds": "5650",
+      "total_slot_ms": "408884672",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:40:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "256",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "2272",
+      "sum_total_seconds": "2285",
+      "total_slot_ms": "438874916",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:40:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "170",
+      "sum_total_seconds": "171",
+      "total_slot_ms": "1901111",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:40:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "4",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "8",
+      "sum_total_seconds": "9",
+      "total_slot_ms": "31158",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:50:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "411",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "4605",
+      "sum_total_seconds": "4650",
+      "total_slot_ms": "480125830",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 03:50:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "130",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "1921",
+      "sum_total_seconds": "1938",
+      "total_slot_ms": "448187595",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:00:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "665",
+      "sum_queue_seconds": "631",
+      "sum_run_seconds": "7495",
+      "sum_total_seconds": "8252",
+      "total_slot_ms": "695754156",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:00:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "196",
+      "sum_queue_seconds": "1",
+      "sum_run_seconds": "5366",
+      "sum_total_seconds": "5387",
+      "total_slot_ms": "1117288010",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:00:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "1",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "0",
+      "sum_total_seconds": "0",
+      "total_slot_ms": "211",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:10:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "432",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "3168",
+      "sum_total_seconds": "3212",
+      "total_slot_ms": "194844374",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:10:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "69",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "1538",
+      "sum_total_seconds": "1545",
+      "total_slot_ms": "71734079",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:10:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "197",
+      "sum_total_seconds": "199",
+      "total_slot_ms": "2048040",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:20:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "594",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "3818",
+      "sum_total_seconds": "3908",
+      "total_slot_ms": "575319102",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:20:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "179",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "1364",
+      "sum_total_seconds": "1386",
+      "total_slot_ms": "301417303",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:20:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "1",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "61",
+      "sum_total_seconds": "61",
+      "total_slot_ms": "4172326",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:30:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "565",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "4697",
+      "sum_total_seconds": "4781",
+      "total_slot_ms": "378214107",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:30:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "262",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "5753",
+      "sum_total_seconds": "5780",
+      "total_slot_ms": "701098504",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:30:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "0",
+      "sum_total_seconds": "0",
+      "total_slot_ms": "1847",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:40:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "755",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "2816",
+      "sum_total_seconds": "2926",
+      "total_slot_ms": "265144404",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:40:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "325",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "3649",
+      "sum_total_seconds": "3672",
+      "total_slot_ms": "1068989219",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:40:00",
+      "classification_type": "INTERNAL_USER",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "171",
+      "sum_total_seconds": "172",
+      "total_slot_ms": "1616172",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:40:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "18",
+      "sum_total_seconds": "18",
+      "total_slot_ms": "25492402",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:50:00",
+      "classification_type": "AUTOMATION",
+      "job_count": "472",
+      "sum_queue_seconds": "2",
+      "sum_run_seconds": "4040",
+      "sum_total_seconds": "4094",
+      "total_slot_ms": "479856704",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:50:00",
+      "classification_type": "HUB_SERVICE",
+      "job_count": "158",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "2056",
+      "sum_total_seconds": "2089",
+      "total_slot_ms": "363207255",
+      "window_id": "rolling_07d"
+    },
+    {
+      "bucket_ts": "2025-10-28 04:50:00",
+      "classification_type": "UNKNOWN",
+      "job_count": "2",
+      "sum_queue_seconds": "0",
+      "sum_run_seconds": "13",
+      "sum_total_seconds": "13",
+      "total_slot_ms": "9272765",
+      "window_id": "rolling_07d"
+    }
+  ]
+]

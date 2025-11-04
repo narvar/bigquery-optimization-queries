@@ -1,0 +1,12 @@
+When you need additional information, details, or clarifications, ask me first and wait for my response before proceeding.
+
+Minimize file creation. Always update existing files first before creating new ones.
+
+For BigQuery queries, always check estimated query cost and warn about high-cost queries (>10GB). Recommend dry-run validation for large datasets.
+
+For BigQuery SQL, use DECLARE for configurable parameters, include proper timestamp filtering, and maintain consistency with existing query patterns in the repository.
+
+When writing Python code for Google Cloud, use proper resource cleanup, context managers, error handling, and appropriate timeouts/retries.
+
+For Jupyter notebooks, keep cells focused, include markdown documentation, and never hardcode credentials or sensitive data.
+

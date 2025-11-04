@@ -1,0 +1,2 @@
+spike_id,start_ts,end_ts,duration_minutes,total_slot_ms,max_slot_ms,avg_queue_seconds,classifications,slot_hours
+1,2025-10-28 00:30:00,2025-10-28 00:40:00,30,2539896675,2012302018,0.3333333333333333,3,705.5268541666667

@@ -1,0 +1,2 @@
+spike_id,start_ts,end_ts,buckets,total_slot_ms,max_slot_ms,duration_minutes,slot_hours
+1,2025-10-28 00:30:00,2025-10-28 00:40:00,3,2539896675,2012302018,30,705.5268541666667
