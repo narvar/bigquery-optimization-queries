@@ -1,0 +1,223 @@
+
+================================================================================
+🚀 BigQuery Traffic Classification - Multi-Period Automation
+================================================================================
+Mode: all
+Dry run: False
+Target table: narvar-data-lake.query_opt.traffic_classification
+Classification version: v1.0
+================================================================================
+
+📅 Periods to classify: 7
+   1. Peak_2024_2025                 (2024-11-01 to 2025-01-31) - Most recent complete peak
+   2. Peak_2023_2024                 (2023-11-01 to 2024-01-31) - Historical peak for YoY comparison
+   3. NonPeak_2024_Feb_Mar           (2024-02-01 to 2024-03-31) - Post-peak 2023-2024 baseline
+   4. NonPeak_2023_Sep_Oct           (2023-09-01 to 2023-10-31) - Pre-peak 2023-2024 baseline
+   5. Peak_2022_2023                 (2022-11-01 to 2023-01-31) - Historical peak for 3-year trend
+   6. NonPeak_2023_Feb_Mar           (2023-02-01 to 2023-03-31) - Post-peak 2022-2023 baseline
+   7. NonPeak_2022_Sep_Oct           (2022-09-01 to 2022-10-31) - Pre-peak 2022-2023 baseline
+
+⚠️  Proceed with classification? This will take ~105 minutes. [y/N]: ✅ Connected to BigQuery project: narvar-data-lake
+
+
+################################################################################
+# RUN 1/7
+################################################################################
+
+================================================================================
+🔄 Processing: Peak_2024_2025
+   Description: Most recent complete peak
+   Period: 2024-11-01 to 2025-01-31
+   Type: PEAK
+================================================================================
+   ⏳ Query job started: 5ca2c311-19aa-40fc-aeeb-268d4b054186
+   ⏳ Waiting for completion...
+   ✅ Completed in 0.5 minutes
+   📊 Bytes processed: 26.40 GB
+   📊 Slot milliseconds: 1,085,468
+
+   📊 Validation Results:
+      Jobs classified: 4,721,623
+      Unclassified: 2.66%
+      Slot hours: 2,818,053
+      Estimated cost: $139,339
+      Unique retailers: 227
+      ✅ Excellent classification rate!
+
+
+################################################################################
+# RUN 2/7
+################################################################################
+
+================================================================================
+🔄 Processing: Peak_2023_2024
+   Description: Historical peak for YoY comparison
+   Period: 2023-11-01 to 2024-01-31
+   Type: PEAK
+================================================================================
+   ⏳ Query job started: 956bb0c3-2eed-4f8c-a3f3-1734f327efc9
+   ⏳ Waiting for completion...
+   ✅ Completed in 0.3 minutes
+   📊 Bytes processed: 24.63 GB
+   📊 Slot milliseconds: 1,129,980
+
+   📊 Validation Results:
+      Jobs classified: 3,287,346
+      Unclassified: 0.07%
+      Slot hours: 1,632,269
+      Estimated cost: $80,709
+      Unique retailers: 565
+      ✅ Excellent classification rate!
+
+
+################################################################################
+# RUN 3/7
+################################################################################
+
+================================================================================
+🔄 Processing: NonPeak_2024_Feb_Mar
+   Description: Post-peak 2023-2024 baseline
+   Period: 2024-02-01 to 2024-03-31
+   Type: NON_PEAK
+================================================================================
+   ⏳ Query job started: 0e6660a9-a946-4ceb-a5c5-dac6ff4d4dfe
+   ⏳ Waiting for completion...
+   ✅ Completed in 0.3 minutes
+   📊 Bytes processed: 20.76 GB
+   📊 Slot milliseconds: 975,286
+
+   📊 Validation Results:
+      Jobs classified: 1,864,763
+      Unclassified: 1.20%
+      Slot hours: 1,175,135
+      Estimated cost: $58,098
+      Unique retailers: 216
+      ✅ Excellent classification rate!
+
+
+################################################################################
+# RUN 4/7
+################################################################################
+
+================================================================================
+🔄 Processing: NonPeak_2023_Sep_Oct
+   Description: Pre-peak 2023-2024 baseline
+   Period: 2023-09-01 to 2023-10-31
+   Type: NON_PEAK
+================================================================================
+   ⏳ Query job started: 50032e47-f0d3-489c-8623-d65a523e91b9
+   ⏳ Waiting for completion...
+   ✅ Completed in 0.4 minutes
+   📊 Bytes processed: 19.89 GB
+   📊 Slot milliseconds: 924,314
+
+   📊 Validation Results:
+      Jobs classified: 1,876,673
+      Unclassified: 0.02%
+      Slot hours: 976,896
+      Estimated cost: $48,304
+      Unique retailers: 188
+      ✅ Excellent classification rate!
+
+
+################################################################################
+# RUN 5/7
+################################################################################
+
+================================================================================
+🔄 Processing: Peak_2022_2023
+   Description: Historical peak for 3-year trend
+   Period: 2022-11-01 to 2023-01-31
+   Type: PEAK
+================================================================================
+   ⏳ Query job started: 59ba6e4c-f1e1-4579-8421-49fc888d0af5
+   ⏳ Waiting for completion...
+   ✅ Completed in 0.7 minutes
+   📊 Bytes processed: 41.25 GB
+   📊 Slot milliseconds: 2,573,626
+
+   📊 Validation Results:
+      Jobs classified: 11,344,161
+      Unclassified: 40.94%
+      Slot hours: 3,392,224
+      Estimated cost: $167,678
+      Unique retailers: 523
+      ⚠️  WARNING: High unclassified rate (40.9%)
+
+
+################################################################################
+# RUN 6/7
+################################################################################
+
+================================================================================
+🔄 Processing: NonPeak_2023_Feb_Mar
+   Description: Post-peak 2022-2023 baseline
+   Period: 2023-02-01 to 2023-03-31
+   Type: NON_PEAK
+================================================================================
+   ⏳ Query job started: 20e784a1-365c-42b6-9424-cae7170fdf86
+   ⏳ Waiting for completion...
+   ✅ Completed in 0.2 minutes
+   📊 Bytes processed: 21.71 GB
+   📊 Slot milliseconds: 1,177,824
+
+   📊 Validation Results:
+      Jobs classified: 5,015,889
+      Unclassified: 62.12%
+      Slot hours: 814,284
+      Estimated cost: $40,269
+      Unique retailers: 500
+      ⚠️  WARNING: High unclassified rate (62.1%)
+
+
+################################################################################
+# RUN 7/7
+################################################################################
+
+================================================================================
+🔄 Processing: NonPeak_2022_Sep_Oct
+   Description: Pre-peak 2022-2023 baseline
+   Period: 2022-09-01 to 2022-10-31
+   Type: NON_PEAK
+================================================================================
+   ⏳ Query job started: 23826510-44a6-41ce-a64f-5b345281df3a
+   ⏳ Waiting for completion...
+   ✅ Completed in 0.3 minutes
+   📊 Bytes processed: 39.13 GB
+   📊 Slot milliseconds: 2,291,423
+
+   📊 Validation Results:
+      Jobs classified: 7,464,975
+      Unclassified: 35.20%
+      Slot hours: 2,474,565
+      Estimated cost: $122,320
+      Unique retailers: 514
+      ⚠️  WARNING: High unclassified rate (35.2%)
+
+
+================================================================================
+📊 CLASSIFICATION RUN SUMMARY
+================================================================================
+
+✅ Successful runs: 7
+
+Period                         Jobs         Unclass %    Slot Hours      Cost         Runtime
+----------------------------------------------------------------------------------------------------
+Peak_2024_2025                   4,721,623        2.7%      2,818,053 $   139,339     0.5 min
+Peak_2023_2024                   3,287,346        0.1%      1,632,269 $    80,709     0.3 min
+NonPeak_2024_Feb_Mar             1,864,763        1.2%      1,175,135 $    58,098     0.3 min
+NonPeak_2023_Sep_Oct             1,876,673        0.0%        976,896 $    48,304     0.4 min
+Peak_2022_2023                  11,344,161       40.9%      3,392,224 $   167,678     0.7 min
+NonPeak_2023_Feb_Mar             5,015,889       62.1%        814,284 $    40,269     0.2 min
+NonPeak_2022_Sep_Oct             7,464,975       35.2%      2,474,565 $   122,320     0.3 min
+----------------------------------------------------------------------------------------------------
+TOTAL                           35,575,430                              $   656,716     2.7 min
+
+================================================================================
+
+
+🎯 Next Steps:
+   1. Review validation results above
+   2. Check for any periods with >5% unclassified
+   3. If quality is good, proceed to Phase 2 analysis
+   4. Query the table: `narvar-data-lake.query_opt.traffic_classification`
