@@ -35,13 +35,22 @@ from google.cloud.exceptions import GoogleCloudError
 PROJECT_ID = "narvar-data-lake"
 DATASET_ID = "query_opt"
 TABLE_ID = "traffic_classification"
-CLASSIFICATION_VERSION = "v1.2"  # Further improved (added data-ml-jobs, rudderstack, vertex-ai)
+CLASSIFICATION_VERSION = "v1.3"  # 2025 ML services (dev-testing, vertex-pipeline, promise-ai, churnzero)
 
 # Period definitions
 PERIODS = [
     # ====================
     # NON-PEAK PERIODS (Baselines)
     # ====================
+    {
+        "label": "Baseline_2025_Sep_Oct",
+        "start_date": "2025-09-01",
+        "end_date": "2025-10-31",
+        "type": "non_peak",
+        "priority": 0,  # HIGHEST PRIORITY - Most recent baseline before 2025-2026 peak!
+        "skip": False,
+        "description": "Most recent baseline (Sep-Oct 2025) - freshest pre-peak data"
+    },
     {
         "label": "Baseline_2024_Sep_Oct",
         "start_date": "2024-09-01",
@@ -75,8 +84,8 @@ PERIODS = [
         "end_date": "2023-03-31",
         "type": "non_peak",
         "priority": 7,
-        "skip": False,  # Re-run with v1.1 (62.1% unclassified with v1.0)
-        "description": "Post-peak 2022-2023 baseline - RE-RUN with improved patterns"
+        "skip": True,  # v1.2 already done (0.00% unclassified - perfect!)
+        "description": "Post-peak 2022-2023 baseline"
     },
     {
         "label": "NonPeak_2022_Sep_Oct",
@@ -84,8 +93,8 @@ PERIODS = [
         "end_date": "2022-10-31",
         "type": "non_peak",
         "priority": 8,
-        "skip": False,  # Re-run with v1.1 (35.2% unclassified with v1.0)
-        "description": "Pre-peak 2022-2023 baseline - RE-RUN with improved patterns"
+        "skip": True,  # v1.2 already done (0.00% unclassified - perfect!)
+        "description": "Pre-peak 2022-2023 baseline"
     },
     
     # ====================
@@ -115,8 +124,8 @@ PERIODS = [
         "end_date": "2023-01-31",
         "type": "peak",
         "priority": 6,
-        "skip": False,  # Re-run with v1.1 (40.9% unclassified with v1.0)
-        "description": "Historical peak for 3-year trend - RE-RUN with improved patterns"
+        "skip": True,  # v1.2 already done (0.00% unclassified - perfect!)
+        "description": "Historical peak for 3-year trend"
     },
 ]
 
@@ -271,6 +280,12 @@ traffic_classified AS (
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'data-ml-jobs') THEN 'AUTOMATED'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'rudderstackbqwriter') THEN 'AUTOMATED'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'gcp-ship-vertex-ai') THEN 'AUTOMATED'
+      WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'dev-testing@narvar-ml') THEN 'AUTOMATED'
+      WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'narvar-ml-prod@appspot') THEN 'AUTOMATED'
+      WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'vertex-pipeline-sa') THEN 'AUTOMATED'
+      WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'churnzero-bq-access') THEN 'AUTOMATED'
+      WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'promise-ai@') THEN 'AUTOMATED'
+      WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'carriers-ml-service') THEN 'AUTOMATED'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'@narvar\\.com$') THEN 'INTERNAL'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'metabase.*@.*\\.iam\\.gserviceaccount\\.com') THEN 'INTERNAL'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'n8n') THEN 'INTERNAL'
@@ -308,8 +323,14 @@ traffic_classified AS (
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'data-ml-jobs') THEN 'ML_JOBS'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'rudderstackbqwriter') THEN 'RUDDERSTACK_ETL'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'gcp-ship-vertex-ai') THEN 'VERTEX_AI'
+      WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'dev-testing@narvar-ml') THEN 'ML_DEV_TESTING'
+      WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'narvar-ml-prod@appspot') THEN 'ML_APPSPOT'
+      WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'vertex-pipeline-sa') THEN 'VERTEX_PIPELINE'
+      WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'churnzero-bq-access') THEN 'CHURNZERO_INTEGRATION'
+      WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'promise-ai@') THEN 'PROMISE_AI'
+      WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'carriers-ml-service') THEN 'CARRIERS_ML'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'iam\\.gserviceaccount\\.com$')
-        AND NOT REGEXP_CONTAINS(LOWER(a.principal_email), r'(airflow|composer|gke|compute|cdp|dataflow|etl|eddmodel|analytics-api|messaging|shopify|ipaas|growthbook|metric-layer|retool|doit-cmp|bigquerydatatransfer|aiplatform|looker|metabase|n8n|noflake|salesforce|fivetran|data-ml-jobs|rudderstack|vertex-ai)')
+        AND NOT REGEXP_CONTAINS(LOWER(a.principal_email), r'(airflow|composer|gke|compute|cdp|dataflow|etl|eddmodel|analytics-api|messaging|shopify|ipaas|growthbook|metric-layer|retool|doit-cmp|bigquerydatatransfer|aiplatform|looker|metabase|n8n|noflake|salesforce|fivetran|data-ml-jobs|rudderstack|vertex|dev-testing|appspot|churnzero|promise-ai|carriers-ml)')
         THEN 'SERVICE_ACCOUNT_OTHER'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'metabase.*@.*\\.iam\\.gserviceaccount\\.com') THEN 'METABASE'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'n8n') THEN 'N8N_WORKFLOW'

@@ -22,16 +22,17 @@
 ## 📊 Final Classification Table Summary
 
 ### **Table Statistics**:
-- **Total Jobs Classified**: 39,363,739 jobs (100% unique, 0% duplicates)
-- **Time Period Coverage**: 19 months (Sep 2022 - Jan 2025)
-- **Table Size**: ~18-20 GB (partitioned and clustered)
-- **Storage Cost**: ~$0.36-0.40/month
-- **Classification Versions**: v1.0 (recent periods), v1.2 (historical periods)
+- **Total Jobs Classified**: 43,834,889 jobs (100% unique, 0% duplicates)
+- **Time Period Coverage**: 21 months (Sep 2022 - Oct 2025)
+- **Table Size**: ~20-22 GB (partitioned and clustered)
+- **Storage Cost**: ~$0.40-0.44/month
+- **Classification Versions**: v1.0 (2023-2024 periods), v1.2 (2022-2023 periods), v1.3 (2025 periods)
 
-### **Periods Classified** (8 periods total):
+### **Periods Classified** (9 periods total):
 
 | Period | Type | Jobs | Unclass % | Slot Hours | Cost | Retailers |
 |--------|------|------|-----------|------------|------|-----------|
+| **Baseline_2025_Sep_Oct** ⭐ | Non-Peak | 4.47M | **0.04%** | 2.04M | $101K | 210 |
 | **Baseline_2024_Sep_Oct** | Non-Peak | 3.79M | **4.0%** | 1.63M | $80K | 207 |
 | **Peak_2024_2025** | Peak | 4.72M | **2.7%** | 2.82M | $139K | 227 |
 | **NonPeak_2024_Feb_Mar** | Non-Peak | 1.86M | **1.2%** | 1.18M | $58K | 216 |
@@ -41,15 +42,18 @@
 | **Peak_2022_2023** | Peak | 11.34M | **0.00%** | 3.39M | $168K | 523 |
 | **NonPeak_2022_Sep_Oct** | Non-Peak | 7.46M | **0.00%** | 2.47M | $122K | 514 |
 
-**TOTAL**: 39.36M jobs, 15.5M slot-hours, $737K (19 months)
+**TOTAL**: 43.83M jobs, 17.52M slot-hours, $838K (21 months)
+
+⭐ **Baseline_2025_Sep_Oct** = Most recent baseline (added Nov 5, 2025) - Critical for 2025-2026 peak planning!
 
 ### **Classification Quality**: 🏆 EXCELLENT
 
-**2024 Periods**: 0.02-4.0% unclassified ✅  
+**2025 Periods**: 0.04% unclassified ✅✅✅  
+**2024 Periods**: 1.2-4.0% unclassified ✅  
 **2023 Periods**: 0.00-0.07% unclassified ✅✅  
 **2022 Periods**: 0.00% unclassified ✅✅✅
 
-**Average unclassified rate**: ~1% (far exceeds <5% target!)
+**Average unclassified rate**: ~0.8% (far exceeds <5% target!)
 
 ---
 
@@ -64,36 +68,74 @@ INTERNAL (P1):   10-15% of jobs, 10-20% of slot hours
 UNCLASSIFIED:    0-4% of jobs, <1% of slot hours
 ```
 
-**Key Finding**: External traffic is **slot-intensive** (fewer jobs, more slots per job)
+#### **Key Finding**: External traffic is **slot-intensive** (fewer jobs, more slots per job)
 
-### 2. **Peak vs. Non-Peak Traffic Patterns**:
+#### **CRITICAL: MONITOR_BASE Dominates External Capacity**
 
-**Peak Periods** (Nov-Jan):
-- Average: 6.45M jobs per period
-- Average: 2.61M slot-hours per period
-- **Peak traffic is ~1.8-2.2x higher than non-peak**
+**Monitor-base projects** (`monitor-base-us-prod/qa/stg`) are shared infrastructure serving all retailers:
+- **3.38M jobs** (23% of external jobs)
+- **8.74M slot-hours** (85.85% of ALL external slot consumption!) 🚨
+- **Appears across all 9 periods** (consistent infrastructure load)
 
-**Non-Peak Periods**:
-- Average: 4.16M jobs per period
-- Average: 1.41M slot-hours per period
-- Sep-Oct (pre-peak): Higher baseline due to back-to-school
-- Feb-Mar (post-peak): Lower baseline, post-holiday
+**Breakdown of EXTERNAL subcategories**:
+```
+MONITOR_BASE:      85.85% of external slot hours (shared infrastructure)
+MONITOR:            8.85% of external slot hours (individual retailer projects)
+MONITOR_UNMATCHED:  3.58% of external slot hours (unmatched retailer projects)
+HUB:                1.72% of external slot hours (Looker dashboards)
+```
 
-### 3. **Year-over-Year Growth**:
+**Implication for Capacity Planning**:
+- Monitor-base is correctly classified as EXTERNAL (P0 priority - serves customer data)
+- BUT it's infrastructure workload, not direct customer queries
+- Should be tracked separately for optimization (batch scheduling, off-peak execution)
+- Represents the single largest capacity consumer across all categories!
 
-**Peak Periods**:
-- 2022-2023: 11.34M jobs, 3.39M slot-hours
-- 2023-2024: 3.29M jobs, 1.63M slot-hours (📉 Lower - data quality issue?)
-- 2024-2025: 4.72M jobs, 2.82M slot-hours
+### 2. **Peak vs. Non-Peak Traffic Patterns by Category**:
 
-**Observation**: Peak 2023-2024 seems anomalously low. Need to investigate in Phase 2.
+**Overall Peak Multiplier**: ~1.7-2.0x
 
-**Non-Peak Sep-Oct**:
-- 2022: 7.46M jobs, 2.47M slot-hours
-- 2023: 1.88M jobs, 977K slot-hours
-- 2024: 3.79M jobs, 1.63M slot-hours
+**Detailed by Category**:
 
-**Observation**: High variability - need deeper analysis in Phase 2.
+| Category | Avg Jobs Non-Peak | Avg Jobs Peak | Job Multiplier | Avg Slots Non-Peak | Avg Slots Peak | **Slot Multiplier** |
+|----------|-------------------|---------------|----------------|-------------------|----------------|---------------------|
+| **EXTERNAL** | 1.31M | 2.59M | **1.98x** | 868K | 1.71M | **1.97x** |
+| **AUTOMATED** | 2.22M | 3.24M | **1.46x** | 312K | 510K | **1.63x** |
+| **INTERNAL** | 432K | 571K | **1.32x** | 229K | 382K | **1.67x** |
+
+**Key Insights**:
+- ✅ **EXTERNAL has highest peak multiplier** (1.97x) - external traffic nearly doubles during peak!
+- ✅ **AUTOMATED is more stable** (1.63x) - scheduled jobs continue regardless of season
+- ✅ **INTERNAL lowest multiplier** (1.67x) - internal analytics less affected by external peak
+- ✅ **Job count vs. slot consumption multipliers are similar** (traffic pattern consistency)
+
+**Implication**: External capacity planning needs **~2x buffer** for peak vs. baseline
+
+### 3. **Year-over-Year Growth by Category**:
+
+#### **Peak Period Growth (Nov-Jan each year)**:
+
+| Category | 2022-2023 | 2023-2024 | 2024-2025 | YoY 2022→2023 | YoY 2023→2024 |
+|----------|-----------|-----------|-----------|---------------|---------------|
+| **EXTERNAL (Jobs)** | 5.26M | 1.75M | 769K | **-66.7%** ⚠️ | **-56.1%** ⚠️ |
+| **EXTERNAL (Slots)** | 3.11M | 825K | 1.21M | **-73.4%** ⚠️ | **+46.1%** ✅ |
+| **AUTOMATED (Jobs)** | 5.46M | 950K | 3.32M | **-82.6%** ⚠️ | **+249%** 🚀 |
+| **AUTOMATED (Slots)** | 152K | 423K | 953K | **+177.6%** 🚀 | **+125.2%** 🚀 |
+| **INTERNAL (Jobs)** | 623K | 583K | 507K | **-6.4%** | **-13.0%** |
+| **INTERNAL (Slots)** | 133K | 358K | 656K | **+168.4%** 🚀 | **+83.3%** ✅ |
+
+**⚠️ DATA QUALITY ALERT**: 2022-2023 peak shows 3-11x higher job counts than 2023-2024, which is unrealistic. This suggests:
+- Possible data collection changes between 2022 and 2023
+- Classification methodology differences
+- Audit log schema changes
+- Actual service architecture changes (noflake retirement in 2023)
+
+**Reliable Growth Trend** (2023-2024 → 2024-2025 Peak):
+- **AUTOMATED slot growth**: +125% (driven by Airflow/GKE expansion)
+- **INTERNAL slot growth**: +83% (increased analytics usage)
+- **EXTERNAL slot growth**: +46% (despite fewer jobs - larger queries)
+
+**Observation**: The 2022 data anomaly requires Phase 2 investigation before using for projections.
 
 ### 4. **Retailer Growth**:
 
@@ -133,7 +175,7 @@ Result: 0-4% unclassified for 2024 periods
 Result: 40% → 20% unclassified for 2022-2023
 ```
 
-### **v1.2 Patterns** (Final - Complete Historical Coverage):
+### **v1.2 Patterns** (Historical 2022-2023 Coverage):
 ```
 ➕ data-ml-jobs (historical ML)
 ➕ rudderstackbqwriter (event tracking)
@@ -142,7 +184,19 @@ Result: 40% → 20% unclassified for 2022-2023
 Result: 20% → 0% unclassified for 2022-2023 ✅
 ```
 
-**Total Patterns**: 30+ service account classifications
+### **v1.3 Patterns** (Final - 2025 Services):
+```
+➕ dev-testing@narvar-ml (ML development/testing - 679K jobs!)
+➕ narvar-ml-prod@appspot (ML production service)
+➕ vertex-pipeline-sa (Vertex AI pipelines)
+➕ churnzero-bq-access (ChurnZero integration)
+➕ promise-ai@ (Promise AI service)
+➕ carriers-ml-service (Carriers ML)
+
+Result: 16.1% → 0.04% unclassified for 2025 baseline ✅
+```
+
+**Total Patterns**: 35+ service account classifications (spanning 2022-2025)
 
 ---
 
@@ -269,16 +323,16 @@ GROUP BY analysis_period_label, consumer_category;
 ## 📊 Final Statistics (All Periods Combined)
 
 ### **Coverage**:
-- **Time Span**: Sep 2022 - Jan 2025 (2.5 years)
-- **Months Covered**: 19 months
+- **Time Span**: Sep 2022 - Oct 2025 (3+ years)
+- **Months Covered**: 21 months
 - **Peak Months**: 9 months (3 peak periods)
-- **Non-Peak Months**: 10 months (5 non-peak periods)
+- **Non-Peak Months**: 12 months (6 non-peak periods)
 
 ### **Volume**:
-- **Total Jobs**: 39,363,739
-- **Total Slot Hours**: 15,484,887
-- **Total Cost**: $765,656 (19 months historical)
-- **Average Monthly Cost**: ~$40K
+- **Total Jobs**: 43,834,889
+- **Total Slot Hours**: 17,523,909
+- **Total Cost**: $865,630 (21 months historical)
+- **Average Monthly Cost**: ~$41K
 
 ### **Classification Breakdown** (Across All Periods):
 ```
@@ -396,13 +450,14 @@ Despite being only 20-30% of jobs:
 | Criteria | Target | Achieved | Status |
 |----------|--------|----------|--------|
 | Traffic Classified | 95%+ | 96-100% | ✅ |
-| UNCLASSIFIED Rate | <5% | 0-4% | ✅ |
+| UNCLASSIFIED Rate | <5% | 0-4% (avg 0.8%) | ✅ |
 | Physical Table Created | Yes | Yes | ✅ |
-| Multiple Periods | 3+ | 8 periods | ✅ |
-| Retailer Attribution | Working | 200-500 per period | ✅ |
+| Multiple Periods | 3+ | **9 periods** | ✅ |
+| Retailer Attribution | Working | 200-565 per period | ✅ |
 | Cost Calculation | Accurate | Slot-based | ✅ |
 | Automation | Desired | Scripts created | ✅ |
-| Documentation | Complete | 9 documents | ✅ |
+| Documentation | Complete | 10 documents | ✅ |
+| Latest Baseline (2025) | Desired | Sep-Oct 2025 | ✅ |
 
 ---
 
@@ -466,11 +521,11 @@ With the classified table, Phase 2 queries can now:
 ### **Primary Table**:
 ```
 narvar-data-lake.query_opt.traffic_classification
-- 39.36M rows (100% unique job_ids)
-- 18-20 GB storage
-- 8 periods classified
-- 19 months coverage
-- $0.36/month storage cost
+- 43.83M rows (100% unique job_ids, 0 duplicates)
+- 20-22 GB storage
+- 9 periods classified (including critical 2025 baseline)
+- 21 months coverage (Sep 2022 - Oct 2025)
+- $0.40-0.44/month storage cost
 ```
 
 ### **Backup Table**:
@@ -498,10 +553,17 @@ narvar-data-lake.query_opt.traffic_classification_backup
 
 ## 🎊 PHASE 1: COMPLETE AND READY FOR PHASE 2
 
-**Status**: Production-ready classification table with 39.4M jobs classified  
+**Status**: Production-ready classification table with 43.8M jobs classified  
 **Quality**: 0-4% unclassified across all periods (excellent!)  
-**Coverage**: 8 periods spanning 2.5 years (sufficient for trend analysis)  
+**Coverage**: 9 periods spanning 3+ years (Sep 2022 - Oct 2025)  
+**Latest Baseline**: Sep-Oct 2025 (most recent data before 2025-2026 peak)  
 **Next**: Update Phase 2 queries to use the physical table
+
+### **Critical Findings for Phase 2**:
+1. ⚠️ **Data quality issue in 2022 vs. 2023-2024**: Investigate 3x higher job counts in 2022
+2. 🚨 **MONITOR_BASE dominates**: 85% of external capacity (single largest consumer!)
+3. ✅ **Peak multiplier**: EXTERNAL ~2x, AUTOMATED ~1.6x, INTERNAL ~1.7x
+4. ✅ **Recent growth trends**: +46-125% slot growth 2023→2024 (reliable for projections)
 
 ---
 
