@@ -10,56 +10,69 @@ This analysis project aims to optimize BigQuery slot allocation and ensure Quali
 
 ## Quick Start
 
-### 1. Validate Data Availability
+### **Phase 1 Complete** ✅ - Classification Table Ready!
 
-Before running any analysis, validate that audit log data is complete:
+**Physical Table**: `narvar-data-lake.query_opt.traffic_classification`
+- **43.8M jobs classified** across 9 periods (Sep 2022 - Oct 2025)
+- **0-4% unclassified** (excellent quality)
+- **35+ service account patterns** identified
+- **Latest baseline**: Sep-Oct 2025 (freshest data!)
 
-```sql
--- Run this first
-queries/utils/validate_audit_log_completeness.sql
-```
+**For complete Phase 1 results**: See `PHASE1_FINAL_REPORT.md`  
+**For AI assistants/future sessions**: See `AI_SESSION_CONTEXT.md`
 
-**What to check**:
-- Days with gaps in data (is_gap = TRUE)
-- Suspiciously low record counts (is_suspiciously_low = TRUE)
-- High null rates for critical fields (>10%)
-- Coverage for all 3 peak periods (Nov-Jan 2022/23, 2023/24, 2024/25)
+---
 
-### 2. Run Traffic Classification
+### Using the Classification Table
 
-Once data quality is confirmed, classify traffic by consumer category:
+**Query the table directly** (no need to reclassify):
 
 ```sql
--- Identify external consumers (monitor projects, hub traffic)
-queries/phase1_classification/external_consumer_classification.sql
-
--- Identify automated processes (Airflow, CDP, etc.)
-queries/phase1_classification/automated_process_classification.sql
-
--- Identify internal users (Metabase, ad-hoc queries)
-queries/phase1_classification/internal_user_classification.sql
-
--- Unified view combining all classifications
-queries/phase1_classification/vw_traffic_classification.sql
+-- Example: Get category breakdown for latest peak
+SELECT
+  consumer_category,
+  consumer_subcategory,
+  COUNT(*) as jobs,
+  SUM(slot_hours) as slot_hours,
+  COUNT(DISTINCT retailer_moniker) as retailers
+FROM `narvar-data-lake.query_opt.traffic_classification`
+WHERE analysis_period_label = 'Peak_2024_2025'
+GROUP BY consumer_category, consumer_subcategory
+ORDER BY slot_hours DESC;
 ```
 
-### 3. Analyze Historical Patterns
+### Classify New Periods (Automation)
 
-Understand peak vs. non-peak traffic patterns:
+**For future periods** (e.g., Nov 2025 - Jan 2026 peak):
 
+```bash
+cd scripts/
+# Edit run_classification_all_periods.py to add new period
+python run_classification_all_periods.py --mode all
+```
+
+See `scripts/CLASSIFICATION_AUTOMATION_GUIDE.md` for details.
+
+### Phase 2: Analyze Historical Patterns (Next Step)
+
+**Status**: Queries exist but need updates to use physical `traffic_classification` table
+
+**Phase 2 Queries** (will be updated):
 ```sql
 -- Compare peak periods across years
-queries/phase2_historical/peak_vs_nonpeak_analysis.sql
+queries/phase2_historical/peak_vs_nonpeak_analysis.sql  ← Needs update
 
--- Identify QoS violations
-queries/phase2_historical/qos_violations_historical.sql
+-- Identify QoS violations  
+queries/phase2_historical/qos_violations_historical.sql  ← Needs update
 
 -- Generate slot utilization heatmaps
-queries/phase2_historical/slot_heatmap_analysis.sql
+queries/phase2_historical/slot_heatmap_analysis.sql      ← Needs update
 
 -- Calculate year-over-year growth
-queries/phase2_historical/yoy_growth_analysis.sql
+queries/phase2_historical/yoy_growth_analysis.sql        ← Needs update
 ```
+
+**These queries will be much faster now** - they'll query the pre-classified table instead of reclassifying 43M jobs each time!
 
 ### 4. Predict 2025 Peak Load
 
@@ -308,8 +321,24 @@ END
 
 ---
 
-**Last Updated**: 2025-10-31
-**Version**: 0.1.0 (In Development)
+## 📚 Documentation
+
+**Primary Docs**:
+- `PHASE1_FINAL_REPORT.md` - Complete Phase 1 results and findings
+- `AI_SESSION_CONTEXT.md` - Quick context for AI assistants/future sessions
+- `README.md` - This file (project overview)
+
+**Strategy & Implementation**:
+- `docs/CLASSIFICATION_STRATEGY.md` - Temporal variability handling
+- `docs/IMPLEMENTATION_STATUS.md` - Implementation checklist
+
+**Archived Docs** (Historical Reference):
+- `docs/archive/` - Interim documentation from Phase 1 development
+
+---
+
+**Last Updated**: November 5, 2025  
+**Version**: 1.0.0 (Phase 1 Complete)  
 **Maintained by**: Peak Capacity Planning Team
 
 
