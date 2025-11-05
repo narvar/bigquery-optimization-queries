@@ -306,23 +306,39 @@ jupyter notebook notebooks/phase2_analysis.ipynb
 
 ---
 
-## 🎉 Summary
+## 🎉 Phase 2 Complete - Key Findings!
 
-**Phase 2 is ready to execute!**
+**Status**: ✅ All queries executed and analyzed  
+**Date**: November 5, 2025
 
-You have:
-- ✅ Automated query execution script
-- ✅ Complete analysis notebook (32 cells)
-- ✅ Comprehensive documentation
-- ✅ Output directories prepared
-- ✅ Clear success criteria
+### 📊 Critical Results
 
-**Estimated total time**: 40-70 minutes (mostly unattended)
-**Estimated cost**: $0.13-0.36 USD
-**Expected insights**: Complete capacity stress analysis for 2025-2026 planning
+#### 1️⃣ Stress Frequency
+- **CRITICAL stress**: 4.9% of time
+- **WARNING stress**: 0.0% of time  
+- **Total stress**: ~5% of time
+- **6,123 windows analyzed** across 3 periods
 
-**Ready to begin?** → Run `./scripts/run_phase2_queries.sh`
+#### 2️⃣ Customer QoS Impact
+- **CRITICAL data**: 2,223 jobs analyzed
+- **Violation rate**: 6.34% during CRITICAL periods
+- **P95 execution**: 392.5 seconds (vs baseline)
+- **Key finding**: Stress caused by **HIGH_CONCURRENCY** (≥60 concurrent jobs), not necessarily slow queries
 
-Good luck! 🚀
+#### 3️⃣ Monitor-Base Causation
+- **H1 NOT SUPPORTED**: Ratio 0.82x (HIGH vs LOW monitor-base activity)
+- **Conclusion**: Monitor-base does NOT cause customer stress
+- **Recommendation**: ✅ Current unified reservation acceptable
+
+#### 4️⃣ Critical Discovery
+🔧 **Query 2 Fixed**: Original query recalculated stress using hourly P95 only, missing CRITICAL periods triggered by concurrency. Fixed version now JOINs with `phase2_stress_periods` table, capturing 2,223 customer jobs during CRITICAL stress.
+
+### 📁 Deliverables
+- ✅ 4 BigQuery tables populated
+- ✅ Professional visualizations generated
+- ✅ CSV exports in `results/`
+- ✅ `phase3_inputs.json` ready for Phase 3
+
+**Next**: Begin Phase 3 projection using these baseline metrics! 🚀
 
 
