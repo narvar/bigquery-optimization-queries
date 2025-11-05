@@ -28,6 +28,7 @@ DECLARE analyze_periods ARRAY<STRING> DEFAULT NULL;  -- NULL = all periods
 -- MAIN ANALYSIS
 -- ============================================================================
 
+CREATE OR REPLACE TEMP TABLE hourly_patterns AS
 WITH
 -- Classify periods as PEAK or NON_PEAK
 period_classification AS (
@@ -89,12 +90,13 @@ hourly_patterns AS (
     t.analysis_period_label, pc.period_type, date, hour_of_day, 
     day_of_week, day_name, t.consumer_category, t.consumer_subcategory
 )
+SELECT * FROM hourly_patterns;
 
 -- ============================================================================
 -- OUTPUT 1: Peak vs Non-Peak Summary by Category
 -- ============================================================================
 
-SELECT
+SELECT -- OUTPUT 1: Peak vs Non-Peak Summary by Category
   period_type,
   consumer_category,
   consumer_subcategory,
@@ -130,8 +132,8 @@ ORDER BY period_type, total_slot_hours DESC;
 -- OUTPUT 2: Peak Multipliers (Peak vs Non-Peak Ratios)
 -- ============================================================================
 -- Uncomment to see peak multipliers by category
-/*
-WITH peak_summary AS (
+
+WITH peak_summary AS ( -- OUTPUT 2: Peak Multipliers (Peak vs Non-Peak Ratios)
   SELECT
     consumer_category,
     SUM(jobs) / COUNT(DISTINCT analysis_period_label) AS avg_jobs_per_peak_period,
@@ -161,14 +163,14 @@ SELECT
 FROM peak_summary p
 FULL OUTER JOIN nonpeak_summary n USING (consumer_category)
 ORDER BY avg_slot_hrs_peak DESC;
-*/
+
 
 -- ============================================================================
 -- OUTPUT 3: Hour-of-Day Patterns
 -- ============================================================================
 -- Uncomment to see traffic distribution by hour of day
-/*
-SELECT
+
+SELECT -- OUTPUT 3: Hour-of-Day Patterns
   period_type,
   consumer_category,
   hour_of_day,
@@ -181,14 +183,14 @@ SELECT
 FROM hourly_patterns
 GROUP BY period_type, consumer_category, hour_of_day
 ORDER BY period_type, consumer_category, hour_of_day;
-*/
+
 
 -- ============================================================================
 -- OUTPUT 4: Day-of-Week Patterns
 -- ============================================================================
 -- Uncomment to see traffic distribution by day of week
-/*
-SELECT
+
+SELECT -- OUTPUT 4: Day-of-Week Patterns
   period_type,
   consumer_category,
   day_of_week,
@@ -201,14 +203,14 @@ SELECT
 FROM hourly_patterns
 GROUP BY period_type, consumer_category, day_of_week, day_name
 ORDER BY period_type, consumer_category, day_of_week;
-*/
+
 
 -- ============================================================================
 -- OUTPUT 5: Year-over-Year Growth (Peak Periods Only)
 -- ============================================================================
 -- Uncomment to see growth trends
-/*
-WITH peak_by_year AS (
+
+WITH peak_by_year AS ( -- OUTPUT 5: Year-over-Year Growth (Peak Periods Only)
   SELECT
     EXTRACT(YEAR FROM date) AS year,
     consumer_category,
@@ -243,7 +245,7 @@ SELECT
 FROM peak_by_year
 GROUP BY consumer_category
 ORDER BY MAX(CASE WHEN year = 2024 THEN total_slot_hours END) DESC;
-*/
+
 
 -- ============================================================================
 -- USAGE NOTES
