@@ -11,6 +11,35 @@
 
 This is the cost that would need to be offset by any alternative solution to the current BQ Monitor merge operations.
 
+### **Cost Calculation Formula**
+
+```
+Total Annual Cost = Monitor Merge Reservation Cost + Storage + Pub/Sub
+
+Where:
+  Monitor Merge Reservation Cost = Total BQ Reservation × Monitor Merge %
+                                  = $619,598.41 × 24.18%
+                                  = $149,831.76
+
+  Storage Cost (monitor-base-us-prod)     = $24,899.45
+  Cloud Pub/Sub Cost (monitor-base-us-prod) = $26,226.46
+
+Therefore:
+  Total Annual Cost = $149,831.76 + $24,899.45 + $26,226.46
+                    = $200,957.67
+```
+
+### **Baseline Period & Extrapolation**
+
+**Important**: This cost is extrapolated from actual 2-month traffic data:
+- **Baseline Period**: September - October 2024
+- **2-Month Actual Cost**: $24,971.96 (compute only)
+- **Extrapolation Method**: 
+  - Calculated percentage of total BQ Reservation: 24.18%
+  - Applied this percentage to annual BQ Reservation costs
+  - Added annual storage and Pub/Sub costs for monitor-base-us-prod
+- **Extrapolation Factor**: 6x (12 months ÷ 2 months)
+
 ---
 
 ## 📊 KEY FINDINGS
