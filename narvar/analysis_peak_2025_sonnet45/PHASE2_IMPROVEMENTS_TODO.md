@@ -128,8 +128,22 @@ END AS monitor_type
 
 **Question**: Identify most active retailers and their query patterns
 
+**Additional Data Sources Available** (Per Eric's guidance):
+
+Monitor-specific tables in `monitor-base-us-prod.monitor_audit`:
+- **`v_core_user`** - Monitor user/retailer metadata
+- **`v_query_execution`** - Detailed query execution logs
+
+**Reference**: [Noflake queries for monitor analysis](https://noflake.narvar.com/collection/1227-nov-2025-monitor-usage-analysis)
+
+These tables provide:
+- Retailer-specific query patterns
+- Dashboard correlation data
+- More granular execution metrics
+- User activity details
+
 **Analysis Required**:
-1. **Top retailers by activity**:
+1. **Top retailers by activity** (from `traffic_classification`):
    ```sql
    SELECT 
      retailer_moniker,
@@ -147,19 +161,46 @@ END AS monitor_type
    ```
 
 2. **Query pattern analysis** (for top 5-10 retailers):
+   
+   **Option A - Using traffic_classification**:
    - Common query characteristics (execution time, bytes processed, slot usage)
    - Temporal patterns (hour of day, day of week)
-   - Correlation with specific dashboards (if dashboard_id available)
    - QoS violation patterns
+   
+   **Option B - Using monitor_audit tables** (more detailed):
+   ```sql
+   -- Join with v_query_execution for detailed patterns
+   SELECT 
+     qe.retailer_id,
+     cu.retailer_name,
+     COUNT(*) as query_count,
+     AVG(qe.execution_time_ms) as avg_exec_ms,
+     -- Add dashboard correlation if available
+     -- Add query pattern analysis
+   FROM `monitor-base-us-prod.monitor_audit.v_query_execution` qe
+   LEFT JOIN `monitor-base-us-prod.monitor_audit.v_core_user` cu
+     ON qe.retailer_id = cu.retailer_id
+   WHERE qe.execution_timestamp >= '2024-11-01'  -- Peak period
+   GROUP BY qe.retailer_id, cu.retailer_name
+   ORDER BY query_count DESC
+   LIMIT 20
+   ```
 
-3. **Stress period behavior**:
+3. **Dashboard correlation**:
+   - Use `v_query_execution` to map queries to specific dashboards
+   - Identify which dashboards drive most traffic
+   - Find optimization opportunities (slow dashboards, frequent refreshes)
+
+4. **Stress period behavior**:
    - Which retailers run during CRITICAL stress?
    - Do specific retailers trigger stress?
+   - Cross-reference with audit logs for deeper insights
 
 **Expected Deliverable**: 
-- Top 20 retailer report
-- Detailed profile for top 5-10 retailers
-- Potential optimization targets
+- Top 20 retailer report (from traffic_classification)
+- Detailed profile for top 5-10 retailers (enhanced with monitor_audit data)
+- Dashboard-level insights (if available in v_query_execution)
+- Potential optimization targets with specific recommendations
 
 ---
 
