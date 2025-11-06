@@ -1,0 +1,5 @@
+Cost Component,Annual Cost (USD),Percentage of Total,Details
+BigQuery Reservation (Monitor Merge),149831.76,74.6%,"Service: monitor-base-us-prod@appspot.gserviceaccount.com, 24.18% of total BQ capacity"
+Storage (monitor-base-us-prod),24899.45,12.4%,All storage SKUs for monitor-base-us-prod project
+Cloud Pub/Sub (monitor-base-us-prod),26226.46,13.1%,All Pub/Sub operations for monitor-base-us-prod project
+TOTAL,200957.67,100.0%,Total cost to offset by alternative solution

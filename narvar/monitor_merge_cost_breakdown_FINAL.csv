@@ -1,0 +1,13 @@
+Metric,Value
+Analysis Period,Sep-Oct 2024
+Service Account,monitor-base-us-prod@appspot.gserviceaccount.com
+Query Pattern,"MERGE queries containing ""shipments"""
+Job Count (2 months),"6,256"
+Slot Hours (2 months),"505,505.37"
+Cost (2 months),"$24,971.96"
+Percentage of BQ Reservation,24.18%
+Annual BQ Reservation Cost,"$149,831.76"
+Annual Storage Cost,"$24,899.45"
+Annual Pub/Sub Cost,"$26,226.46"
+TOTAL ANNUAL COST,"$200,957.67"
+Date Analyzed,2025-11-06

@@ -1,0 +1,137 @@
+================================================================================
+BQ MONITOR MERGE COST ANALYSIS - SUMMARY
+================================================================================
+Date: 2025-11-06
+Question: "What is the BQ Monitor merge costing us today annually, that would 
+           need to be offset?"
+
+================================================================================
+PRELIMINARY RESULTS (From DoIT CSV)
+================================================================================
+
+FIXED COSTS (Already Calculated):
+─────────────────────────────────────────────────────────────────────────────
+1. BigQuery Reservation API (Annual)      $619,598.41
+   - Enterprise Edition (US multi-region)    $435,906.71
+   - Enterprise Edition 1 Year               $104,957.84
+   - Enterprise Edition 3 Years               $78,733.87
+
+2. Storage (monitor-base-us-prod)          $24,899.45
+   - Active Logical Storage                   $17,996.28
+   - Long Term Logical Storage                 $5,801.23
+   - Long-Term Physical Storage (US)             $948.01
+   - Active Physical Storage (US)                $153.94
+
+3. Cloud Pub/Sub (monitor-base-us-prod)    $26,226.46
+   - Message Delivery Basic                   $26,226.46
+
+SUBTOTAL (Storage + Pub/Sub):              $51,125.91
+─────────────────────────────────────────────────────────────────────────────
+
+VARIABLE COST (Requires BigQuery Query):
+─────────────────────────────────────────────────────────────────────────────
+Monitor Merge Reservation Cost = $619,598.41 × (monitor_merge_slot_pct / 100)
+
+This percentage represents the portion of AUTOMATED slots consumed by merge
+operations writing to monitor projects (like monitor-base-us-prod).
+
+================================================================================
+FORMULA FOR FINAL ANSWER
+================================================================================
+
+Total Annual Cost = Monitor Merge Reservation + Storage + Pub/Sub
+                  = (619,598.41 × merge_slot_pct / 100) + 24,899.45 + 26,226.46
+
+Example Scenarios:
+──────────────────
+If merge_slot_pct = 5%:   Total = $30,979.92 + $51,125.91 = $82,105.83
+If merge_slot_pct = 8%:   Total = $49,567.87 + $51,125.91 = $100,693.78
+If merge_slot_pct = 10%:  Total = $61,959.84 + $51,125.91 = $113,085.75
+If merge_slot_pct = 15%:  Total = $92,939.76 + $51,125.91 = $144,065.67
+
+================================================================================
+NEXT STEPS TO GET FINAL ANSWER
+================================================================================
+
+Option 1 (Recommended): Run Jupyter Notebook
+────────────────────────────────────────────
+File: monitor_merge_cost_analysis.ipynb
+- Opens notebook and runs all cells
+- Automatically queries BigQuery and calculates final cost
+- Exports results to CSV
+
+Option 2: SQL Query + Python Calculator
+────────────────────────────────────────
+Step 1: Run SQL query in BigQuery console
+  File: monitor_merge_analysis.sql
+  
+Step 2: Use calculator with the percentage from Step 1
+  Command: python3 calculate_monitor_merge_cost.py
+
+Option 3: Manual Calculation
+─────────────────────────────
+If you already have the merge percentage, use the formula above.
+
+================================================================================
+SCOPE & ASSUMPTIONS
+================================================================================
+
+Scope:
+- Consumer Category: AUTOMATED only (excludes EXTERNAL and INTERNAL)
+- Operation Type: MERGE INTO operations writing to monitor-* projects
+- Time Period: Sep-Oct 2024 baseline (2 months), extrapolated to annual
+- Projects: Specifically monitor-base-us-prod for storage/Pub/Sub costs
+
+Key Assumptions:
+1. Merge operations identified via regex: MERGE\s+INTO\s+monitor-*
+2. Proportional cost allocation based on slot consumption
+3. Sep-Oct 2024 is representative of typical workload
+4. All monitor-base-us-prod storage/Pub/Sub is merge-related
+
+================================================================================
+FILES CREATED FOR THIS ANALYSIS
+================================================================================
+
+1. monitor_merge_cost_analysis.ipynb     - Full Jupyter notebook
+2. monitor_merge_analysis.sql            - SQL query for BigQuery
+3. calculate_monitor_merge_cost.py       - Python calculator script
+4. MONITOR_MERGE_COST_README.md          - Detailed documentation
+5. MONITOR_MERGE_COST_SUMMARY.txt        - This summary file
+
+================================================================================
+COST BREAKDOWN VISUALIZATION
+================================================================================
+
+                    ANNUAL BQ MONITOR MERGE COST STRUCTURE
+                    
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                                                                 │
+    │  FIXED COSTS (Known):                      $51,125.91          │
+    │  ├─ Storage (monitor-base-us-prod)         $24,899.45  (48.7%) │
+    │  └─ Pub/Sub (monitor-base-us-prod)         $26,226.46  (51.3%) │
+    │                                                                 │
+    │  VARIABLE COST (Needs Query):              $??? (TBD)          │
+    │  └─ Monitor Merge Reservation              Depends on % of     │
+    │     (from $619,598.41 total)               AUTOMATED slots     │
+    │                                                                 │
+    │  TOTAL ANNUAL COST:                        $??? (TBD)          │
+    │  (This is the cost to offset)                                  │
+    │                                                                 │
+    └─────────────────────────────────────────────────────────────────┘
+
+================================================================================
+FINAL ANSWER (Once Query Completes)
+================================================================================
+
+[TO BE FILLED IN AFTER RUNNING BIGQUERY QUERY]
+
+The BQ Monitor merge (AUTOMATED category, writing to monitor projects)
+is costing us $________ annually.
+
+This cost would need to be offset by any alternative solution.
+
+================================================================================
+END OF SUMMARY
+================================================================================
+
+For detailed methodology, see: MONITOR_MERGE_COST_README.md
