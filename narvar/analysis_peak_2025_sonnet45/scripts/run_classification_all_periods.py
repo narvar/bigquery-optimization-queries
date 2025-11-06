@@ -35,7 +35,7 @@ from google.cloud.exceptions import GoogleCloudError
 PROJECT_ID = "narvar-data-lake"
 DATASET_ID = "query_opt"
 TABLE_ID = "traffic_classification"
-CLASSIFICATION_VERSION = "v1.3"  # 2025 ML services (dev-testing, vertex-pipeline, promise-ai, churnzero)
+CLASSIFICATION_VERSION = "v1.4"  # 2025-11-06: monitor-base → AUTOMATED, QoS threshold 60s → 30s
 
 # Period definitions
 PERIODS = [
@@ -106,7 +106,7 @@ PERIODS = [
         "end_date": "2025-01-31",
         "type": "peak",
         "priority": 2,
-        "skip": True,  # v1.0 already done (2.7% unclassified - excellent)
+        "skip": False,  # Re-run with v1.4 (monitor-base → AUTOMATED, QoS 30s)
         "description": "Most recent complete peak"
     },
     {
@@ -115,7 +115,7 @@ PERIODS = [
         "end_date": "2024-01-31",
         "type": "peak",
         "priority": 3,
-        "skip": True,  # v1.0 already done (0.1% unclassified - excellent)
+        "skip": False,  # Re-run with v1.4 (monitor-base → AUTOMATED, QoS 30s)
         "description": "Historical peak for YoY comparison"
     },
     {
@@ -145,7 +145,7 @@ DECLARE analysis_period_label STRING DEFAULT '{period_label}';
 DECLARE classification_version STRING DEFAULT '{classification_version}';
 
 -- QoS thresholds
-DECLARE external_qos_threshold_seconds INT64 DEFAULT 60;
+DECLARE external_qos_threshold_seconds INT64 DEFAULT 30;  -- Updated 2025-11-06 from 60s to 30s
 DECLARE internal_qos_threshold_seconds INT64 DEFAULT 480;
 DECLARE automated_qos_threshold_seconds INT64 DEFAULT 1800;
 
@@ -254,6 +254,8 @@ traffic_classified AS (
     
     -- PRIMARY CLASSIFICATION
     CASE
+      -- Monitor-base infrastructure (AUTOMATED, not customer-facing) - Updated 2025-11-06
+      WHEN a.project_id IN ('monitor-base-us-prod', 'monitor-base-us-qa', 'monitor-base-us-stg') THEN 'AUTOMATED'
       WHEN STARTS_WITH(LOWER(a.project_id), 'monitor-') THEN 'EXTERNAL'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'looker.*@.*\\.iam\\.gserviceaccount\\.com') THEN 'EXTERNAL'
       WHEN REGEXP_CONTAINS(LOWER(a.principal_email), r'(airflow|composer)') THEN 'AUTOMATED'

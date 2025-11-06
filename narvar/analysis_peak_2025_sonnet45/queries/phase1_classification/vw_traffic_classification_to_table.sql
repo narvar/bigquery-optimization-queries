@@ -34,7 +34,7 @@ DECLARE analysis_period_label STRING DEFAULT 'Baseline_2024_Sep_Oct';
 DECLARE classification_version STRING DEFAULT 'v1.0';
 
 -- QoS thresholds by consumer category
-DECLARE external_qos_threshold_seconds INT64 DEFAULT 60;   -- 1 minute (P0)
+DECLARE external_qos_threshold_seconds INT64 DEFAULT 30;   -- 30 seconds (P0) - Updated 2025-11-06
 DECLARE internal_qos_threshold_seconds INT64 DEFAULT 480;  -- 8 minutes (P1)
 DECLARE automated_qos_threshold_seconds INT64 DEFAULT 1800; -- 30 minutes placeholder
 
@@ -190,6 +190,9 @@ traffic_classified AS (
       -- ===================
       -- EXTERNAL CONSUMERS (P0) - Customer-facing APIs and services
       -- ===================
+      
+      -- Monitor-base infrastructure (AUTOMATED, not customer-facing) - Updated 2025-11-06
+      WHEN a.project_id IN ('monitor-base-us-prod', 'monitor-base-us-qa', 'monitor-base-us-stg') THEN 'AUTOMATED'
       
       -- Monitor projects (retailer-specific projects)
       WHEN STARTS_WITH(LOWER(a.project_id), 'monitor-') THEN 'EXTERNAL'

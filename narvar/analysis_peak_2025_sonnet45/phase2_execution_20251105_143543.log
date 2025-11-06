@@ -1,0 +1,77 @@
+[0;34m[2025-11-05 14:35:44][0m ==========================================
+[0;34m[2025-11-05 14:35:44][0m PHASE 2 QUERY EXECUTION - START
+[0;34m[2025-11-05 14:35:45][0m ==========================================
+[0;34m[2025-11-05 14:35:45][0m Project: narvar-data-lake
+[0;34m[2025-11-05 14:35:45][0m Dataset: query_opt
+[0;34m[2025-11-05 14:35:45][0m Log file: phase2_execution_20251105_143543.log
+[0;34m[2025-11-05 14:35:46][0m 
+[0;34m[2025-11-05 14:35:50][0m ==========================================
+[0;34m[2025-11-05 14:35:53][0m DRY-RUN VALIDATION
+[0;34m[2025-11-05 14:35:53][0m ==========================================
+[0;34m[2025-11-05 14:35:56][0m Validating all queries and estimating costs...
+[0;34m[2025-11-05 14:35:59][0m Validating Query 1...
+[1;33m[WARNING][0m Could not estimate Query 1
+[0;34m[2025-11-05 14:36:30][0m Validating Query 2...
+[1;33m[WARNING][0m Could not estimate Query 2
+[0;34m[2025-11-05 14:36:45][0m Validating Query 3...
+[1;33m[WARNING][0m Could not estimate Query 3
+[0;34m[2025-11-05 14:36:59][0m Validating Query 4...
+[1;33m[WARNING][0m Could not estimate Query 4
+[0;34m[2025-11-05 14:37:14][0m ==========================================
+[0;34m[2025-11-05 14:37:14][0m QUERY 1: Capacity Stress Period Detection
+[0;34m[2025-11-05 14:37:14][0m ==========================================
+[0;34m[2025-11-05 14:37:14][0m Destination: narvar-data-lake.query_opt.phase2_stress_periods
+[0;34m[2025-11-05 14:37:14][0m Estimated: 10-30GB, 15-30 minutes
+[0;34m[2025-11-05 14:37:15][0m Starting execution...
+BigQuery error in query operation: Error processing job 'narvar-data-
+lake:bqjob_r28539958ada3334e_0000019a55864004_1':
+configuration.query.destinationTable cannot be set for scripts
+[0;32m[SUCCESS][0m Query 1 completed in 18s
+[0;34m[2025-11-05 14:37:33][0m Fetching table statistics...
+[0;34m[2025-11-05 14:37:50][0m ==========================================
+[0;34m[2025-11-05 14:37:50][0m QUERY 2: External Customer QoS Analysis
+[0;34m[2025-11-05 14:37:50][0m ==========================================
+[0;34m[2025-11-05 14:37:50][0m Destination: narvar-data-lake.query_opt.phase2_external_qos
+[0;34m[2025-11-05 14:37:50][0m Estimated: 5-15GB, 5-10 minutes
+[0;34m[2025-11-05 14:37:50][0m Starting execution...
+BigQuery error in query operation: Error processing job 'narvar-data-
+lake:bqjob_r22f220ac580cb29b_0000019a5586a459_1':
+configuration.query.destinationTable cannot be set for scripts
+[0;32m[SUCCESS][0m Query 2 completed in 9s
+[0;34m[2025-11-05 14:37:59][0m Fetching table statistics...
+[0;34m[2025-11-05 14:38:18][0m ==========================================
+[0;34m[2025-11-05 14:38:19][0m QUERY 3: Monitor-Base Infrastructure Analysis
+[0;34m[2025-11-05 14:38:20][0m ==========================================
+[0;34m[2025-11-05 14:38:20][0m Destination: narvar-data-lake.query_opt.phase2_monitor_base
+[0;34m[2025-11-05 14:38:20][0m Estimated: 10-20GB, 10-15 minutes
+[0;34m[2025-11-05 14:38:20][0m Starting execution...
+BigQuery error in query operation: Error processing job 'narvar-data-
+lake:bqjob_r2c2bac2e5d95fbe8_0000019a558727b9_1':
+configuration.query.destinationTable cannot be set for scripts
+[0;32m[SUCCESS][0m Query 3 completed in 13s
+[0;34m[2025-11-05 14:38:33][0m Fetching table statistics...
+[0;34m[2025-11-05 14:38:48][0m ==========================================
+[0;34m[2025-11-05 14:38:48][0m QUERY 4: Peak vs Non-Peak Patterns (5 outputs)
+[0;34m[2025-11-05 14:38:49][0m ==========================================
+[0;34m[2025-11-05 14:38:49][0m Note: This query has 5 SELECT statements - will create 5 result sets
+[1;33m[WARNING][0m bq CLI will only capture the last SELECT. Consider running in BigQuery Console.
+[0;34m[2025-11-05 14:38:49][0m Destination: narvar-data-lake.query_opt.phase2_peak_patterns
+[0;34m[2025-11-05 14:38:49][0m Estimated: 1-5GB, 2-5 minutes
+[1;33m[WARNING][0m Query 4 has multiple SELECT statements. Only last output will be saved to table.
+[1;33m[WARNING][0m Recommendation: Run this query in BigQuery Console to capture all 5 outputs.
+[0;34m[2025-11-05 14:41:59][0m Starting execution...
+BigQuery error in query operation: Error processing job 'narvar-data-
+lake:bqjob_r16b69d61501bad6f_0000019a558a9a41_1':
+configuration.query.destinationTable cannot be set for scripts
+[0;32m[SUCCESS][0m Query 4 completed in 20s
+[0;34m[2025-11-05 14:42:19][0m Fetching table statistics...
+[0;34m[2025-11-05 14:42:38][0m ==========================================
+[0;34m[2025-11-05 14:42:38][0m PHASE 2 QUERY EXECUTION - COMPLETE
+[0;34m[2025-11-05 14:42:39][0m ==========================================
+[0;34m[2025-11-05 14:42:41][0m Total runtime: 5 minutes (324s)
+[0;32m[SUCCESS][0m All queries completed successfully! ✅
+[0;34m[2025-11-05 14:42:41][0m 
+[0;34m[2025-11-05 14:42:41][0m Next steps:
+[0;34m[2025-11-05 14:42:41][0m 1. Open Jupyter notebook: notebooks/phase2_analysis.ipynb
+[0;34m[2025-11-05 14:42:41][0m 2. Run notebook cells to import results and generate visualizations
+[0;34m[2025-11-05 14:42:41][0m 3. Review findings and prepare Phase 3 inputs

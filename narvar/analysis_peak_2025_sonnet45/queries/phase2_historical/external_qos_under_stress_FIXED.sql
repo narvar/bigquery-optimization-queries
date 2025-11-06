@@ -11,7 +11,7 @@ DECLARE analyze_periods ARRAY<STRING> DEFAULT [
   'Peak_2023_2024'
 ];
 
-DECLARE external_qos_threshold_seconds INT64 DEFAULT 60;
+DECLARE external_qos_threshold_seconds INT64 DEFAULT 30;  -- Updated 2025-11-06 from 60s to 30s
 
 -- ============================================================================
 -- CREATE THE OUTPUT TABLE

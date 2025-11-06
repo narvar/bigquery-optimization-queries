@@ -2,4 +2,4 @@ stress_state,total_jobs,qos_violations,qos_violation_pct,p95_execution_seconds,p
 NORMAL,0,0,,,,nan
 INFO,0,0,,,,nan
 WARNING,0,0,,,,nan
-CRITICAL,2223,141,8.603333333333333,392.5,10319.5,6.34
+CRITICAL,4446,412,12.818333333333333,392.5,10319.5,9.27

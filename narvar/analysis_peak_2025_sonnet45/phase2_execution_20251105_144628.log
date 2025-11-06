@@ -1,0 +1,20 @@
+[0;34m[2025-11-05 14:46:28][0m ==========================================
+[0;34m[2025-11-05 14:46:28][0m PHASE 2 QUERY EXECUTION - START
+[0;34m[2025-11-05 14:46:28][0m ==========================================
+[0;34m[2025-11-05 14:46:28][0m Project: narvar-data-lake
+[0;34m[2025-11-05 14:46:28][0m Dataset: query_opt
+[0;34m[2025-11-05 14:46:28][0m Log file: phase2_execution_20251105_144628.log
+[0;34m[2025-11-05 14:46:28][0m 
+[0;34m[2025-11-05 14:46:37][0m ==========================================
+[0;34m[2025-11-05 14:46:37][0m DRY-RUN VALIDATION
+[0;34m[2025-11-05 14:46:37][0m ==========================================
+[0;34m[2025-11-05 14:46:37][0m Validating all queries and estimating costs...
+[0;34m[2025-11-05 14:46:37][0m Validating Query 1...
+[1;33m[WARNING][0m Could not estimate Query 1
+[0;34m[2025-11-05 14:47:02][0m Validating Query 2...
+[1;33m[WARNING][0m Could not estimate Query 2
+[0;34m[2025-11-05 14:47:20][0m Validating Query 3...
+[1;33m[WARNING][0m Could not estimate Query 3
+[0;34m[2025-11-05 14:47:38][0m Validating Query 4...
+[1;33m[WARNING][0m Could not estimate Query 4
+[1;33m[WARNING][0m Execution cancelled by user.

@@ -1,17 +1,17 @@
 {
   "baseline_period": "Baseline_2025_Sep_Oct",
   "stress_metrics": {
-    "warning_pct": 0.013333333333333334,
-    "critical_pct": 4.920000000000001,
-    "total_stress_pct": 4.9333333333333345
+    "warning_pct": 0.0,
+    "critical_pct": 0.8633333333333334,
+    "total_stress_pct": 0.8633333333333334
   },
   "qos_metrics": {
     "baseline_violation_pct": NaN,
-    "critical_violation_pct": 6.34,
+    "critical_violation_pct": 9.27,
     "violation_increase_factor": 0.0
   },
   "recommendations": {
     "separate_monitor_base_reservation": false,
-    "capacity_buffer_needed_pct": 4.9333333333333345
+    "capacity_buffer_needed_pct": 0.8633333333333334
   }
 }
