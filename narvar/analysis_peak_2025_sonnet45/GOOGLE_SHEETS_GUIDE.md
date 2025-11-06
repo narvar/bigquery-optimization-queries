@@ -148,8 +148,12 @@ ORDER BY environment, total_slot_hours DESC;
 |--------|-------------|
 | `project_id` | BigQuery project identifier |
 | `environment` | PROD/QA/STG |
+| `slot_type` | **RESERVED** (uses bq-narvar-admin reservation) or **ON_DEMAND** (unreserved, billed separately) |
 | `mapping_status` | MATCHED (has retailer_moniker) or UNMATCHED |
 | `retailer_moniker` | Retailer name (NULL if unmatched) |
+| `first_job_date` | First job date in period (2025-09-01 to 2025-10-31) |
+| `last_job_date` | Last job date in period |
+| `days_span` | Total days between first and last job |
 | `total_jobs` | Total BQ jobs in period |
 | `active_days` | Number of days with activity (out of 61) |
 | `total_slot_hours` | Total slot consumption |
@@ -160,7 +164,43 @@ ORDER BY environment, total_slot_hours DESC;
 | `max_exec_seconds` | Longest query |
 | `qos_violations` | Count of queries >30s |
 | `qos_violation_pct` | % of queries >30s |
-| `total_cost_usd` | Estimated cost (slot-based) |
+| `total_cost_usd` | Internal cost allocation (slot_hours * $0.0494 blended rate) - **NOT actual billing** |
+
+### 💰 Cost Explanation
+
+**`total_cost_usd` represents:**
+- Internal resource consumption cost
+- Based on blended reserved slot rate: **$0.0494/slot-hour**
+- Formula: `(slot_ms / 3.6M) * $0.0494`
+
+**Blended rate calculation:**
+```
+(500 slots @ $0.048 + 500 @ $0.036 + 700 @ $0.06) / 1,700 = $0.0494/hr
+```
+
+**⚠️ NOT actual BigQuery billing:**
+- Reserved slots: Pre-paid, no additional charges
+- On-demand: Billed separately at $6.25/TB
+
+**See:** `COST_AND_RESERVATION_EXPLANATION.md` for full details
+
+---
+
+### 🎯 Slot Type Insights
+
+**97.8% of monitor traffic uses RESERVED slots**
+
+**15 projects using ON_DEMAND (2.2% of consumption):**
+- Sephora: 340 slot hours
+- OnRunning: 113 slot hours (also has 522 reserved!)
+- Uniqlo: 108 slot hours
+- Lululemon: 57 slot hours
+- Nike: 80 slot hours
+
+**⚠️ Note:** Some projects (like OnRunning) appear **twice** in the data:
+- Once for RESERVED usage
+- Once for ON_DEMAND usage
+- This is correct - they use both slot types
 
 ---
 

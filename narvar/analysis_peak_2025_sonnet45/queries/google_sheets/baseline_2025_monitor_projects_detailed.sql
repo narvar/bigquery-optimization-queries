@@ -22,6 +22,13 @@ SELECT
     ELSE 'UNKNOWN'
   END as environment,
   
+  -- Slot allocation type (RESERVED vs ON-DEMAND)
+  CASE
+    WHEN reservation_name = 'bq-narvar-admin:US.default' THEN 'RESERVED'
+    WHEN reservation_name = 'unreserved' THEN 'ON_DEMAND'
+    ELSE reservation_name
+  END as slot_type,
+  
   -- Mapping status (MATCHED/UNMATCHED)
   CASE
     WHEN consumer_subcategory = 'MONITOR' THEN 'MATCHED'
@@ -31,6 +38,11 @@ SELECT
   
   -- Retailer name (NULL if unmatched)
   retailer_moniker,
+  
+  -- === TIME PERIOD ===
+  MIN(DATE(start_time)) as first_job_date,
+  MAX(DATE(start_time)) as last_job_date,
+  DATE_DIFF(MAX(DATE(start_time)), MIN(DATE(start_time)), DAY) + 1 as days_span,
   
   -- === VOLUME METRICS ===
   COUNT(*) as total_jobs,
@@ -58,7 +70,7 @@ SELECT
 FROM `narvar-data-lake.query_opt.traffic_classification`
 WHERE analysis_period_label = 'Baseline_2025_Sep_Oct'
   AND consumer_subcategory IN ('MONITOR', 'MONITOR_UNMATCHED')  -- EXCLUDE MONITOR_BASE
-GROUP BY project_id, consumer_subcategory, retailer_moniker
+GROUP BY project_id, consumer_subcategory, retailer_moniker, reservation_name
 ORDER BY 
   environment,              -- PROD first, then QA, then STG
   total_slot_hours DESC;    -- Within each environment, highest consumers first
