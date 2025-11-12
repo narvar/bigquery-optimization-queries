@@ -1,0 +1,3 @@
+# Exclude large CSV result files
+narvar/analysis_peak_2025_sonnet45/results/hub_full_2025_analysis_*.csv
+narvar/analysis_peak_2025_sonnet45/results/hub_retailer_summary_*.csv
