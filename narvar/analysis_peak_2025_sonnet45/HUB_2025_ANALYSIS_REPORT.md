@@ -2,7 +2,6 @@
 **Comprehensive QoS, Cost, and Retailer Attribution Analysis**
 
 **Date**: November 12, 2025  
-**Analyst**: AI Assistant (Claude Sonnet 4.5)  
 **Periods Analyzed**: Peak_2024_2025 (Nov 2024-Jan 2025), Baseline_2025_Sep_Oct  
 **Total Queries**: 235,977 Hub (Looker) queries
 

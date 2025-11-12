@@ -2,7 +2,6 @@
 **Comprehensive QoS, Cost, and Per-Retailer Performance Profiles**
 
 **Date**: November 12, 2025  
-**Analyst**: AI Assistant (Claude Sonnet 4.5)  
 **Periods Analyzed**: Peak_2024_2025 (Nov 2024-Jan 2025), Baseline_2025_Sep_Oct  
 **Total Queries**: 205,483 Monitor queries across 284 retailers
 
@@ -367,15 +366,6 @@ Monitor demonstrates **excellent baseline performance** (97.8% compliance, $223/
 
 ## 📐 Cost Calculation Methodology - DETAILED
 
-### **Why Cost Calculation Matters**
-
-Initial analysis used **slot-based cost estimation** for ALL queries ($0.0494/slot-hour). This is INCORRECT for ON_DEMAND queries, which are billed by **data scanned** ($6.25/TB), not slots consumed.
-
-**Impact of Correction**:
-- **Before**: $2,504 total (slot-based for all)
-- **After**: $2,674 total (slot-based for RESERVED, per-TB for ON_DEMAND)
-- **Difference**: +$170 (6.8% underestimate)
-
 ### **Three BigQuery Billing Models Used by Monitor Retailers**
 
 #### **1. RESERVED_SHARED_POOL** (`bq-narvar-admin:US.default`)
@@ -446,14 +436,6 @@ Where:
 
 ---
 
-#### **3. RESERVED_PIPELINE** (`default-pipeline`)
-**Used by**: 0 Monitor retailers (0%)  
-**Billing Model**: Slot-based (similar to RESERVED_SHARED_POOL)
-
-**Note**: This reservation is used by AUTOMATED pipelines (Airflow, etc.), not Monitor retailers. Included for completeness but not relevant to this Monitor analysis.
-
----
-
 ### **Cost Comparison Example: RESERVED vs ON_DEMAND**
 
 **Scenario**: Retailer query scanning 50 GB, using 30 slots for 3 minutes
@@ -497,7 +479,7 @@ Cost: 0.0488 TB × $6.25 = $0.305
 
 **Finding from Data**: Most ON_DEMAND retailers use it **100% of the time** (not mixed), suggesting intentional configuration rather than overflow.
 
-**Recommendation**: Investigate with Platform team why these 14 retailers are on ON_DEMAND. If overflow, consider:
+**Recommendation**: Investigate with Data team why these 14 retailers are on ON_DEMAND. If overflow, consider:
 - Increasing RESERVED pool (reduce overflow)
 - Creating dedicated Monitor reservation (300-500 slots)
 - If intentional, ensure retailers understand cost trade-off
@@ -588,9 +570,6 @@ Cost: 0.0488 TB × $6.25 = $0.305
 - Recommendation: Keep on ON_DEMAND, move to RESERVED, or create dedicated pool
 - Implementation plan if changes needed
 
-**Timeline**: 3-5 days  
-**Owner**: Platform Engineering + Finance
-
 **Potential Impact**:
 - **If moved to dedicated RESERVED** (300 slots): Save $400-600/year with <2% violations
 - **If optimized for shared RESERVED**: Save $700-800/year but accept 3% violations
@@ -623,8 +602,6 @@ Cost: 0.0488 TB × $6.25 = $0.305
 - Reduce cost by 30-50% (save $200-300/year)
 - Improve P95 from 68s to <30s
 
-**Timeline**: 1-2 weeks  
-**Owner**: Data Engineering + fashionnova technical liaison
 
 ---
 
@@ -673,10 +650,6 @@ Cost: 0.0488 TB × $6.25 = $0.305
 4. Track improvement over 3-6 months
 
 **Expected Impact**: Reduce overall Monitor violations from 2.95% to <1.5% during Peak
-
-**Timeline**: 2-3 months (ongoing engagement)  
-**Owner**: Solutions Engineering + Customer Success
-
 ---
 
 ### **TO DO 5: Create Retailer Performance Dashboards** 📊 MEDIUM PRIORITY
@@ -696,10 +669,6 @@ Cost: 0.0488 TB × $6.25 = $0.305
 - `notebooks/monitor_retailer_profiles.ipynb` with interactive visualizations
 - `images/monitor_qos_heatmap.png`, `images/monitor_cost_ranking.png`, etc.
 - Monthly retailer performance scorecard
-
-**Timeline**: 1 week  
-**Owner**: Analytics team
-
 ---
 
 ### **TO DO 6: Peak vs Baseline Retailer Trends** ⏰ MEDIUM PRIORITY
@@ -716,10 +685,7 @@ Cost: 0.0488 TB × $6.25 = $0.305
 - "fashionnova degradation: Driven by 40% volume increase + complex queries"
 - "20 retailers improve during Peak (better query optimization deployed)"
 - "Peak violations cluster at specific hours (2-4 PM)"
-
-**Timeline**: 2-3 days  
 **Deliverable**: `MONITOR_PEAK_VS_BASELINE_ANALYSIS.md`
-
 ---
 
 ### **TO DO 7: Monitor vs Hub Comparison Study** 🔬 LOW PRIORITY
@@ -736,10 +702,7 @@ Cost: 0.0488 TB × $6.25 = $0.305
 - "Monitor = simple lookups (fast, cheap), Hub = complex aggregations (slow, expensive)"
 - "Hub queries are 4x longer and 75% slower on average"
 - "Different optimization strategies needed for each platform"
-
-**Timeline**: 1-2 days  
 **Deliverable**: `MONITOR_VS_HUB_COMPARISON.md`
-
 ---
 
 ## 📝 Analysis Code References
