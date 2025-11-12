@@ -188,3 +188,6 @@ GROUP BY analysis_section, analysis_period_label, monitor_base_intensity
 
 ORDER BY analysis_section, analysis_period_label;
 
+
+
+

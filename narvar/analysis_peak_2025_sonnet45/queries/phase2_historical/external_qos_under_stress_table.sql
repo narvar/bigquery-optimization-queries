@@ -97,3 +97,6 @@ ORDER BY analysis_period_label,
   CASE stress_state WHEN 'CRITICAL' THEN 1 WHEN 'WARNING' THEN 2 WHEN 'INFO' THEN 3 ELSE 4 END,
   total_jobs DESC;
 
+
+
+

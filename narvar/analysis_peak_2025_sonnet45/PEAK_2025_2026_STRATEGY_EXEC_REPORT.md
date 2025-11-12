@@ -5,9 +5,9 @@
 
 ## Executive Summary
 
-The data team recommends an **ad-hoc reactive capacity management strategy** for the upcoming Nov 2025 - Jan 2026 peak period rather than pre-configuring additional capacity. This decision is driven by cost-benefit analysis showing that pre-loading capacity would cost **$58K-$173K** with uncertain ROI, while **empirical analysis of 129 critical incidents during 2025** reveals that **69% stem from automated processes** (inefficient pipelines), **23% from internal users** (growing Metabase/analytics usage), and only **8% from external customer load spikes**—none of which are resolved by adding capacity.
+The data team recommends a **capacity management strategy based on continuous monitoring, automated controls, and rapid response capabilities** for the upcoming Nov 2025 - Jan 2026 peak period rather than pre-configuring additional capacity. The strategy includes: (1) **automated proactive monitoring** via Airflow DAGs running every 10 minutes to detect and alert on capacity stress, (2) **automated query termination** for long-running internal queries to preserve capacity for customer-facing workloads, (3) **staggered pipeline schedules** to reduce concurrent load (implemented Oct 9, 2025), and (4) **documented incident response procedures** with temporary capacity burst capabilities. This decision is driven by cost-benefit analysis showing that pre-loading capacity would cost **$58K-$173K** with uncertain ROI, while **empirical analysis of 129 critical incidents during 2025** reveals that **69% stem from automated processes** (inefficient pipelines), **23% from internal users** (growing Metabase/analytics usage), and only **8% from external customer load spikes**—none of which are resolved by adding capacity.
 
-**Key Evidence**: Peak 2024-2025 was successfully managed at **~$63K/month average cost** using our current 1,700-slot configuration combined with reactive monitoring and incident response.
+**Key Evidence**: Peak 2024-2025 was successfully managed at **~$63K/month average cost** using our current 1,700-slot configuration combined with monitoring, automated controls, and incident response capabilities.
 
 ---
 

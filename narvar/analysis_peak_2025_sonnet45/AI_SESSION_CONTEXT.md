@@ -1,7 +1,7 @@
 # AI Session Context - BigQuery Peak Capacity Planning
 
-**Last Updated**: November 5, 2025  
-**Current Phase**: Phase 1 Complete ✅ | Phase 2 Ready to Start 🚀  
+**Last Updated**: November 12, 2025  
+**Current Phase**: Phase 1 ✅ | Phase 2 ✅ | Next: Monitor/Hub Deep Dive 🎯  
 **For**: Future AI assistants and collaborators
 
 ---
@@ -229,24 +229,31 @@ AUTOMATED: Requires schedule data (not currently available)
 
 ---
 
-## 📁 File Structure Reference
+## 📁 File Structure Reference (Updated Nov 12, 2025)
+
+### **Root Folder** (Essential Docs Only - 6 files):
+```
+├── README.md                                    ← Project overview
+├── AI_SESSION_CONTEXT.md                        ← THIS FILE (for AI assistants)
+├── PHASE1_FINAL_REPORT.md                       ← Complete Phase 1 results
+├── PEAK_2025_2026_STRATEGY_EXEC_REPORT.md      ← Executive recommendation
+├── ROOT_CAUSE_ANALYSIS_FINDINGS.md             ← Root cause technical deep dive
+└── INV6_HUB_QOS_RESULTS.md                     ← Hub QoS crisis analysis ⭐ NEXT PRIORITY
+```
 
 ### **SQL Queries**:
 ```
 queries/
 ├── phase1_classification/
 │   ├── vw_traffic_classification_to_table.sql  ← MAIN PRODUCTION QUERY
-│   ├── external_consumer_classification.sql
-│   ├── automated_process_classification.sql
-│   └── internal_user_classification.sql
+│   └── (3 other classification queries)
 ├── phase2_historical/
-│   ├── peak_vs_nonpeak_analysis.sql  ← NEEDS UPDATE for physical table
-│   ├── qos_violations_historical.sql  ← NEEDS UPDATE
-│   ├── slot_heatmap_analysis.sql      ← NEEDS UPDATE
-│   └── yoy_growth_analysis.sql        ← NEEDS UPDATE
+│   ├── identify_capacity_stress_periods.sql    ← ✅ Stress detection
+│   ├── external_qos_under_stress.sql           ← ✅ Customer QoS during stress
+│   ├── monitor_base_stress_analysis.sql        ← ✅ Infrastructure analysis
+│   └── peak_vs_nonpeak_analysis_v2.sql         ← ✅ Overall patterns
 └── utils/
-    ├── validate_audit_log_completeness.sql
-    └── classification_diagnostics.sql
+    └── (validation and diagnostic queries)
 ```
 
 ### **Python Scripts**:
@@ -254,58 +261,35 @@ queries/
 scripts/
 ├── run_classification_all_periods.py       ← Multi-period automation
 ├── deduplicate_classification_table.py     ← Remove duplicate versions
-└── requirements.txt                         ← google-cloud-bigquery>=3.10.0
+└── requirements.txt
 ```
 
 ### **Documentation**:
 ```
-├── README.md                        ← Project overview
-├── PHASE1_FINAL_REPORT.md          ← Complete Phase 1 results ⭐
-├── AI_SESSION_CONTEXT.md           ← THIS FILE (for AI assistants)
-└── docs/
-    ├── CLASSIFICATION_STRATEGY.md  ← Temporal variability strategy
-    └── IMPLEMENTATION_STATUS.md     ← Implementation checklist
+docs/
+├── phase1/archive/          ← Phase 1 interim docs
+├── phase2/
+│   ├── investigations/      ← INV2, INV3 (reservation, mapping quality)
+│   ├── cost_analysis/       ← Cost summaries
+│   ├── archive/             ← Phase 2 status/process docs
+│   └── PHASE2_SCOPE.md      ← Phase 2 scope definition
+├── reference/               ← Cost explanations, reservation guides
+└── CLASSIFICATION_STRATEGY.md
 ```
 
----
+### **Results & Data**:
+```
+results/
+├── phase3_inputs.json                          ← Prepared for Phase 3
+├── stress_state_summary.csv                    ← Stress analysis results
+├── customer_qos_summary.csv                    ← QoS metrics
+├── monitor_base_qos_summary.csv                ← Infrastructure QoS
+├── baseline_2025_monitor_projects_FINAL.csv    ← All monitor projects
+└── (root cause analysis results)
 
-## 🚀 Phase 2: Next Steps
-
-### **What Needs to Be Done**:
-
-**1. Update Phase 2 Queries** to use `traffic_classification` table instead of inline classification:
-- Replace inline WITH clauses with: `FROM \`narvar-data-lake.query_opt.traffic_classification\``
-- Add period filtering: `WHERE analysis_period_label IN ('Peak_2024_2025', ...)`
-- Use latest versions only
-
-**2. Run Phase 2 Analysis**:
-- Peak vs. non-peak comparison
-- QoS violations analysis  
-- Slot utilization heatmaps
-- Year-over-year growth (investigate 2022 anomaly)
-
-**3. Investigate Critical Findings**:
-- monitor-base optimization opportunities
-- 2022 data quality issue
-- Category-specific capacity patterns
-
-### **Phase 2 Query Pattern** (Example):
-```sql
--- Old approach: Inline classification (slow, expensive)
-WITH audit_data AS (
-  SELECT ... FROM cloudaudit_googleapis_com_data_access
-  -- Complex classification logic repeated
-)
-
--- New approach: Use pre-classified table (fast, cheap)
-SELECT
-  analysis_period_label,
-  consumer_category,
-  COUNT(*) as jobs,
-  SUM(slot_hours) as slot_hours
-FROM `narvar-data-lake.query_opt.traffic_classification`
-WHERE analysis_period_label LIKE 'Peak%'
-GROUP BY analysis_period_label, consumer_category;
+images/         ← For visualizations (upcoming)
+notebooks/      ← For Jupyter analysis (upcoming)
+logs/           ← Execution logs
 ```
 
 ---
@@ -364,12 +348,97 @@ GROUP BY analysis_period_label, consumer_category;
 
 ---
 
-## ⚠️ Critical Issues to Address in Phase 2
+## ✅ Phase 2: Historical Analysis - COMPLETE
 
-1. **2022 Data Anomaly**: 3-11x higher volumes than 2023-2024 (investigate before using for projections)
-2. **MONITOR_BASE Optimization**: 8.74M slot-hours - single largest consumer (batch scheduling opportunity?)
-3. **Reliable Growth Trend**: Use 2023-2024 → 2024-2025 (+46-125% slot growth)
-4. **2025 Baseline**: Sep-Oct 2025 is freshest data for upcoming peak planning
+### **What Was Accomplished**:
+- **Root cause analysis of 129 critical incidents** (2025 data)
+- **Stress period identification** using production monitoring thresholds
+- **QoS impact assessment** during capacity stress
+- **Executive strategic report** created and approved
+
+### **Key Findings**:
+
+**1. Root Cause Distribution** (2025 Data - 129 Critical Incidents):
+- **69% AUTOMATED** (inefficient pipelines, not human error!)
+- **23% INTERNAL** (growing concern - up from 12% historically)
+- **8% EXTERNAL** (minimal customer load issues)
+
+**2. Hub QoS Crisis** 🚨:
+- **39.4% violation rate** during Peak_2024_2025 CRITICAL stress
+- vs. 8.5% for MONITOR (retailer queries)
+- **44x slower execution** (P95: 1,521s vs 34s)
+- **Urgent optimization needed before next peak**
+
+**3. Reservation Impact** (Critical Discovery):
+- **Three reservation types** found: RESERVED_SHARED_POOL, RESERVED_PIPELINE, ON_DEMAND
+- **Shared pool causes QoS degradation**: 49.6% violations vs 1.5% on on-demand during CRITICAL
+- **ON_DEMAND dominated Peak_2024_2025**: 56.75% of capacity (massive cost!)
+
+**4. Monitor-base Reclassification**:
+- Moved from EXTERNAL → AUTOMATED (correct - it's batch infrastructure)
+- **New capacity split**: EXTERNAL 6%, AUTOMATED 79%, INTERNAL 15%
+
+**5. Strategic Decision**:
+- **Monitoring-based approach** recommended (not pre-loading capacity)
+- **Cost avoidance**: $58K-$173K
+- **Focus**: Process optimization + automated controls
+
+### **Deliverables Created**:
+- `PEAK_2025_2026_STRATEGY_EXEC_REPORT.md` - Executive recommendation
+- `ROOT_CAUSE_ANALYSIS_FINDINGS.md` - Technical deep dive  
+- `INV6_HUB_QOS_RESULTS.md` - Hub performance crisis analysis
+- `docs/phase2/investigations/` - Supporting investigation files
+- `results/phase3_inputs.json` - Data for Phase 3 projections
+
+---
+
+## 🎯 Next Priority: Monitor & Hub Consumer Analysis
+
+### **Objective**:
+Understand **individual consumer behavior, costs, and QoS patterns** for:
+- **Monitor Projects** (per-retailer performance profiles)
+- **Hub** (dashboard-level analysis, identify 39% violation causes)
+
+**NOT a comparative study** - separate deep dives into each consumer type.
+
+### **Analysis 1: Monitor Project Performance Profiles**
+
+**Questions to Answer**:
+1. Who does the most work? (top 20 retailers by job volume, slot consumption)
+2. Costs per retailer (slot-hours, estimated cost, trends over time)
+3. Type of activity (query patterns, execution time distribution, usage frequency)
+4. QoS issues per retailer (which retailers have highest violation rates?)
+
+**Deliverable**: Per-retailer performance dashboard with:
+- Cost ranking
+- QoS compliance scores
+- Usage patterns (time-of-day, frequency)
+- Optimization targets (expensive + poor QoS retailers)
+
+### **Analysis 2: Hub Dashboard Deep Dive** 🚨
+
+**Critical Issue**: 39.4% violation rate during Peak_2024_2025 CRITICAL stress
+
+**Questions to Answer**:
+1. Which specific queries/dashboards violate SLA? (query patterns, dashboard IDs if available)
+2. Who is using Hub? (concurrent users, usage frequency, auto-refresh patterns)
+3. What drives the costs? (slot consumption by query type, data volume scanned)
+4. QoS pattern analysis (when violations occur, correlation with stress, time patterns)
+5. **Why 44x slower than Monitor?** (query complexity, joins, aggregations)
+
+**Deliverable**: Hub optimization recommendations:
+- Top 10 slowest queries to optimize
+- Dashboard governance recommendations
+- Potential separate reservation need
+- Expected QoS improvement from optimizations
+
+### **Tools Needed**:
+- SQL queries for per-consumer analysis
+- Jupyter notebook with visualizations
+- Images saved to `/images` folder
+- Analysis markdown with findings
+
+**Estimated Duration**: 1-2 days
 
 ---
 
@@ -411,64 +480,92 @@ ORDER BY total_slot_hours DESC;
 
 ---
 
-## 🎯 Phase 2-4 Roadmap
+## 🎯 Project Roadmap
 
-### **Phase 2: Historical Analysis** (Next)
-**Goal**: Understand historical patterns to inform predictions
+### **Phase 1: Traffic Classification** ✅ COMPLETE
+- 43.8M jobs classified across 9 periods
+- 35+ service account patterns
+- Production table created
 
-**Queries to Update** (4 queries need modification to use physical table):
-1. `peak_vs_nonpeak_analysis.sql` - Peak multipliers, patterns
-2. `qos_violations_historical.sql` - QoS issues, slot starvation
-3. `slot_heatmap_analysis.sql` - Hour-by-hour demand patterns
-4. `yoy_growth_analysis.sql` - Growth rates, CAGR
+### **Phase 2: Historical Analysis** ✅ COMPLETE
+- Root cause analysis (129 incidents)
+- Stress period identification
+- Executive strategic report
+- **Decision**: Monitoring-based approach (not pre-loading capacity)
 
-**Expected Runtime**: 1-2 days (queries are fast with pre-classified table)
+### **Current: Monitor & Hub Consumer Analysis** 🎯 IN PROGRESS
+**Goal**: Deep dive into individual consumer performance
 
-### **Phase 3: Prediction** (Not Started)
-**Goal**: Forecast Nov 2025 - Jan 2026 peak demand
+**Focus Areas**:
+1. Per-retailer monitor performance profiles
+2. Hub dashboard optimization (39% violation rate - critical!)
+3. Cost and usage pattern analysis
+4. QoS issue identification by consumer
 
-**Approach**:
-- Apply growth rates from 2023-2024 → 2024-2025
-- Use 2025 baseline as starting point
-- Calculate expected slot demand by hour/category
-- Predict QoS violations under current 1,700-slot capacity
+**Estimated Duration**: 1-2 days
 
-### **Phase 4: Simulation** (Not Started)
-**Goal**: Test slot allocation strategies
+### **Phase 3: Prediction & Forecasting** (Future)
+**Goal**: Forecast Nov 2025 - Jan 2026 peak demand (if needed)
 
-**Scenarios**:
-- A: Separate reservations by category (3 reservations)
-- B: Priority-based single reservation (1 reservation with priorities)
-- C: Hybrid (dedicated for external + shared for others)
-- D: Capacity increase (evaluate 500/1000/1500 additional slots)
+**Note**: May be deferred based on monitoring-first strategy  
+**Inputs**: Already prepared in `results/phase3_inputs.json`
+
+### **Phase 4: Optimization & Governance** (Future)
+**Goal**: Implement findings
+
+**Focus**:
+- Hub dashboard optimization (critical!)
+- Retailer query governance
+- Capacity monitoring enhancements
 
 ---
 
-## 📖 Additional Documentation
+## 📖 Key Documentation by Topic
 
-**Comprehensive Reports**:
-- `PHASE1_FINAL_REPORT.md` - Complete Phase 1 results and findings
-- `docs/CLASSIFICATION_STRATEGY.md` - Temporal variability handling
+**Strategic & Executive**:
+- `PEAK_2025_2026_STRATEGY_EXEC_REPORT.md` - Executive recommendation (monitoring-based approach)
+- `ROOT_CAUSE_ANALYSIS_FINDINGS.md` - 129 incidents analyzed (69% automated, 23% internal, 8% external)
 
-**Archived Docs** (Historical Reference):
-- `docs/archive/PERIOD_COVERAGE_PLAN.md` - Original planning doc
-- `docs/archive/PHASE1_COMPLETION_SUMMARY.md` - Interim summary
-- `docs/archive/PHASE1_IMPROVEMENTS.md` - Issue fixes applied
+**Phase Reports**:
+- `PHASE1_FINAL_REPORT.md` - Classification framework (43.8M jobs, 9 periods)
+- Phase 2 report incorporated into executive summary above
+
+**Critical Issues**:
+- `INV6_HUB_QOS_RESULTS.md` - Hub 39% violation crisis (NEXT PRIORITY)
+- `docs/phase2/investigations/INV2_RESERVATION_IMPACT_RESULTS.md` - Shared pool bottleneck
+- `docs/phase2/investigations/INV3_MAPPING_QUALITY_RESULTS.md` - Retailer mapping quality
+
+**Reference**:
+- `docs/CLASSIFICATION_STRATEGY.md` - Temporal variability approach
+- `docs/reference/` - Cost models, reservation types, guides
+
+**Archived**:
+- `docs/phase1/archive/` - Phase 1 development docs
+- `docs/phase2/archive/` - Phase 2 status/process docs
 
 ---
 
 ## 🔑 Key Takeaways for Future Sessions
 
-1. **Use the physical table** - Don't reclassify, query `traffic_classification`
-2. **Latest baseline is Sep-Oct 2025** - Use for 2025-2026 peak planning
-3. **monitor-base is critical** - 85% of external capacity, track separately
-4. **Don't use 2022 data alone** - Investigate anomaly first
-5. **External ~2x peak multiplier** - Capacity planning needs this buffer
-6. **Pattern library is comprehensive** - 35+ patterns, covers 2022-2025
+### **Data & Tables**:
+1. **Use physical table** - Query `narvar-data-lake.query_opt.traffic_classification`
+2. **Latest baseline**: Sep-Oct 2025 (4.47M jobs, most recent data)
+3. **Table coverage**: 43.8M jobs, 9 periods (Sep 2022 - Oct 2025)
+
+### **Critical Findings**:
+4. **Hub has QoS crisis** - 39% violations during Peak_2024_2025 CRITICAL (44x slower than Monitor)
+5. **Root causes**: 69% automated, 23% internal, 8% external (NOT human error!)
+6. **Shared pool bottleneck**: 49.6% violations on reserved vs 1.5% on on-demand during stress
+7. **monitor-base reclassified**: Now AUTOMATED (was EXTERNAL) - it's infrastructure batch processing
+
+### **Capacity Strategy**:
+8. **Monitoring-based approach approved** - Not pre-loading capacity ($58K-$173K avoided)
+9. **Peak multipliers**: EXTERNAL 1.97x, AUTOMATED 1.63x, INTERNAL 1.67x
+10. **Proactive controls in place**: Metabase termination DAG, Airflow staggering, real-time monitoring
 
 ---
 
-**For detailed Phase 1 results, see**: `PHASE1_FINAL_REPORT.md`
+**For next session priorities**: See "Next Priority: Monitor & Hub Consumer Analysis" section above
 
-**For classification strategy and temporal handling, see**: `docs/CLASSIFICATION_STRATEGY.md`
+**For complete technical details**: See root folder documentation files
 

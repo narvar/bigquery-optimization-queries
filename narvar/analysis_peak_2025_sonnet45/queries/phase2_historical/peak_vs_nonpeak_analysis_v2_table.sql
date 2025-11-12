@@ -97,3 +97,6 @@ FROM peak_by_year
 GROUP BY consumer_category
 ORDER BY MAX(CASE WHEN year = 2024 THEN total_slot_hours END) DESC;
 
+
+
+

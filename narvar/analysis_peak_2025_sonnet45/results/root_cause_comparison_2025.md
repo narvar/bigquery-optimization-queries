@@ -229,3 +229,6 @@ The 2025 data shows a **significant shift toward INTERNAL incidents** (12% → 2
 The findings support reactive management over expensive capacity pre-commitment.
 
 
+
+
+
