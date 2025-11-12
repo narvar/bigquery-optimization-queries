@@ -25,11 +25,16 @@ The Monitor platform (direct retailer API queries) processed **205,483 queries**
 - **P95 execution: 10.1 seconds** - excellent performance
 - Stable usage: **~440 queries/day** across all retailers
 
-**Cost Efficiency:**
-- **$208/month average cost** for entire Monitor platform
-- **$0.0059 per query** (0.6 cents) - more efficient than Hub ($0.0075)
-- **0.12 slot-hours per query** - lower than Hub (0.15)
-- **Total cost: $2,503.88** across both periods
+**Cost Efficiency (CORRECTED with ON_DEMAND billing):**
+- **$223/month average cost** for entire Monitor platform (corrected from $208)
+- **$0.013 per query** (1.3 cents) - includes ON_DEMAND premium pricing
+- **0.12 slot-hours per query** (for RESERVED queries)
+- **Total cost: $2,674** across both periods (67% RESERVED, 33% ON_DEMAND)
+
+**Reservation Distribution:**
+- **94% of retailers** use RESERVED_SHARED_POOL (default 1,700-slot shared pool)
+- **6% of retailers** use ON_DEMAND (pay-per-TB: $6.25/TB)
+- ON_DEMAND retailers pay **16.6x more per query** but get **2.3x better QoS** (1.34% vs 3.03% violations)
 
 **Usage Distribution:**
 - Top retailer concentration: **Top 5 retailers = 27% of queries**
@@ -61,11 +66,15 @@ The Monitor platform (direct retailer API queries) processed **205,483 queries**
 **Finding**: Monitor queries are simpler than Hub queries - mostly straightforward lookups and basic analytics rather than complex dashboard aggregations.
 
 **Cost Concentration:**
-- **fashionnova alone**: $673 (27% of total Monitor cost!)
-- **Top 5 retailers**: $807 (32% of total cost)
-- **Top 20 retailers**: $2,141 (85% of total cost)
+- **fashionnova alone**: $673 (25% of total Monitor cost, uses RESERVED)
+- **Top 5 retailers**: $977 (37% of total cost, includes 3 ON_DEMAND retailers)
+- **Top 20 retailers**: $1,165 (44% of total cost)
 
-**Critical Finding**: Monitor costs are highly concentrated - **20 retailers (7% of total) drive 85% of costs**. This creates clear optimization targets.
+**Reservation-Based Cost Breakdown:**
+- **RESERVED_SHARED_POOL**: $1,791 (67% of cost) - 213 retailers
+- **ON_DEMAND**: $883 (33% of cost) - 14 retailers paying premium for better QoS
+
+**Critical Finding**: While most retailers use RESERVED (94%), the 6% using ON_DEMAND account for 33% of costs due to per-TB pricing premium.
 
 ### **Critical Issues Identified** 🚨
 
@@ -80,27 +89,50 @@ The Monitor platform (direct retailer API queries) processed **205,483 queries**
 - 3,141 violations during Peak vs 1,395 during Baseline
 - Consistent with Hub pattern - shared capacity stress
 
-**3. Cost Concentration** (MEDIUM PRIORITY)
-- Single retailer (fashionnova) represents 27% of Monitor costs
-- Top 5 retailers = 32% of costs
+**3. ON_DEMAND Cost Premium** (HIGH PRIORITY)
+- 14 retailers (6%) using ON_DEMAND account for 33% of costs ($883)
+- Pay 7.9x more per query than RESERVED but get 2.3x better QoS
+- Top 3 (lululemon, nike, sephora) = $324 in ON_DEMAND costs
+- Need investigation: intentional or accidental reservation assignment?
+
+**4. Cost Concentration** (MEDIUM PRIORITY)
+- Single retailer (fashionnova) represents 25% of Monitor costs
+- Top 5 retailers = 37% of costs (includes ON_DEMAND premium)
 - High dependency on small number of large retailers
 
 ### **Next Steps: 5 Priority Actions** 📋
 
 **High Priority (Immediate):**
-1. **Optimize fashionnova queries** - 24.8% violations, $673 cost, highest priority single retailer
-2. **Deep dive into business questions by retailer** using SQL Semantic Framework to understand query patterns
+1. **Optimize fashionnova queries** - 24.8% violations, $673 cost (54% of Peak cost), RESERVED pool
+2. **Investigate ON_DEMAND retailer assignment** - Why are 14 retailers on ON_DEMAND? Intentional or overflow? Cost/benefit analysis
+3. **Deep dive into business questions by retailer** using SQL Semantic Framework to understand query patterns
 
 **Medium Priority:**
-3. **Engage high-violation retailers** (tatcha, calphalon, gracobaby) for query optimization
-4. **Create retailer-level dashboards** with QoS and cost metrics for proactive monitoring
-5. **Analyze Peak vs Baseline degradation** to understand capacity stress impact on specific retailers
+4. **ON_DEMAND cost optimization** - lululemon, nike, sephora pay $324 combined; evaluate move to dedicated RESERVED or accept premium
+5. **Engage high-violation retailers** (tatcha, calphalon, gracobaby) for query optimization on RESERVED pool
+6. **Create retailer-level dashboards** with QoS, cost, AND reservation type monitoring
+7. **Analyze Peak vs Baseline degradation** to understand capacity stress impact by reservation type
 
 ### **Bottom Line** 🎯
 
-Monitor demonstrates **excellent baseline performance** (97.8% compliance, $208/month cost, 4.1s avg execution) with simpler query patterns than Hub. However, the platform is **highly concentrated** - 7% of retailers drive 85% of costs, with fashionnova alone representing 27% of total Monitor costs. The 2.1x Peak violation increase mirrors Hub's pattern, confirming shared capacity stress as the root cause.
+Monitor demonstrates **excellent baseline performance** (97.8% compliance, $223/month corrected cost, 4.1s avg execution) with simpler query patterns than Hub. However, two critical findings require attention:
 
-**Immediate action required**: Optimize fashionnova queries (24.8% violations, $673 cost) before Nov 2025 peak. Engaging this single retailer could reduce Monitor violations by 50% and save $300-400/year.
+**Cost Concentration Risk**:
+- 7% of retailers (Top 20) drive 94% of costs
+- **fashionnova alone**: 54% of Peak cost ($673), 47% of violations
+- **ON_DEMAND retailers (6%)**: 33% of total cost ($883) paying 7.9x premium for 2.3x better QoS
+
+**Reservation-Based QoS Gap**:
+- **RESERVED pool**: 3.03% violations (contention during peak)
+- **ON_DEMAND**: 1.34% violations (2.3x better, but 7.9x more expensive)
+- 14 retailers paying $883 premium for better reliability
+
+**Immediate Actions Required**:
+1. **fashionnova optimization** (RESERVED, 24.8% violations, $673 cost) - fix 47% of Monitor violations
+2. **Investigate ON_DEMAND assignment** - Are 14 retailers intentionally on ON_DEMAND or accidentally overflowing? Cost/benefit analysis needed
+3. **Evaluate dedicated Monitor reservation** (300-500 slots) - Could reduce RESERVED violations from 3.03% to <1.5% at lower cost than ON_DEMAND
+
+**Strategic Decision**: Should high-value ON_DEMAND retailers stay on premium tier (better QoS) or move to dedicated RESERVED pool (lower cost, potentially acceptable QoS)?
 
 ---
 
@@ -138,68 +170,74 @@ Monitor demonstrates **excellent baseline performance** (97.8% compliance, $208/
 
 ---
 
-## 👥 Top 20 Retailers by Query Volume
+## 👥 Top 20 Retailers by Query Volume (WITH RESERVATION INFO)
 
-| Rank | Retailer | Queries (Peak) | Slot-Hours | Cost | Violation % | Status |
-|------|----------|----------------|------------|------|-------------|--------|
-| 1 | astrogaming | 8,831 | 0.23 | $0.23 | 0.0% | ✅ Excellent |
-| 2 | huckberry | 7,888 | 1,444.79 | $71.38 | 1.1% | ✅ Good |
-| 3 | zimmermann | 6,624 | 0.07 | $0.02 | 0.1% | ✅ Excellent |
-| 4 | rapha | 6,435 | 323.34 | $16.15 | 3.1% | ⚠️ Acceptable |
-| 5 | fashionnova | 5,911 | 13,628.21 | $673.32 | 24.8% | 🚨 **CRITICAL** |
-| 6 | bjs | 5,136 | 44.88 | $2.41 | 0.2% | ✅ Excellent |
-| 7 | onrunning | 4,961 | 275.26 | $13.64 | 1.4% | ✅ Good |
-| 8 | centerwell | 3,358 | 45.83 | $2.43 | 0.1% | ✅ Excellent |
-| 9 | panerai | 2,830 | 23.96 | $1.24 | 0.1% | ✅ Excellent |
-| 10 | chanel | 2,825 | 54.29 | $2.84 | 0.4% | ✅ Excellent |
-| 11 | vancleefarpels | 2,585 | 60.25 | $3.00 | 0.4% | ✅ Excellent |
-| 12 | cartierus | 2,428 | 29.98 | $1.53 | 0.1% | ✅ Excellent |
-| 13 | ninja-kitchen-emea | 2,304 | 38.58 | $2.00 | 0.1% | ✅ Excellent |
-| 14 | levi | 1,928 | 72.01 | $3.60 | 0.1% | ✅ Excellent |
-| 15 | lululemon | 1,759 | 530.73 | $26.24 | 1.6% | ✅ Good |
-| 16 | iwcschaffhausen | 1,758 | 2.63 | $0.13 | 0.1% | ✅ Excellent |
-| 17 | johnhardy | 1,755 | 40.68 | $2.08 | 0.0% | ✅ Excellent |
-| 18 | newbalance | 1,610 | 28.92 | $1.50 | 0.1% | ✅ Excellent |
-| 19 | worldmarket | 1,575 | 38.00 | $1.85 | 0.2% | ✅ Excellent |
-| 20 | blundstoneusa | 1,472 | 24.77 | $1.21 | 0.0% | ✅ Excellent |
+| Rank | Retailer | Queries | Reservation | Slot-Hrs | Cost | Viol % | Status |
+|------|----------|---------|-------------|----------|------|--------|--------|
+| 1 | astrogaming | 8,831 | RESERVED | 0.23 | $0.23 | 0.0% | ✅ Excellent |
+| 2 | huckberry | 7,888 | RESERVED | 1,444.79 | $71.38 | 1.1% | ✅ Good |
+| 3 | zimmermann | 6,624 | RESERVED | 0.07 | $0.02 | 0.1% | ✅ Excellent |
+| 4 | rapha | 6,435 | RESERVED | 323.34 | $16.15 | 3.1% | ⚠️ Acceptable |
+| 5 | **fashionnova** | 5,911 | **RESERVED** | 13,628.21 | **$673.32** | **24.8%** | 🚨 **CRITICAL** |
+| 6 | bjs | 5,136 | RESERVED | 44.88 | $2.41 | 0.2% | ✅ Excellent |
+| 7 | onrunning | 4,961 | RESERVED | 275.26 | $13.64 | 1.4% | ✅ Good |
+| 8 | centerwell | 3,358 | RESERVED | 45.83 | $2.43 | 0.1% | ✅ Excellent |
+| 9 | panerai | 2,830 | RESERVED | 23.96 | $1.24 | 0.1% | ✅ Excellent |
+| 10 | chanel | 2,825 | RESERVED | 54.29 | $2.84 | 0.4% | ✅ Excellent |
+| 11 | vancleefarpels | 2,585 | RESERVED | 60.25 | $3.00 | 0.4% | ✅ Excellent |
+| 12 | cartierus | 2,428 | RESERVED | 29.98 | $1.53 | 0.1% | ✅ Excellent |
+| 13 | ninja-kitchen-emea | 2,304 | RESERVED | 38.58 | $2.00 | 0.1% | ✅ Excellent |
+| 14 | levi | 1,928 | RESERVED | 72.01 | $3.60 | 0.1% | ✅ Excellent |
+| 15 | **lululemon** | 1,759 | **ON_DEMAND** | 530.73 | **$121.08** | 1.6% | 💰 Premium |
+| 16 | iwcschaffhausen | 1,758 | RESERVED | 2.63 | $0.13 | 0.1% | ✅ Excellent |
+| 17 | johnhardy | 1,755 | RESERVED | 40.68 | $2.08 | 0.0% | ✅ Excellent |
+| 18 | newbalance | 1,610 | RESERVED | 28.92 | $1.50 | 0.1% | ✅ Excellent |
+| 19 | worldmarket | 1,575 | RESERVED | 38.00 | $1.85 | 0.2% | ✅ Excellent |
+| 20 | blundstoneusa | 1,472 | RESERVED | 24.77 | $1.21 | 0.0% | ✅ Excellent |
 
-**Top 20 Total**: 73,013 queries (69% of Peak queries)
+**Top 20 Total**: 73,013 queries (69% of Peak queries), $807 cost
 
 **Retailer Concentration**: 
 - Top 5: 35,689 queries (34% of Peak)
 - Top 20: 73,013 queries (69% of Peak)
-- Much more concentrated than Hub (Hub top 20 = 22%)
+- **Reservation split in Top 20**: 19 RESERVED, 1 ON_DEMAND (lululemon)
+
+**Note**: lululemon's cost jumped from $26 to $121 after correcting for ON_DEMAND per-TB billing (98.8% of their queries use ON_DEMAND)
 
 ---
 
-## 👑 Top 20 Retailers by Cost (Slot Consumption)
+## 👑 Top 20 Retailers by Cost (WITH RESERVATION INFO)
 
-| Rank | Retailer | Slot-Hours | Cost | Queries | Avg Exec Time | Violation % |
-|------|----------|------------|------|---------|---------------|-------------|
-| 1 | **fashionnova** | 13,628.21 | **$673.32** | 5,911 | 15.4s | 🚨 **24.8%** |
-| 2 | huckberry | 1,444.79 | $71.38 | 7,888 | 6.3s | ✅ 1.1% |
-| 3 | lululemon | 530.73 | $26.24 | 1,759 | 3.0s | ✅ 1.6% |
-| 4 | rapha | 323.34 | $16.15 | 6,435 | 6.0s | ⚠️ 3.1% |
-| 5 | onrunning | 275.26 | $13.64 | 4,961 | 5.4s | ✅ 1.4% |
-| 6 | sephora | 189.10 | $9.37 | 1,168 | 4.5s | ✅ - |
-| 7 | thenorthface | 161.05 | $7.94 | 1,263 | 6.5s | ✅ - |
-| 8 | simonk-test | 140.03 | $6.92 | 291 | 141.3s | 🚨 **80.4%** |
-| 9 | tatcha | 125.43 | $6.20 | 527 | 48.7s | 🚨 **38.3%** |
-| 10 | crewclothing | 124.48 | $6.15 | 1,012 | 30.1s | 🚨 **15.1%** |
-| 11 | frenchtoast | 113.16 | $5.60 | 688 | 20.6s | 🚨 **19.3%** |
-| 12 | jcpenney | 105.29 | $5.20 | 199 | 10.1s | ✅ - |
-| 13 | ninjakitchen | 102.32 | $5.10 | 1,170 | 3.7s | ✅ - |
-| 14 | thenorthfacenora | 99.10 | $4.89 | 935 | 9.9s | ⚠️ 8.8% |
-| 15 | nike | 85.53 | $4.26 | 1,272 | 1.6s | ✅ - |
-| 16 | oldnavy | 74.24 | $3.67 | 160 | 3.0s | ✅ - |
-| 17 | levi | 72.01 | $3.60 | 1,928 | 2.7s | ✅ - |
-| 18 | vancleefarpels | 60.25 | $3.00 | 2,585 | 2.0s | ✅ - |
-| 19 | chanel | 54.29 | $2.84 | 2,825 | 2.6s | ✅ - |
-| 20 | forever21 | 46.05 | $2.28 | 83 | 2.4s | ✅ - |
+| Rank | Retailer | Cost | Reservation | Slot-Hrs | Queries | $/Query | Viol % | TB Scanned |
+|------|----------|------|-------------|----------|---------|---------|--------|------------|
+| 1 | **fashionnova** | **$673.32** | RESERVED | 13,628.21 | 5,911 | $0.1139 | 🚨 24.8% | - |
+| 2 | **lululemon** | **$121.08** | **ON_DEMAND** | 530.73 | 1,759 | **$0.0689** | ✅ 1.6% | **19.4 TB** |
+| 3 | **nike** | **$110.08** | **ON_DEMAND** | 85.53 | 1,272 | **$0.0866** | ✅ - | **17.6 TB** |
+| 4 | **sephora** | **$92.93** | **ON_DEMAND** | 189.10 | 1,168 | **$0.0796** | ✅ - | **14.9 TB** |
+| 5 | huckberry | $71.38 | RESERVED | 1,444.79 | 7,888 | $0.0090 | ✅ 1.1% | - |
+| 6 | rapha | $16.15 | RESERVED | 323.34 | 6,435 | $0.0025 | ⚠️ 3.1% | - |
+| 7 | onrunning | $13.64 | RESERVED | 275.26 | 4,961 | $0.0027 | ✅ 1.4% | - |
+| 8 | **gap** | **$11.93** | **ON_DEMAND** | - | 85 | **$0.1404** | ✅ - | **1.9 TB** |
+| 9 | thenorthface | $7.94 | RESERVED | 161.05 | 1,263 | $0.0063 | ✅ - | - |
+| 10 | simonk-test | $6.92 | RESERVED | 140.03 | 291 | $0.0238 | 🚨 80.4% | - |
+| 11 | tatcha | $6.20 | RESERVED | 125.43 | 527 | $0.0118 | 🚨 38.3% | - |
+| 12 | crewclothing | $6.15 | RESERVED | 124.48 | 1,012 | $0.0061 | 🚨 15.1% | - |
+| 13 | frenchtoast | $5.60 | RESERVED | 113.16 | 688 | $0.0081 | 🚨 19.3% | - |
+| 14 | jcpenney | $5.20 | RESERVED | 105.29 | 199 | $0.0261 | ✅ - | - |
+| 15 | ninjakitchen | $5.10 | RESERVED | 102.32 | 1,170 | $0.0044 | ✅ - | - |
+| 16 | thenorthfacenora | $4.89 | RESERVED | 99.10 | 935 | $0.0052 | ⚠️ 8.8% | - |
+| 17 | **asics** | **$4.04** | **ON_DEMAND** | - | 166 | **$0.0243** | ✅ - | **0.6 TB** |
+| 18 | levi | $3.60 | RESERVED | 72.01 | 1,928 | $0.0019 | ✅ - | - |
+| 19 | vancleefarpels | $3.00 | RESERVED | 60.25 | 2,585 | $0.0012 | ✅ - | - |
+| 20 | chanel | $2.84 | RESERVED | 54.29 | 2,825 | $0.0010 | ✅ - | - |
 
-**Top 20 Total**: $1,088.93 (43% of total Monitor cost)
+**Top 20 Total**: $1,165.45 (44% of Peak Monitor cost)
 
-**Critical Pattern**: **fashionnova dominates** - 27% of total cost with severe QoS issues (24.8% violations). Single retailer optimization could reduce Monitor violations by ~50%.
+**Critical Patterns**:
+- **fashionnova (RESERVED)** dominates: 54% of Peak cost with severe QoS issues
+- **5 ON_DEMAND retailers** in top 20: lululemon (#2), nike (#3), sephora (#4), gap (#8), asics (#17)
+- **ON_DEMAND premium**: lululemon pays $121 vs estimated $26 on RESERVED (4.6x more) but gets better QoS
+- **Cost/query variance**: ON_DEMAND ($0.07-0.14) vs RESERVED ($0.001-0.11) - wide range based on data scanned
 
 ---
 
@@ -273,39 +311,219 @@ Monitor demonstrates **excellent baseline performance** (97.8% compliance, $208/
 
 ---
 
-## 💰 Cost Analysis
+## 💰 Cost Analysis (CORRECTED with Reservation-Based Billing)
 
-### **Total Monitor Cost: $2,503.88**
+### **Total Monitor Cost: $2,673.79** (CORRECTED)
 
-| Period | Cost | Slot-Hours | Queries | Avg Cost/Query |
-|--------|------|------------|---------|----------------|
-| **Peak_2024_2025** | $1,472.51 | 29,780 | 106,319 | $0.0139 |
-| **Baseline_2025_Sep_Oct** | $1,031.37 | 20,824 | 99,164 | $0.0104 |
-| **Total** | **$2,503.88** | **50,604** | **205,483** | **$0.0122** |
+| Period | Reserved Cost | ON_DEMAND Cost | Total Cost | Queries | Avg Cost/Query |
+|--------|---------------|----------------|------------|---------|----------------|
+| **Peak_2024_2025** | $891.49 | $349.32 | **$1,240.82** | 106,319 | $0.0117 |
+| **Baseline_2025_Sep_Oct** | $899.31 | $533.68 | **$1,432.99** | 99,164 | $0.0145 |
+| **Total (Both Periods)** | **$1,790.80** | **$882.99** | **$2,673.79** | 205,483 | **$0.0130** |
 
-**Monthly Average**: $208.66/month (assuming 12-month period)
+**Monthly Average**: $222.82/month (corrected from initial $208.66 estimate)
 
-**Peak Cost Increase**: $441 (43% higher than Baseline) despite only 7% more queries - driven by more expensive queries during peak.
+**Why Baseline Costs More Than Peak?** Baseline has MORE ON_DEMAND usage ($534 vs $349), suggesting:
+- Higher capacity stress during Sep-Oct 2025 forcing queries to ON_DEMAND
+- Some retailers moved FROM ON_DEMAND TO RESERVED between periods
+- ON_DEMAND overflow is higher during certain baseline windows
 
-### **Cost Efficiency Metrics**
+### **Cost Breakdown by Reservation Type (Peak_2024_2025)**
 
-- **Avg Slot-Hours per Query**: 0.12 slot-hours (20% lower than Hub)
-- **Avg Cost per Query**: $0.0059 (vs Hub $0.0075) - 21% more efficient
-- **Cost per Retailer**: $8.82/month average (wide variance!)
+| Reservation Type | Retailers | Queries | Cost | % of Cost | Avg $/Query | QoS Viol % |
+|------------------|-----------|---------|------|-----------|-------------|------------|
+| **RESERVED_SHARED_POOL** | 213 (94%) | 101,319 | $891.49 | 71.8% | $0.0088 | 3.03% |
+| **ON_DEMAND** | 14 (6%) | 5,000 | $349.32 | 28.2% | $0.0698 | 1.34% |
+| **Total** | **227** | **106,319** | **$1,240.82** | **100%** | **$0.0117** | **2.95%** |
 
-**Finding**: Monitor queries are more cost-efficient than Hub on average, but high variance across retailers creates optimization opportunities.
+**Critical Finding**: 6% of retailers (ON_DEMAND) account for 28% of costs, paying **7.9x more per query** but getting **2.3x better QoS**.
 
-### **Cost Concentration by Retailer**
+### **Cost Efficiency Metrics by Reservation**
 
-| Tier | Retailers | % of Retailers | Cost | % of Total Cost |
-|------|-----------|----------------|------|-----------------|
-| **Top 1** (fashionnova) | 1 | 0.4% | $673 | 27% |
-| **Top 5** | 5 | 1.8% | $807 | 32% |
-| **Top 10** | 10 | 3.5% | $1,032 | 41% |
-| **Top 20** | 20 | 7.0% | $2,141 | 85% |
-| **Remaining 264** | 264 | 93% | $363 | 15% |
+| Metric | RESERVED | ON_DEMAND | Ratio |
+|--------|----------|-----------|-------|
+| **Avg $/Query** | $0.0088 | $0.0698 | 7.9x more expensive |
+| **Cost Model** | Slot-hours | TB scanned | Different models |
+| **QoS Violations** | 3.03% | 1.34% | 2.3x better QoS |
+| **Best For** | High volume, cost-sensitive | Low volume, QoS-critical |
 
-**Critical Finding**: **Extreme cost concentration** - 20 retailers (7%) drive 85% of costs. This is significantly more concentrated than Hub, where cost distribution is more balanced.
+**Finding**: ON_DEMAND retailers are paying **premium pricing** for **better service reliability**. This is either:
+- Intentional (project configured for ON_DEMAND)
+- Accidental (capacity overflow from shared pool)
+
+### **Cost Concentration by Retailer (Updated)**
+
+| Tier | Retailers | % of Retailers | Cost | % of Total Cost | Reservation Mix |
+|------|-----------|----------------|------|-----------------|-----------------|
+| **Top 1** (fashionnova) | 1 | 0.4% | $673 | 54% | RESERVED |
+| **Top 5** | 5 | 1.8% | $977 | 79% | 2 RESERVED, 3 ON_DEMAND |
+| **Top 10** | 10 | 3.5% | $1,087 | 88% | 6 RESERVED, 4 ON_DEMAND |
+| **Top 20** | 20 | 7.0% | $1,165 | 94% | 15 RESERVED, 5 ON_DEMAND |
+| **Remaining 207** | 207 | 91% | $76 | 6% | Mostly RESERVED |
+
+**Critical Finding**: **Extreme cost concentration** with reservation insight - Top 20 retailers (7%) drive 94% of costs, with 5 ON_DEMAND retailers contributing disproportionately high costs.
+
+---
+
+## 📐 Cost Calculation Methodology - DETAILED
+
+### **Why Cost Calculation Matters**
+
+Initial analysis used **slot-based cost estimation** for ALL queries ($0.0494/slot-hour). This is INCORRECT for ON_DEMAND queries, which are billed by **data scanned** ($6.25/TB), not slots consumed.
+
+**Impact of Correction**:
+- **Before**: $2,504 total (slot-based for all)
+- **After**: $2,674 total (slot-based for RESERVED, per-TB for ON_DEMAND)
+- **Difference**: +$170 (6.8% underestimate)
+
+### **Three BigQuery Billing Models Used by Monitor Retailers**
+
+#### **1. RESERVED_SHARED_POOL** (`bq-narvar-admin:US.default`)
+**Used by**: 213 retailers (94%)  
+**Billing Model**: Slot-based (time-based charging)
+
+**Cost Formula**:
+```
+Cost = (total_slot_ms / 3,600,000) × $0.0494 per slot-hour
+
+Where:
+- total_slot_ms = Total slot milliseconds consumed by query
+- 3,600,000 = Convert milliseconds to hours
+- $0.0494 = Blended slot-hour rate
+```
+
+**Blended Rate Components**:
+- 500 slots @ 3-year commitment: $0.036/slot-hour = $18.00/hour
+- 500 slots @ 1-year commitment: $0.048/slot-hour = $24.00/hour
+- 700 slots @ autoscale: $0.060/slot-hour = $42.00/hour
+- **Weighted average**: ($18 + $24 + $42) / 1,700 slots = **$0.0494/slot-hour**
+
+**Example Calculation (typical Monitor query)**:
+- Query uses 25 concurrent slots for 2 seconds
+- Slot-milliseconds: 25 slots × 2 seconds × 1,000 ms = 50,000 slot-ms
+- Slot-hours: 50,000 / 3,600,000 = 0.0139 slot-hours
+- **Cost**: 0.0139 × $0.0494 = **$0.0007** (less than 1 cent!)
+
+**Characteristics**:
+- ✅ Very cost-effective for frequent queries
+- ✅ Predictable monthly cost
+- ❌ Subject to slot contention (1,700-slot limit shared across all Narvar)
+- ❌ QoS degradation during peak load (3.03% violations)
+
+---
+
+#### **2. ON_DEMAND** (`unreserved`)
+**Used by**: 14 retailers (6%)  
+**Billing Model**: Per-TB scanned (data-volume charging)
+
+**Cost Formula**:
+```
+Cost = (total_billed_bytes / 1,099,511,627,776) × $6.25 per TB
+
+Where:
+- total_billed_bytes = Bytes scanned by query (from BigQuery execution metadata)
+- 1,099,511,627,776 = Bytes in 1 TB (1024^4)
+- $6.25 = On-demand rate for BigQuery Analysis (US multi-region)
+```
+
+**Example Calculation (lululemon typical query)**:
+- Query scans 10 GB of data
+- Terabytes: 10 / 1,024 = 0.00977 TB
+- **Cost**: 0.00977 TB × $6.25 = **$0.061** (6 cents per query!)
+
+**Real Example from Data**:
+- **nike**: 1,272 queries scanned 17.6 TB total
+- Cost: 17.6 TB × $6.25 = **$110.08**
+- Avg per query: $110.08 / 1,272 = **$0.0866**
+
+**Characteristics**:
+- ✅ No slot contention (unlimited capacity)
+- ✅ Better QoS (1.34% violations vs 3.03% for RESERVED)
+- ✅ Can burst to any capacity needed
+- ❌ **Expensive** - typically 7-20x more per query than RESERVED
+- ❌ Unpredictable billing (varies by data scanned)
+- ❌ Cost increases with query complexity (more tables/data scanned)
+
+---
+
+#### **3. RESERVED_PIPELINE** (`default-pipeline`)
+**Used by**: 0 Monitor retailers (0%)  
+**Billing Model**: Slot-based (similar to RESERVED_SHARED_POOL)
+
+**Note**: This reservation is used by AUTOMATED pipelines (Airflow, etc.), not Monitor retailers. Included for completeness but not relevant to this Monitor analysis.
+
+---
+
+### **Cost Comparison Example: RESERVED vs ON_DEMAND**
+
+**Scenario**: Retailer query scanning 50 GB, using 30 slots for 3 minutes
+
+**RESERVED_SHARED_POOL Calculation**:
+```
+Slot-milliseconds: 30 slots × 180 seconds × 1,000 ms = 5,400,000
+Slot-hours: 5,400,000 / 3,600,000 = 1.5 slot-hours
+Cost: 1.5 × $0.0494 = $0.074
+```
+
+**ON_DEMAND Calculation**:
+```
+Data scanned: 50 GB = 0.0488 TB
+Cost: 0.0488 TB × $6.25 = $0.305
+```
+
+**Result**: ON_DEMAND is **4.1x more expensive** for this query ($0.305 vs $0.074)
+
+**When ON_DEMAND is Cheaper**:
+- Small queries scanning <3 GB
+- Infrequent queries (<10 per month)
+- Queries using very few slots (<5) for long time
+
+**When RESERVED is Cheaper**:
+- Queries scanning >10 GB (most Monitor queries)
+- High-frequency queries (>100 per month)
+- **Most Monitor retailers** benefit from RESERVED
+
+---
+
+### **Why 14 Retailers Use ON_DEMAND**
+
+**ON_DEMAND Retailers** (Peak_2024_2025): lululemon, nike, sephora, gap, asics, maurices, oldnavy, forever21, express, basspro, and 4 others
+
+**Possible Reasons**:
+1. **Project Configuration**: Projects may be explicitly set to ON_DEMAND for guaranteed capacity
+2. **Reservation Overflow**: Shared 1,700-slot pool full → queries spill to ON_DEMAND
+3. **QoS Priority**: Some retailers value <1.5% violations over cost (paying 7.9x premium)
+4. **Separate Billing**: ON_DEMAND may be billed to different cost center or customer contract
+
+**Finding from Data**: Most ON_DEMAND retailers use it **100% of the time** (not mixed), suggesting intentional configuration rather than overflow.
+
+**Recommendation**: Investigate with Platform team why these 14 retailers are on ON_DEMAND. If overflow, consider:
+- Increasing RESERVED pool (reduce overflow)
+- Creating dedicated Monitor reservation (300-500 slots)
+- If intentional, ensure retailers understand cost trade-off
+
+---
+
+### **ON_DEMAND Retailer Details** (Peak_2024_2025)
+
+| Retailer | Queries | TB Scanned | ON_DEMAND Cost | $/Query | QoS Viol % | Status |
+|----------|---------|------------|----------------|---------|------------|--------|
+| **lululemon** | 1,738 | 19.4 TB | $121.08 | $0.0697 | 1.6% | 💰 High cost, good QoS |
+| **nike** | 1,272 | 17.6 TB | $110.08 | $0.0866 | - | 💰 High cost, excellent QoS |
+| **sephora** | 1,168 | 14.9 TB | $92.93 | $0.0796 | - | 💰 High cost, excellent QoS |
+| **gap** | 85 | 1.9 TB | $11.93 | $0.1404 | - | 💰 Very high $/query |
+| **asics** | 166 | 0.6 TB | $4.04 | $0.0243 | - | Reasonable cost |
+| **maurices** | 105 | 0.4 TB | $2.49 | $0.0237 | - | Reasonable cost |
+| **oldnavy** | 160 | 0.3 TB | $2.08 | $0.0130 | - | Low cost |
+| **forever21** | 83 | 0.2 TB | $1.44 | $0.0173 | - | Low cost |
+| *... 6 more retailers* | ... | ... | $3.26 | ... | - | ... |
+| **TOTAL** | **~5,000** | **~56 TB** | **$349.32** | $0.0698 | 1.34% | Premium tier |
+
+**Analysis**:
+- **Top 3 ON_DEMAND retailers** (lululemon, nike, sephora) = $324 (93% of ON_DEMAND cost)
+- These 3 retailers scan **51.9 TB** over 4,179 queries
+- **If moved to RESERVED**: Would cost ~$260 (save $64, but get 2.3x worse QoS)
+- **Trade-off question**: Is $64 savings worth potentially 2.3x more violations?
 
 ---
 
@@ -334,7 +552,55 @@ Monitor demonstrates **excellent baseline performance** (97.8% compliance, $208/
 
 ## 📋 Future Work & TO DO Items
 
-### **TO DO 1: Optimize fashionnova Queries** 🚨 CRITICAL - IMMEDIATE ACTION
+### **TO DO 1: Investigate ON_DEMAND Retailer Assignment** 🔍 CRITICAL - IMMEDIATE ACTION
+
+**Objective**: Understand why 14 retailers (6%) are using ON_DEMAND billing and whether this is intentional or accidental.
+
+**Problem**:
+- **$883 in ON_DEMAND costs** (33% of total Monitor cost)
+- ON_DEMAND is **7.9x more expensive per query** than RESERVED
+- But provides **2.3x better QoS** (1.34% vs 3.03% violations)
+
+**Key Questions**:
+1. **Is assignment intentional?**
+   - Are projects explicitly configured for ON_DEMAND?
+   - Or is this overflow from saturated 1,700-slot shared pool?
+
+2. **Cost/benefit analysis**:
+   - lululemon: Pays $121 (ON_DEMAND) vs ~$26 if on RESERVED (4.6x premium)
+   - nike: Pays $110 (ON_DEMAND) vs ~$4 if on RESERVED (27.5x premium!)
+   - sephora: Pays $93 (ON_DEMAND) vs ~$9 if on RESERVED (10.3x premium)
+
+3. **Strategic options**:
+   - **Keep on ON_DEMAND**: Accept 7.9x cost for 2.3x better QoS (if retailers value reliability)
+   - **Move to dedicated Monitor reservation**: Create 300-500 slot pool for these retailers (better than shared, cheaper than ON_DEMAND)
+   - **Optimize and move to RESERVED_SHARED**: If queries can be optimized to tolerate 3% violations
+
+**Approach**:
+1. Check project configurations in GCP Console (BigQuery → Capacity → Assignments)
+2. Review historical data: When did these retailers move to ON_DEMAND?
+3. Interview Platform team: Is this intentional or accidental?
+4. Calculate ROI for dedicated reservation vs ON_DEMAND cost
+
+**Expected Deliverables**:
+- Reservation assignment audit report
+- Per-retailer cost/benefit analysis (ON_DEMAND vs RESERVED vs Dedicated)
+- Recommendation: Keep on ON_DEMAND, move to RESERVED, or create dedicated pool
+- Implementation plan if changes needed
+
+**Timeline**: 3-5 days  
+**Owner**: Platform Engineering + Finance
+
+**Potential Impact**:
+- **If moved to dedicated RESERVED** (300 slots): Save $400-600/year with <2% violations
+- **If optimized for shared RESERVED**: Save $700-800/year but accept 3% violations
+- **If kept on ON_DEMAND**: Accept current costs for premium QoS
+
+**Priority**: 🚨 **CRITICAL** - $883 annual cost optimization opportunity
+
+---
+
+### **TO DO 2: Optimize fashionnova Queries** 🚨 CRITICAL - IMMEDIATE ACTION
 
 **Objective**: Reduce fashionnova's 24.8% violation rate and $673 cost (27% of total Monitor cost).
 
@@ -362,7 +628,7 @@ Monitor demonstrates **excellent baseline performance** (97.8% compliance, $208/
 
 ---
 
-### **TO DO 2: Deep Dive into Business Questions by Retailer** 🔮 HIGH VALUE
+### **TO DO 3: Deep Dive into Business Questions by Retailer** 🔮 HIGH VALUE
 
 **Objective**: Understand *what business questions* retailers are asking through Monitor API queries.
 
@@ -386,7 +652,7 @@ Monitor demonstrates **excellent baseline performance** (97.8% compliance, $208/
 
 ---
 
-### **TO DO 3: Engage High-Violation Retailers (Top 8)** 🤝 HIGH PRIORITY
+### **TO DO 4: Engage High-Violation Retailers (Top 8)** 🤝 HIGH PRIORITY
 
 **Objective**: Proactively work with retailers experiencing QoS issues to improve query performance.
 
@@ -413,7 +679,7 @@ Monitor demonstrates **excellent baseline performance** (97.8% compliance, $208/
 
 ---
 
-### **TO DO 4: Create Retailer Performance Dashboards** 📊 MEDIUM PRIORITY
+### **TO DO 5: Create Retailer Performance Dashboards** 📊 MEDIUM PRIORITY
 
 **Objective**: Build monitoring dashboards for proactive retailer QoS tracking.
 
@@ -436,7 +702,7 @@ Monitor demonstrates **excellent baseline performance** (97.8% compliance, $208/
 
 ---
 
-### **TO DO 5: Peak vs Baseline Retailer Trends** ⏰ MEDIUM PRIORITY
+### **TO DO 6: Peak vs Baseline Retailer Trends** ⏰ MEDIUM PRIORITY
 
 **Objective**: Understand which retailers degrade during Peak and why.
 
@@ -456,7 +722,7 @@ Monitor demonstrates **excellent baseline performance** (97.8% compliance, $208/
 
 ---
 
-### **TO DO 6: Monitor vs Hub Comparison Study** 🔬 LOW PRIORITY
+### **TO DO 7: Monitor vs Hub Comparison Study** 🔬 LOW PRIORITY
 
 **Objective**: Understand fundamental differences between Monitor (API) and Hub (dashboards) query patterns.
 
