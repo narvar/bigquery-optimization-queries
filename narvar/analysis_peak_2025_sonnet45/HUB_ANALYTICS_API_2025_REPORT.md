@@ -419,9 +419,6 @@ Where:
 - **Apply to Monitor**: Help fashionnova and other high-violation retailers
 - **Scalable solution**: Reusable patterns for all future development
 
-**Timeline**: 1 week  
-**Cost**: $0.02 (sample query analysis)
-
 ---
 
 ### **TO DO 2: Hub Analytics vs Looker Comparative Study** 🔬 HIGH PRIORITY
@@ -443,8 +440,6 @@ Where:
 **Deliverable**: `HUB_ANALYTICS_VS_LOOKER_COMPARISON.md`
 
 **Impact**: Provides roadmap for Looker optimization (target: reduce from 3.5% to <1% violations)
-
-**Timeline**: 2-3 days
 
 ---
 
@@ -471,11 +466,9 @@ Where:
 
 **Deliverable**: Capacity planning recommendation for Hub Analytics growth
 
-**Timeline**: 2 days
-
 ---
 
-### **TO DO 4: Deep Dive into Business Questions** 🔮 LOW PRIORITY
+### **TO DO 4: Deep Dive into Business Questions** 🔬 HIGH PRIORITY
 
 **Objective**: Understand *what analytics* the Hub API provides (even though no per-retailer attribution).
 
@@ -491,8 +484,6 @@ Where:
 
 **Prerequisites**: SQL Semantic Analysis Framework (see `SQL_SEMANTIC_ANALYSIS_NEXT_SESSION.md`)
 
-**Timeline**: 1 week (after framework built)  
-**Cost**: $5-10 (LLM-based classification)
 
 ---
 
