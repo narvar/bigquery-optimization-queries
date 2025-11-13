@@ -1,15 +1,18 @@
-# Hub Dashboard Performance Analysis - 2025
+# Looker Dashboard Performance Analysis - 2025
 **Comprehensive QoS, Cost, and Retailer Attribution Analysis**
 
 **Date**: November 12, 2025  
 **Periods Analyzed**: Peak_2024_2025 (Nov 2024-Jan 2025), Baseline_2025_Sep_Oct  
-**Total Queries**: 235,977 Hub (Looker) queries
+**Total Queries**: 235,977 Looker queries  
+**Consumer Subcategory**: HUB (Looker service accounts: `r'looker.*@.*\.iam\.gserviceaccount\.com'`)
+
+**⚠️ IMPORTANT CLARIFICATION**: This report analyzes **Looker dashboard traffic** (consumer_subcategory = 'HUB' in classification table). For **Hub analytics dashboards** (analytics-api-bigquery-access service account), see separate `HUB_ANALYTICS_API_2025_REPORT.md`.
 
 ---
 
 ## 🎯 Executive Summary
 
-The Hub dashboard platform processed **235,977 queries** across the 2025 analysis periods with significantly better performance than initial concerns suggested. While previous analysis identified Hub QoS issues during CRITICAL capacity stress windows (39% violation rate), the full dataset reveals an overall **2.6% violation rate**, with Peak period at 3.5% and Baseline at 1.6%.
+The **Looker dashboard platform** processed **235,977 queries** across the 2025 analysis periods with significantly better performance than initial concerns suggested. While previous analysis identified Hub QoS issues during CRITICAL capacity stress windows (39% violation rate), the full dataset reveals an overall **2.6% violation rate**, with Peak period at 3.5% and Baseline at 1.6%.
 
 ### **Key Achievements** ✅
 
