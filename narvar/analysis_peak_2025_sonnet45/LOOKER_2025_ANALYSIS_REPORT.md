@@ -450,14 +450,14 @@ This report was generated using the following code artifacts:
 ### **SQL Queries**
 
 1. **Pattern Discovery (Sample Analysis)**
-   - File: `queries/phase2_consumer_analysis/hub_pattern_discovery_sample.sql`
-   - Purpose: Sample 200 Hub queries to test retailer extraction patterns
+   - File: `queries/phase2_consumer_analysis/looker_pattern_discovery_sample.sql`
+   - Purpose: Sample 200 Looker queries to test retailer extraction patterns
    - Cost: $0.19 (38 GB scan)
    - Results: `results/hub_pattern_discovery_20251112_130121.csv` (60 queries)
 
-2. **Full 2025 Hub Analysis**
-   - File: `queries/phase2_consumer_analysis/hub_full_2025_analysis.sql`
-   - Purpose: Analyze all 235,977 Hub queries with improved retailer attribution
+2. **Full 2025 Looker Analysis**
+   - File: `queries/phase2_consumer_analysis/looker_full_2025_analysis.sql`
+   - Purpose: Analyze all 235,977 Looker queries with improved retailer attribution
    - Cost: $0.85 (173.75 GB scan)
    - Results: `results/hub_full_2025_analysis_20251112_134533.csv` (235,977 rows)
    - Key Features:
@@ -474,17 +474,17 @@ This report was generated using the following code artifacts:
    - Used for: Validating query costs before execution
 
 2. **Pattern Discovery Execution**
-   - File: `scripts/run_hub_pattern_discovery.py`
+   - File: `scripts/run_looker_pattern_discovery.py`
    - Purpose: Execute pattern discovery query and generate summary statistics
    - Output: CSV file + console summary
 
 3. **Pattern Analysis**
-   - File: `scripts/analyze_pattern_discovery.py`
+   - File: `scripts/analyze_looker_pattern_discovery.py`
    - Purpose: Analyze pattern discovery results, identify why 40% failed
    - Output: `results/hub_failed_patterns_for_review.csv` + recommendations
 
-4. **Full Hub Analysis Execution**
-   - File: `scripts/run_hub_full_analysis.py`
+4. **Full Looker Analysis Execution**
+   - File: `scripts/run_looker_full_analysis.py`
    - Purpose: Execute full analysis query and generate comprehensive report
    - Output: 
      * `results/hub_full_2025_analysis_20251112_134533.csv` (primary dataset)
@@ -495,15 +495,15 @@ This report was generated using the following code artifacts:
 
 ```bash
 # Step 1: Pattern Discovery (identify extraction patterns)
-python scripts/run_hub_pattern_discovery.py
+python scripts/run_looker_pattern_discovery.py
 # → Discovered 60% initial success rate
 
 # Step 2: Analyze Failures (improve patterns)
-python scripts/analyze_pattern_discovery.py
+python scripts/analyze_looker_pattern_discovery.py
 # → Identified 5 new patterns to add
 
 # Step 3: Full Analysis (apply improved patterns to all data)
-python scripts/run_hub_full_analysis.py
+python scripts/run_looker_full_analysis.py
 # → 72.9% final success rate (235,977 queries)
 
 # Step 4: Generate Report (this document)
@@ -751,18 +751,23 @@ narvar-data-lake.query_opt.traffic_classification (43.8M jobs, Phase 1)
 - `queries/phase2_historical/external_qos_under_stress.sql` - SQL query used for INV6 analysis
 - `queries/phase2_historical/identify_capacity_stress_periods.sql` - Stress period detection methodology
 
-**This Hub Analysis (Phase 2 Consumer Deep Dive)**:
-- `queries/phase2_consumer_analysis/hub_pattern_discovery_sample.sql` - Pattern discovery (sample 200 queries)
-- `queries/phase2_consumer_analysis/hub_full_2025_analysis.sql` - Full 2025 analysis (235,977 queries)
-- `scripts/run_hub_pattern_discovery.py` - Execute pattern discovery query
-- `scripts/analyze_pattern_discovery.py` - Analyze pattern failures
-- `scripts/run_hub_full_analysis.py` - Execute full analysis and generate summaries
+**This Looker Analysis (Phase 2 Consumer Deep Dive)**:
+- `queries/phase2_consumer_analysis/looker_pattern_discovery_sample.sql` - Pattern discovery (sample 200 queries)
+- `queries/phase2_consumer_analysis/looker_full_2025_analysis.sql` - Full 2025 analysis (235,977 queries)
+- `scripts/run_looker_pattern_discovery.py` - Execute pattern discovery query
+- `scripts/analyze_looker_pattern_discovery.py` - Analyze pattern failures
+- `scripts/run_looker_full_analysis.py` - Execute full analysis and generate summaries
 - `scripts/check_query_cost.py` - Dry-run cost estimation utility
 
-**Results Files**:
+**Results Files** (local only, excluded from git):
 - `results/hub_full_2025_analysis_20251112_134533.csv` - Primary dataset (235,977 rows)
 - `results/hub_retailer_summary_20251112_134533.csv` - Retailer-level aggregations
 - `results/hub_pattern_discovery_20251112_130121.csv` - Pattern discovery sample (60 rows)
+
+**Hub Analytics API Analysis** (Real Hub):
+- `HUB_ANALYTICS_API_2025_REPORT.md` - Hub Analytics API performance report
+- `queries/phase2_consumer_analysis/hub_analytics_api_performance.sql` - Hub Analytics API query
+- `scripts/run_hub_analytics_api_analysis.py` - Hub Analytics API analysis script
 
 **SQL Semantic Analysis Sub-Project** (Future Work):
 - `SQL_QUERY_SEMANTIC_ANALYSIS_FRAMEWORK.md` - Complete framework design and methodology
@@ -785,8 +790,9 @@ The successful **72.9% retailer attribution rate** enables targeted optimization
 
 **Report Date**: November 12, 2025  
 **Analysis Cost**: $1.04 ($0.19 pattern discovery + $0.85 full analysis)  
-**Data Coverage**: 235,977 queries, 12 months, $1,777 in Hub costs  
-**Analyst**: AI Assistant (Claude Sonnet 4.5)
+**Data Coverage**: 235,977 Looker queries, 12 months, $1,777 in Looker costs  
 
 **Status**: ✅ **COMPLETE** - Ready for stakeholder review and action planning
+
+**See Also**: `HUB_ANALYTICS_API_2025_REPORT.md` for real Hub analytics dashboard analysis (ANALYTICS_API subcategory)
 
