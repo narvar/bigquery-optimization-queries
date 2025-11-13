@@ -1,0 +1,2793 @@
+job_id,analysis_period_label,start_time,execution_time_seconds,slot_hours,estimated_slot_cost_usd,approximate_slot_count,gb_scanned,is_qos_violation,qos_violation_seconds,full_query_length,partial_query_length,pct_captured_in_sample,pattern_1_retailer_equals,pattern_2_retailer_in,pattern_3_join_retailer,pattern_4_comment_retailer,pattern_5_json_retailer,pattern_6_url_retailer,pattern_7_table_suffix,has_retailer_moniker_field,has_retailer_word,has_api_comment,api_comment_line,best_retailer_match,retailer_extraction_success,has_joins,has_group_by,has_window_functions,has_cte,has_partition_filter,approx_from_clauses,query_preview_1000,full_query_text
+38a97d81-0461-46a6-b8d4-409fd9a6f8b5,Baseline_2025_Sep_Oct,2025-09-30 10:27:29.930000+00:00,0,0.0,0.0002,34.979643765903305,0.14,,0,231,231,100.0,dooney,,,,,,looker,True,True,False,,dooney,True,False,False,False,False,False,1.0,"SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'dooney' ) AND ( T.return_created_date >= '2025-09-23' AND T.return_created_date <= '2025-09-29' ) AND ( ( T.locale = 'en_US' ) )
+;","SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'dooney' ) AND ( T.return_created_date >= '2025-09-23' AND T.return_created_date <= '2025-09-29' ) AND ( ( T.locale = 'en_US' ) )
+;"
+0daa06ad-259b-4c12-82ca-e81f88ba76c5,Baseline_2025_Sep_Oct,2025-10-03 13:20:55.330000+00:00,0,0.01,0.0003,23.93,1.37,,0,290,290,100.0,carharttr,,,,,,looker,True,True,False,,carharttr,True,False,False,False,False,False,1.0,"SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'carharttr' ) AND ( T.return_created_date >= '2025-06-01' AND T.return_created_date <= '2025-10-02' ) AND ( ( T.locale = 'en_US' ) ) AND ( lower(T.tracking_number) = '1z62e5y99012854326' )
+;","SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'carharttr' ) AND ( T.return_created_date >= '2025-06-01' AND T.return_created_date <= '2025-10-02' ) AND ( ( T.locale = 'en_US' ) ) AND ( lower(T.tracking_number) = '1z62e5y99012854326' )
+;"
+1ab2bd2f-92ef-4e7e-b283-c743a54a5119,Peak_2024_2025,2025-01-09 20:00:08.335000+00:00,0,0.0,0.0001,5.950484391819161,8.23,,0,327,327,100.0,youthtothepeople,,,,,,view,True,True,False,,youthtothepeople,True,False,True,False,False,False,1.0,"SELECT SUM( T.count * 1.00 ) AS sum_count, T.event_track_status AS event_track_status
+FROM analytics.v_component_platform_track_page_view AS T
+WHERE ( T.event_ts >= '2024-12-10' AND T.event_ts <= '2025-01-08' ) AND ( T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'youthtothepeople' )
+GROUP BY T.event_track_status
+;","SELECT SUM( T.count * 1.00 ) AS sum_count, T.event_track_status AS event_track_status
+FROM analytics.v_component_platform_track_page_view AS T
+WHERE ( T.event_ts >= '2024-12-10' AND T.event_ts <= '2025-01-08' ) AND ( T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'youthtothepeople' )
+GROUP BY T.event_track_status
+;"
+e3cb9963-071b-4f32-a285-385e2e3b1819,Peak_2024_2025,2024-12-01 14:45:24.096000+00:00,0,0.0,0.0,1.2701149425287357,0.02,,0,336,336,100.0,arula,,,,,,details,True,True,False,,arula,True,False,False,False,False,False,1.0,"
+--returns_started
+select
+    IFNULL(count(distinct return_process_info_id), 0) as count_distinct_return_process_info_id
+from
+    reporting.t_return_details
+where
+    retailer_moniker = 'arula'
+    and lower(locale) = lower('en_US')
+    and return_status != 'cancelled'
+    and return_created_date between '2024-11-24' and '2024-11-30'
+","
+--returns_started
+select
+    IFNULL(count(distinct return_process_info_id), 0) as count_distinct_return_process_info_id
+from
+    reporting.t_return_details
+where
+    retailer_moniker = 'arula'
+    and lower(locale) = lower('en_US')
+    and return_status != 'cancelled'
+    and return_created_date between '2024-11-24' and '2024-11-30'
+"
+ba6d37f8-f846-47de-aa7a-d3c809f9553c,Peak_2024_2025,2024-12-23 14:39:35.814000+00:00,0,0.0,0.0001,10.68199233716475,0.04,,0,672,500,74.4,champion,,,,,,details,True,True,False,,champion,True,False,True,True,False,True,2.0,"
+--average_items_per_mail_return
+select
+    IFNULL(round(avg(items),1), 0) AS average_items
+from
+    (select
+        return_process_info_id, sum(return_qty) AS items,
+        row_number() over(partition by return_process_info_id order by return_last_modified_date desc) as rnk
+    from
+        reporting.t_return_details
+    where
+        retailer_moniker = 'champion'
+        and lower(locale) = lower('en_US')
+        and return_status != 'cancelled'
+        and return_method in ('mail', 'printerless_mail')
+        and return_created_date between '2024-12-15' and '2024-12-21'
+    group by
+        return_process_info_id, return_last_modified_date
+    )
+where rnk = 1
+","
+--average_items_per_mail_return
+select
+    IFNULL(round(avg(items),1), 0) AS average_items
+from
+    (select
+        return_process_info_id, sum(return_qty) AS items,
+        row_number() over(partition by return_process_info_id order by return_last_modified_date desc) as rnk
+    from
+        reporting.t_return_details
+    where
+        retailer_moniker = 'champion'
+        and lower(locale) = lower('en_US')
+        and return_status != 'cancelled'
+        and return_method in ('mail', 'printerless_mail')
+        and return_created_date between '2024-12-15' and '2024-12-21'
+    group by
+        return_process_info_id, return_last_modified_date
+    )
+where rnk = 1
+"
+919b84a1-0b17-4bc4-adc0-d59d29dacc2a,Baseline_2025_Sep_Oct,2025-10-25 15:18:43.330000+00:00,0,0.01,0.0004,33.90601092896175,2.51,,0,279,279,100.0,crewclothing,,,,,,looker,True,True,False,,crewclothing,True,False,False,False,False,False,1.0,"SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'crewclothing' ) AND ( T.return_created_date >= '2025-01-01' AND T.return_created_date <= '2025-10-24' ) AND ( ( T.locale = 'en_GB' ) ) AND ( lower(T.order_number) = '8874942' )
+;","SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'crewclothing' ) AND ( T.return_created_date >= '2025-01-01' AND T.return_created_date <= '2025-10-24' ) AND ( ( T.locale = 'en_GB' ) ) AND ( lower(T.order_number) = '8874942' )
+;"
+98b4f2f1-26e1-4838-896c-bebae8bd79ce,Baseline_2025_Sep_Oct,2025-09-24 09:18:56.129000+00:00,0,0.0,0.0001,11.369734789391575,0.24,,0,1433,500,34.9,rapha,,,,,,details,True,True,False,,rapha,True,False,True,True,False,True,2.0,"
+--items_per_return_bar
+select
+    CASE return_method
+    WHEN 'mail' THEN 'Mail Returns'
+    WHEN 'printerless_mail' THEN 'Printerless Mail Returns'
+    WHEN 'concierge' THEN 'Concierge Returns'
+    WHEN 'store' THEN 'Store Returns'
+    WHEN 'pickup' THEN 'Pickup'
+    WHEN 'local_pickup' THEN 'Local Pickup'
+    WHEN 'home_pickup' THEN 'Home Pickup'
+    WHEN 'locker_dropoff' THEN 'Locker Dropoff'
+    WHEN 'keeptheitem' THEN 'Keep The Item'
+    WHEN 'self' THEN 'Self'
+    WHEN 'concierge_partnership' THEN 'Concierge Partnership Returns'
+    WHEN 'boxless' THEN 'Boxless Returns'
+    ELSE 'Other'
+    END AS return_method, items_count_bucket as bucket, count(1) as sum_return_count
+from
+    (select
+        return_method,
+        return_process_info_id,
+        case
+            when sum(return_qty) >= 5 then '5+'
+            else cast(sum(return_qty) as string)
+        end as items_count_bucket,
+        row_number() over(partition by return_process_info_id order by return_last_modified_date ","
+--items_per_return_bar
+select
+    CASE return_method
+    WHEN 'mail' THEN 'Mail Returns'
+    WHEN 'printerless_mail' THEN 'Printerless Mail Returns'
+    WHEN 'concierge' THEN 'Concierge Returns'
+    WHEN 'store' THEN 'Store Returns'
+    WHEN 'pickup' THEN 'Pickup'
+    WHEN 'local_pickup' THEN 'Local Pickup'
+    WHEN 'home_pickup' THEN 'Home Pickup'
+    WHEN 'locker_dropoff' THEN 'Locker Dropoff'
+    WHEN 'keeptheitem' THEN 'Keep The Item'
+    WHEN 'self' THEN 'Self'
+    WHEN 'concierge_partnership' THEN 'Concierge Partnership Returns'
+    WHEN 'boxless' THEN 'Boxless Returns'
+    ELSE 'Other'
+    END AS return_method, items_count_bucket as bucket, count(1) as sum_return_count
+from
+    (select
+        return_method,
+        return_process_info_id,
+        case
+            when sum(return_qty) >= 5 then '5+'
+            else cast(sum(return_qty) as string)
+        end as items_count_bucket,
+        row_number() over(partition by return_process_info_id order by return_last_modified_date desc) as rnk
+    from
+        reporting.t_return_details
+    where
+        retailer_moniker = 'rapha'
+        and lower(locale) = lower('en_US')
+        and return_created_date between '2025-08-24' and '2025-09-22'
+        and return_status != 'cancelled'
+    group by
+        return_method, return_process_info_id, return_last_modified_date
+    )
+where rnk = 1
+group by return_method, items_count_bucket
+order by items_count_bucket
+"
+87c5a5c3-3973-4624-a4ed-b5c7a4268403,Peak_2024_2025,2025-01-14 00:26:33.844000+00:00,0,0.01,0.0007,78.29803328290468,0.75,,0,230,230,100.0,crocs,,,,,,looker,True,True,False,,crocs,True,False,False,False,False,False,1.0,"SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'crocs' ) AND ( T.return_created_date >= '2024-12-09' AND T.return_created_date <= '2025-01-07' ) AND ( ( T.locale = 'ja_JP' ) )
+;","SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'crocs' ) AND ( T.return_created_date >= '2024-12-09' AND T.return_created_date <= '2025-01-07' ) AND ( ( T.locale = 'ja_JP' ) )
+;"
+ac47d395-091c-419e-ae48-616f665c6137,Baseline_2025_Sep_Oct,2025-09-08 12:47:36.963000+00:00,0,0.0,0.0001,8.5,0.29,,0,649,500,77.0,theory,,,,,,details,True,True,False,,theory,True,False,True,True,False,True,2.0,"
+--average_items_per_store_return
+select
+    IFNULL(round(avg(items),1), 0) AS average_items
+from
+    (select
+        return_process_info_id, sum(return_qty) AS items,
+        row_number() over(partition by return_process_info_id order by return_last_modified_date desc) as rnk
+    from
+        reporting.t_return_details
+    where
+        retailer_moniker = 'theory'
+        and lower(locale) = lower('en_US')
+        and return_status != 'cancelled'
+        and return_method = 'store'
+        and return_created_date between '2025-07-30' and '2025-08-28'
+    group by
+        return_process_info_id, return_last_modified_date
+    )
+where rnk = 1
+","
+--average_items_per_store_return
+select
+    IFNULL(round(avg(items),1), 0) AS average_items
+from
+    (select
+        return_process_info_id, sum(return_qty) AS items,
+        row_number() over(partition by return_process_info_id order by return_last_modified_date desc) as rnk
+    from
+        reporting.t_return_details
+    where
+        retailer_moniker = 'theory'
+        and lower(locale) = lower('en_US')
+        and return_status != 'cancelled'
+        and return_method = 'store'
+        and return_created_date between '2025-07-30' and '2025-08-28'
+    group by
+        return_process_info_id, return_last_modified_date
+    )
+where rnk = 1
+"
+28217cc8-b674-4505-8c19-ce36cffeee17,Baseline_2025_Sep_Oct,2025-10-06 17:25:19.099000+00:00,1,0.0,0.0002,16.450292397660817,0.54,,0,278,278,100.0,aritzia,,,,,,engagement,True,True,False,,aritzia,True,False,False,False,False,False,1.0,"SELECT COUNT( distinct distinct_event ) AS count_distinct_distinct_event
+FROM analytics.v_component_platform_support_engagement AS T
+WHERE ( T.event_ts >= '2025-09-29' AND T.event_ts <= '2025-10-05' ) AND ( T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'aritzia' )
+;","SELECT COUNT( distinct distinct_event ) AS count_distinct_distinct_event
+FROM analytics.v_component_platform_support_engagement AS T
+WHERE ( T.event_ts >= '2025-09-29' AND T.event_ts <= '2025-10-05' ) AND ( T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'aritzia' )
+;"
+a33af5e8-62d1-4cde-8512-0e1abf23f2c9,Baseline_2025_Sep_Oct,2025-10-13 16:01:15.339000+00:00,1,0.0,0.0001,2.9030704394942806,0.24,,0,230,230,100.0,babor,,,,,,looker,True,True,False,,babor,True,False,False,False,False,False,1.0,"SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'babor' ) AND ( T.return_created_date >= '2025-09-11' AND T.return_created_date <= '2025-10-10' ) AND ( ( T.locale = 'en_US' ) )
+;","SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'babor' ) AND ( T.return_created_date >= '2025-09-11' AND T.return_created_date <= '2025-10-10' ) AND ( ( T.locale = 'en_US' ) )
+;"
+5ff4bd6d-126f-45fb-914a-0c2bb90286cf,Baseline_2025_Sep_Oct,2025-10-13 11:43:56.239000+00:00,1,0.0,0.0,1.6897435897435897,0.22,,0,203,203,100.0,onrunning,,,,,,looker,True,True,False,,onrunning,True,False,False,False,False,False,1.0,"SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'onrunning' ) AND ( T.return_created_date >= '2025-09-11' AND T.return_created_date <= '2025-10-10' )
+;","SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'onrunning' ) AND ( T.return_created_date >= '2025-09-11' AND T.return_created_date <= '2025-10-10' )
+;"
+18c8e502-32db-414a-89db-4de3e0e4d36d,Peak_2024_2025,2024-11-05 20:44:38.973000+00:00,1,0.0,0.0001,7.2888086642599275,0.21,,0,1436,500,34.8,rag-bone,,,,,,details,True,True,False,,rag-bone,True,False,True,True,False,True,2.0,"
+--items_per_return_bar
+select
+    CASE return_method
+    WHEN 'mail' THEN 'Mail Returns'
+    WHEN 'printerless_mail' THEN 'Printerless Mail Returns'
+    WHEN 'concierge' THEN 'Concierge Returns'
+    WHEN 'store' THEN 'Store Returns'
+    WHEN 'pickup' THEN 'Pickup'
+    WHEN 'local_pickup' THEN 'Local Pickup'
+    WHEN 'home_pickup' THEN 'Home Pickup'
+    WHEN 'locker_dropoff' THEN 'Locker Dropoff'
+    WHEN 'keeptheitem' THEN 'Keep The Item'
+    WHEN 'self' THEN 'Self'
+    WHEN 'concierge_partnership' THEN 'Concierge Partnership Returns'
+    WHEN 'boxless' THEN 'Boxless Returns'
+    ELSE 'Other'
+    END AS return_method, items_count_bucket as bucket, count(1) as sum_return_count
+from
+    (select
+        return_method,
+        return_process_info_id,
+        case
+            when sum(return_qty) >= 5 then '5+'
+            else cast(sum(return_qty) as string)
+        end as items_count_bucket,
+        row_number() over(partition by return_process_info_id order by return_last_modified_date ","
+--items_per_return_bar
+select
+    CASE return_method
+    WHEN 'mail' THEN 'Mail Returns'
+    WHEN 'printerless_mail' THEN 'Printerless Mail Returns'
+    WHEN 'concierge' THEN 'Concierge Returns'
+    WHEN 'store' THEN 'Store Returns'
+    WHEN 'pickup' THEN 'Pickup'
+    WHEN 'local_pickup' THEN 'Local Pickup'
+    WHEN 'home_pickup' THEN 'Home Pickup'
+    WHEN 'locker_dropoff' THEN 'Locker Dropoff'
+    WHEN 'keeptheitem' THEN 'Keep The Item'
+    WHEN 'self' THEN 'Self'
+    WHEN 'concierge_partnership' THEN 'Concierge Partnership Returns'
+    WHEN 'boxless' THEN 'Boxless Returns'
+    ELSE 'Other'
+    END AS return_method, items_count_bucket as bucket, count(1) as sum_return_count
+from
+    (select
+        return_method,
+        return_process_info_id,
+        case
+            when sum(return_qty) >= 5 then '5+'
+            else cast(sum(return_qty) as string)
+        end as items_count_bucket,
+        row_number() over(partition by return_process_info_id order by return_last_modified_date desc) as rnk
+    from
+        reporting.t_return_details
+    where
+        retailer_moniker = 'rag-bone'
+        and lower(locale) = lower('en_US')
+        and return_created_date between '2024-10-06' and '2024-11-04'
+        and return_status != 'cancelled'
+    group by
+        return_method, return_process_info_id, return_last_modified_date
+    )
+where rnk = 1
+group by return_method, items_count_bucket
+order by items_count_bucket
+"
+4ce2a34a-50db-43be-8c0a-8db68bda85b9,Peak_2024_2025,2024-11-07 17:17:57.067000+00:00,1,0.0,0.0,0.18604651162790697,0.01,,0,290,290,100.0,lemonaid,,,,,,rating,True,True,False,,lemonaid,True,False,True,False,False,False,1.0,"SELECT COUNT( * ) AS count, T.rating AS rating
+FROM analytics.v_component_platform_feedback_rating AS T
+WHERE ( T.event_ts >= '2024-11-05' AND T.event_ts <= '2024-11-07' ) AND ( T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'lemonaid' )
+GROUP BY T.rating
+ORDER BY T.rating ASC
+;","SELECT COUNT( * ) AS count, T.rating AS rating
+FROM analytics.v_component_platform_feedback_rating AS T
+WHERE ( T.event_ts >= '2024-11-05' AND T.event_ts <= '2024-11-07' ) AND ( T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'lemonaid' )
+GROUP BY T.rating
+ORDER BY T.rating ASC
+;"
+111427ea-3fde-47b0-a3b4-63523d61f6db,Baseline_2025_Sep_Oct,2025-10-20 16:01:34.222000+00:00,1,0.01,0.0003,10.37275204359673,1.16,,0,1124,500,44.5,asics,,,,,,latest,True,True,False,,asics,True,False,True,False,False,False,3.0,"
+--retained_gmv_credit
+SELECT
+  SUM(Retained_GMV) AS sum_retained_gmv_credit
+FROM (
+  SELECT
+    return_process_item_id AS return_process_item_id,
+    ( 
+        SUM(CASE WHEN refund_option in ('gift_card','GIFT_CARD','instant_store_credit','store_credit')  and narvar_product != 'exchange' THEN item_price * item_qty ELSE 0.0 END)
+    ) AS Retained_GMV
+  FROM (
+    SELECT
+      return_process_item_id AS return_process_item_id,
+      refund_option AS refund_option,
+      narvar_product AS narvar_product,
+      SUM(item_price) AS item_price,
+      SUM(return_qty) AS item_qty
+    FROM
+      analytics.v_return_details_latest
+    WHERE
+      return_created_date between '2025-07-01' and '2025-09-30'
+      AND (return_status <> 'cancelled' OR return_status IS NULL)
+      AND retailer_moniker = 'asics'
+      and lower(locale) = lower('en_CH')
+    GROUP BY
+      return_process_item_id,
+      refund_option,
+      narvar_product
+    ORDER BY
+      return_process_item_id ASC,
+      refund_option AS","
+--retained_gmv_credit
+SELECT
+  SUM(Retained_GMV) AS sum_retained_gmv_credit
+FROM (
+  SELECT
+    return_process_item_id AS return_process_item_id,
+    ( 
+        SUM(CASE WHEN refund_option in ('gift_card','GIFT_CARD','instant_store_credit','store_credit')  and narvar_product != 'exchange' THEN item_price * item_qty ELSE 0.0 END)
+    ) AS Retained_GMV
+  FROM (
+    SELECT
+      return_process_item_id AS return_process_item_id,
+      refund_option AS refund_option,
+      narvar_product AS narvar_product,
+      SUM(item_price) AS item_price,
+      SUM(return_qty) AS item_qty
+    FROM
+      analytics.v_return_details_latest
+    WHERE
+      return_created_date between '2025-07-01' and '2025-09-30'
+      AND (return_status <> 'cancelled' OR return_status IS NULL)
+      AND retailer_moniker = 'asics'
+      and lower(locale) = lower('en_CH')
+    GROUP BY
+      return_process_item_id,
+      refund_option,
+      narvar_product
+    ORDER BY
+      return_process_item_id ASC,
+      refund_option ASC,
+      narvar_product ASC) source
+  GROUP BY
+    return_process_item_id
+  ORDER BY
+    return_process_item_id ASC) source
+"
+5aa52f88-5685-4b37-b657-b164353e74e4,Peak_2024_2025,2025-01-23 23:19:00.180000+00:00,1,0.0,0.0002,10.623175965665236,0.17,,0,683,500,73.2,johnnywas,,,,,,details,True,True,False,,johnnywas,True,False,True,True,False,True,2.0,"
+--return_method
+select
+    return_method, count(distinct return_process_info_id) as sum_return_count
+from
+    (select
+        return_method,
+        return_process_info_id,
+        row_number() over(partition by return_process_info_id order by return_last_modified_date desc) as rnk
+    from
+        reporting.t_return_details
+    where
+        retailer_moniker = 'johnnywas'
+        and lower(locale) = lower('en_US')
+        and return_created_date between '2024-12-24' and '2025-01-22'
+        and return_status != 'cancelled'
+    group by
+        return_method, return_process_info_id, return_last_modified_date
+    )
+where rnk = 1
+group by return_method
+order by return_method
+","
+--return_method
+select
+    return_method, count(distinct return_process_info_id) as sum_return_count
+from
+    (select
+        return_method,
+        return_process_info_id,
+        row_number() over(partition by return_process_info_id order by return_last_modified_date desc) as rnk
+    from
+        reporting.t_return_details
+    where
+        retailer_moniker = 'johnnywas'
+        and lower(locale) = lower('en_US')
+        and return_created_date between '2024-12-24' and '2025-01-22'
+        and return_status != 'cancelled'
+    group by
+        return_method, return_process_info_id, return_last_modified_date
+    )
+where rnk = 1
+group by return_method
+order by return_method
+"
+30cdb9c8-2c16-49b8-b975-6cbedada140b,Baseline_2025_Sep_Oct,2025-09-16 20:24:19.331000+00:00,1,0.0,0.0002,11.474468085106382,2.0,,0,497,497,100.0,clarinsusa,,,,,,engagement,True,True,False,,clarinsusa,True,False,True,False,False,False,1.0,"SELECT COUNT( * ) AS count, T.feature AS feature, T.click_sub_type AS click_sub_type
+FROM analytics.v_component_platform_support_chat_engagement AS T
+WHERE ( T.event_ts >= '2025-08-17' AND T.event_ts <= '2025-09-15' ) AND ( T.locale = 'en_US' AND T.type = 'OUTBOUND_SHIPPING' AND ( T.segment_id = 'c43e2057-d32b-45e1-9cbb-d4710e04802c' OR T.segment_id = 'ec1ac75f-190a-4327-9f24-1581b80c4ede' ) ) AND ( T.retailer_moniker = 'clarinsusa' )
+GROUP BY T.feature, T.click_sub_type
+ORDER BY count DESC
+;","SELECT COUNT( * ) AS count, T.feature AS feature, T.click_sub_type AS click_sub_type
+FROM analytics.v_component_platform_support_chat_engagement AS T
+WHERE ( T.event_ts >= '2025-08-17' AND T.event_ts <= '2025-09-15' ) AND ( T.locale = 'en_US' AND T.type = 'OUTBOUND_SHIPPING' AND ( T.segment_id = 'c43e2057-d32b-45e1-9cbb-d4710e04802c' OR T.segment_id = 'ec1ac75f-190a-4327-9f24-1581b80c4ede' ) ) AND ( T.retailer_moniker = 'clarinsusa' )
+GROUP BY T.feature, T.click_sub_type
+ORDER BY count DESC
+;"
+7b241089-7d85-449f-9848-1448a8e2eab0,Peak_2024_2025,2025-01-06 20:30:45.227000+00:00,2,0.01,0.0007,18.141266527487822,0.65,,0,207,207,100.0,vuoriclothing,,,,,,looker,True,True,False,,vuoriclothing,True,False,False,False,False,False,1.0,"SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'vuoriclothing' ) AND ( T.return_created_date >= '2024-11-17' AND T.return_created_date <= '2024-12-16' )
+;","SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'vuoriclothing' ) AND ( T.return_created_date >= '2024-11-17' AND T.return_created_date <= '2024-12-16' )
+;"
+b6c56b91-07fe-47fa-b82f-398e6b903d5c,Peak_2024_2025,2025-01-15 15:57:47.702000+00:00,3,0.08,0.0037,90.81863560732113,2.21,,0,350,350,100.0,snakeriverfarms,,,,,,engagement,True,True,False,,snakeriverfarms,True,False,True,False,False,False,1.0,"SELECT COUNT( distinct distinct_event ) AS count_distinct_distinct_event, T.click_category AS click_category
+FROM analytics.v_component_platform_marketing_engagement AS T
+WHERE ( T.event_ts >= '2024-12-16' AND T.event_ts <= '2025-01-14' ) AND ( T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'snakeriverfarms' )
+GROUP BY T.click_category
+;","SELECT COUNT( distinct distinct_event ) AS count_distinct_distinct_event, T.click_category AS click_category
+FROM analytics.v_component_platform_marketing_engagement AS T
+WHERE ( T.event_ts >= '2024-12-16' AND T.event_ts <= '2025-01-14' ) AND ( T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'snakeriverfarms' )
+GROUP BY T.click_category
+;"
+c8d4ad79-0f31-4b81-994a-a5dd822c080e,Peak_2024_2025,2024-12-18 13:25:38.936000+00:00,3,0.2,0.0101,207.50606488011283,8.46,,0,228,228,100.0,rab,,,,,,looker,True,True,False,,rab,True,False,False,False,False,False,1.0,"SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'rab' ) AND ( T.return_created_date >= '2024-01-01' AND T.return_created_date <= '2024-12-17' ) AND ( ( T.locale = 'de_BE' ) )
+;","SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'rab' ) AND ( T.return_created_date >= '2024-01-01' AND T.return_created_date <= '2024-12-17' ) AND ( ( T.locale = 'de_BE' ) )
+;"
+34977df1-b93a-43ad-a138-c3c8cad466e7,Baseline_2025_Sep_Oct,2025-09-10 13:11:31.133000+00:00,6,0.02,0.0012,14.660802367642223,66.25,,0,2034,500,24.6,,,,,,,,True,True,False,,NO_RETAILER,False,False,False,True,False,True,3.0,"
+--sms_delivered_count
+--Number of SMS messages successfully delivered to a phone number
+SELECT (
+        SELECT GREATEST(
+                COUNT(DISTINCT IF(service_name IN ('twilio_webhook_gcf', 'vivaconnect_webhook'), sms_message_id, NULL)),
+                COUNT(DISTINCT dedupe_key)
+            )
+        FROM (
+          SELECT * EXCEPT (checkout_locale),
+            COALESCE(MAX(checkout_locale) OVER w_dedupe, MAX(checkout_locale) OVER w_tracer, MAX(checkout_locale) OVER w_msg) AS locale,
+            COALESCE(MAX(notification_event_type) OVER w_tracer, MAX(notification_event_type) OVER w_msg, MAX(notification_event_type) OVER w_dedupe) AS notification_type
+          FROM `analytics.v_messaging_sms`
+          WHERE event_ts BETWEEN '2025-07-30' AND '2025-08-28'
+              AND retailer_moniker = LOWER('narvar')
+              AND (
+                (LOWER(sms_message_status) LIKE '%deliv%'
+                AND LOWER(sms_message_status) NOT LIKE '%undel%'
+                AND service_n","
+--sms_delivered_count
+--Number of SMS messages successfully delivered to a phone number
+SELECT (
+        SELECT GREATEST(
+                COUNT(DISTINCT IF(service_name IN ('twilio_webhook_gcf', 'vivaconnect_webhook'), sms_message_id, NULL)),
+                COUNT(DISTINCT dedupe_key)
+            )
+        FROM (
+          SELECT * EXCEPT (checkout_locale),
+            COALESCE(MAX(checkout_locale) OVER w_dedupe, MAX(checkout_locale) OVER w_tracer, MAX(checkout_locale) OVER w_msg) AS locale,
+            COALESCE(MAX(notification_event_type) OVER w_tracer, MAX(notification_event_type) OVER w_msg, MAX(notification_event_type) OVER w_dedupe) AS notification_type
+          FROM `analytics.v_messaging_sms`
+          WHERE event_ts BETWEEN '2025-07-30' AND '2025-08-28'
+              AND retailer_moniker = LOWER('narvar')
+              AND (
+                (LOWER(sms_message_status) LIKE '%deliv%'
+                AND LOWER(sms_message_status) NOT LIKE '%undel%'
+                AND service_name IN ('twilio_webhook_gcf', 'vivaconnect_webhook', 'textlocal_webhook_gcf'))
+                OR
+                (LOWER(sms_message_status) LIKE '%accepted%'
+                AND service_name IN ('sms_service', 'sms-service'))
+                OR
+                (service_name IN ('notification_postprocessor_service'))
+                )
+          WINDOW
+            w_msg AS (PARTITION BY sms_message_id),
+            w_tracer AS (PARTITION BY narvar_tracer_id),
+            w_dedupe AS (PARTITION BY dedupe_key)
+           )
+           WHERE service_name NOT IN ('sms_service', 'sms-service' , 'notification_postprocessor_service')
+           AND LOWER(locale) = LOWER('en_US')
+      ) +
+      (
+       SELECT COUNT(DISTINCT sms_message_id)
+       FROM `analytics.v_watch_list_hub_sms`
+       WHERE event_ts BETWEEN '2025-07-30' AND '2025-08-28'
+         AND notification_channel = 'sms'
+         AND retailer_moniker = LOWER('narvar')
+         AND LOWER(checkout_locale) = LOWER('en_US')
+      )
+   AS count_distinct_sms_message_id
+"
+74e45c2a-2f36-4205-9e02-6605ec0cba4c,Baseline_2025_Sep_Oct,2025-10-09 18:28:24.731000+00:00,6,0.02,0.0011,12.08770603357024,2.62,,0,453,453,100.0,newbalance,,,,,,assets,True,True,False,,newbalance,True,False,True,False,False,False,1.0,"SELECT COUNT( distinct distinct_event ) AS count_distinct_distinct_event, T.asset_id AS asset_id, T.link_href AS link_href, T.name AS name
+FROM analytics.v_component_platform_marketing_assets AS T
+WHERE ( T.event_ts >= '2025-09-09' AND T.event_ts <= '2025-10-08' ) AND ( T.locale = 'en_FR' AND T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'newbalance' )
+GROUP BY T.asset_id, T.link_href, T.name
+ORDER BY count_distinct_distinct_event DESC
+;","SELECT COUNT( distinct distinct_event ) AS count_distinct_distinct_event, T.asset_id AS asset_id, T.link_href AS link_href, T.name AS name
+FROM analytics.v_component_platform_marketing_assets AS T
+WHERE ( T.event_ts >= '2025-09-09' AND T.event_ts <= '2025-10-08' ) AND ( T.locale = 'en_FR' AND T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'newbalance' )
+GROUP BY T.asset_id, T.link_href, T.name
+ORDER BY count_distinct_distinct_event DESC
+;"
+df2c3600-4eb9-422d-ab95-128eff532448,Peak_2024_2025,2025-01-29 10:06:11.184000+00:00,6,0.02,0.0012,13.073350761187145,0.6,,0,231,231,100.0,dooney,,,,,,looker,True,True,False,,dooney,True,False,False,False,False,False,1.0,"SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'dooney' ) AND ( T.return_created_date >= '2024-12-30' AND T.return_created_date <= '2025-01-28' ) AND ( ( T.locale = 'en_US' ) )
+;","SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'dooney' ) AND ( T.return_created_date >= '2024-12-30' AND T.return_created_date <= '2025-01-28' ) AND ( ( T.locale = 'en_US' ) )
+;"
+13d17a96-042b-4330-b0ad-6351ac9a4c7d,Baseline_2025_Sep_Oct,2025-09-17 17:36:49.588000+00:00,6,0.02,0.0008,8.96174863387978,0.88,,0,2298,500,21.8,davidyurman,,,,,,looker,True,True,False,,davidyurman,True,False,True,True,True,True,4.0,"
+--most returned items
+with
+    t_quantities as (
+        select item_name, return_qty, record_count, product_image_url, dense_rank() over (order by return_qty desc) as item_rn,
+            return_reason, reason_qty, reason_count, row_number() over (partition by item_name order by reason_count desc) as reason_rn
+        from (
+            select distinct
+                item_name, return_reason,
+                sum(reason_qty) over (partition by item_name) as return_qty,
+                sum(reason_qty) over (partition by item_name, return_reason) as reason_qty,
+                max(product_image_url) over (partition by item_name) as product_image_url,
+                count(1) over (partition by item_name, return_reason) as reason_count,
+                count(1) over (partition by item_name) AS record_count
+            from (
+                select
+                    item_name, return_reason,
+                    sum(return_qty) as reason_qty,
+                    max(product_image_url) a","
+--most returned items
+with
+    t_quantities as (
+        select item_name, return_qty, record_count, product_image_url, dense_rank() over (order by return_qty desc) as item_rn,
+            return_reason, reason_qty, reason_count, row_number() over (partition by item_name order by reason_count desc) as reason_rn
+        from (
+            select distinct
+                item_name, return_reason,
+                sum(reason_qty) over (partition by item_name) as return_qty,
+                sum(reason_qty) over (partition by item_name, return_reason) as reason_qty,
+                max(product_image_url) over (partition by item_name) as product_image_url,
+                count(1) over (partition by item_name, return_reason) as reason_count,
+                count(1) over (partition by item_name) AS record_count
+            from (
+                select
+                    item_name, return_reason,
+                    sum(return_qty) as reason_qty,
+                    max(product_image_url) as product_image_url,
+                    row_number() over (partition by return_process_info_id, return_process_item_id order by return_last_modified_date desc) as rnk
+                from
+                    analytics.v_return_details_looker
+                where
+                    retailer_moniker = 'davidyurman'
+                    and lower(locale) = lower('en_US')
+                    and return_status != 'cancelled'
+                    and item_name is not null and length(trim(item_name)) > 0
+                    and return_created_date between '2025-08-04' and '2025-09-02'
+                group by
+                    item_name, return_reason, return_process_info_id, return_process_item_id, return_last_modified_date
+                )
+            where rnk = 1
+            order by item_name, reason_count desc
+        )
+    )
+select
+    item_name, return_qty, product_image_url,
+    string_agg(
+        concat(
+            return_reason, ':=',
+            cast(reason_qty as string), ':=',
+            cast(round(((reason_qty / return_qty) * 100), 1) as string), '%%'
+            ),
+        ""^|"" order by reason_qty desc
+    ) as reason_statistics
+from
+    t_quantities
+where item_rn <= 5 and reason_rn <= 3
+group by item_name, return_qty, product_image_url
+order by return_qty desc
+"
+af560f1c-ac5f-4419-83a7-f758fd8ce902,Baseline_2025_Sep_Oct,2025-10-23 20:24:12.004000+00:00,6,0.08,0.0038,44.60843760025666,37.08,,0,8407,500,5.9,,,,,,,summary,True,True,False,,NO_RETAILER,False,True,True,False,True,False,10.0,"
+--emails_engagement_rates_by_notification_type
+WITH dates AS (
+  SELECT DATE('2025-08-23') AS s, DATE('2025-10-23') AS e, MAX(email_sent_date) AS last_rollup_date,
+      DATE(CURRENT_TIMESTAMP()) AS c, DATE_SUB(DATE(CURRENT_TIMESTAMP()), INTERVAL 3 DAY) t_days_ago
+  FROM `reporting.email_engagement_daily_rollup`),
+  denominator AS (
+    SELECT
+        m.mapped_value AS notification_type,
+        SUM(emails_delivered) AS delivered
+        FROM `reporting.email_engagement_daily_rollup` r LEFT JOIN `messaging.campaign_mapping` m
+    ON r.campaign_id = m.sparkpost_campaign_id, dates
+    WHERE
+        email_sent_date >= dates.s AND email_sent_date <= dates.e
+        AND LOWER(retailer_moniker) = LOWER('lululemon')
+        AND LOWER(locale) = LOWER('en_US')
+    GROUP BY m.mapped_value
+  ),
+  click_summary AS (
+      SELECT
+            m.mapped_value AS notification_type, cl.click_type, SUM(cl.emails_clicked) AS clicked_by_type,
+            FROM `reporting.email_engagement_daily_rollup` r LE","
+--emails_engagement_rates_by_notification_type
+WITH dates AS (
+  SELECT DATE('2025-08-23') AS s, DATE('2025-10-23') AS e, MAX(email_sent_date) AS last_rollup_date,
+      DATE(CURRENT_TIMESTAMP()) AS c, DATE_SUB(DATE(CURRENT_TIMESTAMP()), INTERVAL 3 DAY) t_days_ago
+  FROM `reporting.email_engagement_daily_rollup`),
+  denominator AS (
+    SELECT
+        m.mapped_value AS notification_type,
+        SUM(emails_delivered) AS delivered
+        FROM `reporting.email_engagement_daily_rollup` r LEFT JOIN `messaging.campaign_mapping` m
+    ON r.campaign_id = m.sparkpost_campaign_id, dates
+    WHERE
+        email_sent_date >= dates.s AND email_sent_date <= dates.e
+        AND LOWER(retailer_moniker) = LOWER('lululemon')
+        AND LOWER(locale) = LOWER('en_US')
+    GROUP BY m.mapped_value
+  ),
+  click_summary AS (
+      SELECT
+            m.mapped_value AS notification_type, cl.click_type, SUM(cl.emails_clicked) AS clicked_by_type,
+            FROM `reporting.email_engagement_daily_rollup` r LEFT JOIN `messaging.campaign_mapping` m
+        ON r.campaign_id = m.sparkpost_campaign_id, UNNEST(r.clicks_by_type) cl, dates
+        WHERE
+            email_sent_date >= dates.s AND email_sent_date <= dates.e
+            AND LOWER(retailer_moniker) = LOWER('lululemon')
+            AND LOWER(locale) = LOWER('en_US')
+        GROUP BY m.mapped_value, cl.click_type
+    ),
+  open_summary AS (
+        (SELECT
+            m.mapped_value AS notification_type,
+            SUM(emails_opened) AS opened, SUM(emails_delivered) AS delivered
+        FROM `reporting.email_engagement_daily_rollup` e LEFT JOIN `messaging.campaign_mapping` m ON e.campaign_id = m.sparkpost_campaign_id, dates
+        WHERE
+            email_sent_date >= dates.s AND email_sent_date <= dates.e
+            AND LOWER(retailer_moniker) = LOWER('lululemon')
+            AND LOWER(locale) = LOWER('en_US')
+        GROUP BY m.mapped_value
+        )
+    ),
+    recent_summary AS (
+        WITH sp AS
+            (SELECT
+                m.mapped_value AS notification_type, message_id,
+                COALESCE(MIN(IF(type = 'injection', DATE(timestamp), NULL)), MIN(IF(type = 'delivery', DATE(timestamp), NULL))) AS email_sent_date,
+                LOGICAL_OR(IF(type = 'delivery', true, false)) AS email_delivered,
+                LOGICAL_OR(IF(type = 'out_of_band', true, false)) AS out_of_band,
+                LOGICAL_OR(IF(type LIKE '%open' OR type = 'click', true, false)) AS email_opened,
+                ARRAY_AGG(
+                    STRUCT(type, timestamp,
+                            CASE
+                            WHEN LOWER(target_link_url) LIKE '%tracking%' THEN 'Tracking'
+                            WHEN LOWER(target_link_url) LIKE '%returns%' THEN 'Returns'
+                            WHEN IF(target_link_name is null or TRIM(target_link_name)='',target_link_url,target_link_name) LIKE '%contact_find_store%' THEN 'Store Finder'
+                            WHEN IF(target_link_name is null or TRIM(target_link_name)='',target_link_url,target_link_name) LIKE '%callout_link%' THEN 'Contact'
+                            WHEN IF(target_link_name is null or TRIM(target_link_name)='',target_link_url,target_link_name) LIKE '%contact_retailer_link%' THEN 'Contact'
+                            WHEN IF(target_link_name is null or TRIM(target_link_name)='',target_link_url,target_link_name) LIKE '%header_retailer_link%' THEN 'Marketing'
+                            WHEN LOWER(IF(target_link_name is null or TRIM(target_link_name)='',target_link_url,target_link_name)) LIKE '%header%' THEN 'Marketing'
+                            WHEN IF(target_link_name is null or TRIM(target_link_name)='',target_link_url,target_link_name) LIKE '%itemVertical_link%' THEN 'Marketing'
+                            WHEN IF(target_link_name is null or TRIM(target_link_name)='',target_link_url,target_link_name) LIKE '%marketing_item%' THEN 'Marketing'
+                            WHEN IF(target_link_name is null or TRIM(target_link_name)='',target_link_url,target_link_name) LIKE '%multiShipment_itemImage%' THEN 'Marketing'
+                            WHEN IF(target_link_name is null or TRIM(target_link_name)='',target_link_url,target_link_name) LIKE '%recommendations_item%' THEN 'Marketing'
+                            WHEN IF(target_link_name is null or TRIM(target_link_name)='',target_link_url,target_link_name) LIKE '%shipmentHorizontal_itemImage%' THEN 'Marketing'
+                            WHEN IF(target_link_name is null or TRIM(target_link_name)='',target_link_url,target_link_name) LIKE '%unshipped_itemImage%' THEN 'Marketing'
+                            WHEN IF(target_link_name is null or TRIM(target_link_name)='',target_link_url,target_link_name) LIKE '%footer%' THEN 'Footer'
+                            WHEN IF(target_link_name is null or TRIM(target_link_name)='',target_link_url,target_link_name) = 'tracking_link' THEN 'Footer'
+                            WHEN LOWER(target_link_url) LIKE '%help%' THEN 'Contact'
+                            WHEN LOWER(target_link_url) LIKE '%contact%' THEN 'Contact'
+                            ELSE target_link_name
+                            END AS click_type
+                        ) IGNORE NULLS ORDER BY timestamp
+                    ) events
+                FROM `analytics.v_sparkpost` s LEFT JOIN `messaging.campaign_mapping` m
+                    ON s.campaign_id = m.sparkpost_campaign_id, dates
+                WHERE
+                    dates.e > dates.last_rollup_date
+                    AND DATE(timestamp) BETWEEN GREATEST(dates.s, dates.t_days_ago) AND LEAST(dates.e, dates.c)
+                    AND LOWER(retailer_moniker) = LOWER('lululemon')
+                    AND LOWER(locale) = LOWER('en_US')
+                    AND is_narvar_recipient IS FALSE
+                GROUP BY m.mapped_value, message_id)
+            SELECT notification_type, click_type, COUNTIF(clicks > 0) AS clicked, COUNTIF(opens > 0) AS opened, COUNT(DISTINCT message_id) AS delivered
+            FROM (
+                SELECT notification_type, click_type, message_id, SUM(IF(type = 'click', 1, 0)) AS clicks, SUM(IF(type LIKE '%open' OR type = 'click', 1, 0)) AS opens
+                FROM sp, dates, UNNEST(sp.events) AS events
+                WHERE email_sent_date > dates.last_rollup_date
+                    AND email_delivered = true AND out_of_band = false
+                GROUP BY notification_type, message_id, click_type
+            )
+            GROUP BY notification_type, click_type
+    )
+    ,
+    recent_denominator AS (
+        SELECT notification_type, SUM(opened) AS opened, SUM(delivered) AS delivered
+        FROM recent_summary
+        GROUP BY notification_type
+        ORDER BY notification_type
+        )
+SELECT
+    COALESCE(c.notification_type, d.notification_type, r.notification_type, rd.notification_type) AS notification_type,
+    CONCAT(COALESCE(c.click_type, r.click_type), ' Click-Through Rate') AS rate_type,
+    IFNULL(c.clicked_by_type, 0) + IFNULL(r.clicked, 0) AS count_distinct_numerator,
+    IFNULL(d.delivered, 0) + IFNULL(rd.delivered, 0) AS count_distinct_denominator,
+    IF((IFNULL(d.delivered, 0) + IFNULL(rd.delivered, 0)) > 0, ROUND((IFNULL(c.clicked_by_type, 0) + IFNULL(r.clicked, 0))/(IFNULL(d.delivered, 0) + IFNULL(rd.delivered, 0)) * 100, 2), 0) AS percent_rate
+FROM click_summary c
+  FULL OUTER JOIN denominator d ON c.notification_type = d.notification_type
+  FULL OUTER JOIN recent_summary r ON c.notification_type = r.notification_type AND c.click_type = r.click_type
+  FULL OUTER JOIN recent_denominator rd ON r.notification_type = rd.notification_type
+WHERE
+  (c.click_type IN ('Marketing', 'Tracking')
+  OR r.click_type IN ('Marketing', 'Tracking'))
+  AND (c.notification_type IS NOT NULL OR r.notification_type IS NOT NULL)
+UNION ALL
+SELECT COALESCE(o.notification_type, rd.notification_type) AS notification_type,
+  'Open Rate' AS rate_type,
+   IFNULL(o.opened, 0) + IFNULL(rd.opened, 0) AS count_distinct_numerator,
+   IFNULL(o.delivered, 0) + IFNULL(rd.delivered, 0) AS count_distinct_denominator,
+   IF((IFNULL(o.delivered, 0) + IFNULL(rd.delivered, 0)) > 0, ROUND((IFNULL(o.opened, 0) + IFNULL(rd.opened, 0))/(IFNULL(o.delivered, 0) + IFNULL(rd.delivered, 0)) * 100, 2), 0) AS percent_rate
+FROM open_summary o
+  FULL OUTER JOIN recent_denominator rd ON o.notification_type = rd.notification_type
+ORDER BY notification_type
+"
+91ee2856-5c76-48c6-83ca-94ef40c18346,Peak_2024_2025,2024-12-16 14:55:25.007000+00:00,7,1.4,0.0692,694.8365039977944,79.63,,0,6516,500,7.7,parfumschristiandior,,,,,,engine,True,True,False,,parfumschristiandior,True,True,True,False,True,False,15.0,"with
+rules_engine as (
+    SELECT
+     dedupe_key,
+     notification_event_type,
+     notification_event_triggered_message,
+     case
+        when
+            metric_name = 'NOTIFICATION_SUPPRESSED' then 'suppressed'
+        else
+            rule_id
+     end
+     as rule_id,
+     action_type
+    FROM
+      `analytics.v_rules_engine_pulsar` prep
+    WHERE
+      event_ts >= '2024-11-12'
+    AND
+      event_ts < '2024-12-11'
+    AND
+      retailer_moniker = 'parfumschristiandior'
+    and notification_channel = 'email'
+    and lower(checkout_locale) = lower('en_US')
+    and metric_name in ('NOTIFICATION_EVENT_TRIGGERED','NOTIFICATION_SUPPRESSED')
+),
+
+email_api as (
+    SELECT
+      dedupe_key,
+      notification_event_type,
+      notification_channel_provider,
+      email_status_code,
+      template_name
+    FROM
+      `analytics.v_email_api`
+    WHERE
+  event_ts >= '2024-11-12'
+ AND
+  event_ts < '2024-12-11'
+ AND
+  retailer_moniker = 'parfumschristiandior'
+  and lower(checkout_locale) = l","with
+rules_engine as (
+    SELECT
+     dedupe_key,
+     notification_event_type,
+     notification_event_triggered_message,
+     case
+        when
+            metric_name = 'NOTIFICATION_SUPPRESSED' then 'suppressed'
+        else
+            rule_id
+     end
+     as rule_id,
+     action_type
+    FROM
+      `analytics.v_rules_engine_pulsar` prep
+    WHERE
+      event_ts >= '2024-11-12'
+    AND
+      event_ts < '2024-12-11'
+    AND
+      retailer_moniker = 'parfumschristiandior'
+    and notification_channel = 'email'
+    and lower(checkout_locale) = lower('en_US')
+    and metric_name in ('NOTIFICATION_EVENT_TRIGGERED','NOTIFICATION_SUPPRESSED')
+),
+
+email_api as (
+    SELECT
+      dedupe_key,
+      notification_event_type,
+      notification_channel_provider,
+      email_status_code,
+      template_name
+    FROM
+      `analytics.v_email_api`
+    WHERE
+  event_ts >= '2024-11-12'
+ AND
+  event_ts < '2024-12-11'
+ AND
+  retailer_moniker = 'parfumschristiandior'
+  and lower(checkout_locale) = lower('en_US')
+),
+
+provider as (
+    SELECT
+      type,
+      dedup_key as dedupe_key,
+      notification_type as notification_event_type
+    FROM
+      `analytics.v_sparkpost`
+     WHERE
+    timestamp >= '2024-11-12'
+  AND
+    retailer_moniker = 'parfumschristiandior'
+  group by 1,2,3
+),
+
+provider_delivery as (
+    SELECT
+      type,
+      dedupe_key,
+      notification_event_type
+    FROM
+      provider
+     WHERE
+        type = 'delivery'
+),
+
+provider_open as (
+    SELECT
+      type,
+      dedupe_key,
+      notification_event_type
+    FROM
+      provider
+     WHERE
+        type = 'open'
+),
+
+provider_click as (
+    SELECT
+      type,
+      dedupe_key,
+      notification_event_type
+    FROM
+      provider
+     WHERE
+        type = 'click'
+),
+
+report as (
+    SELECT
+        re.dedupe_key, re.notification_event_type, re.notification_event_triggered_message, re.rule_id, re.action_type, eq.dedupe_key as email_narvar_tracer_id, eq.template_name, eq.email_status_code,
+        case
+            when provider_delivery.dedupe_key is not null then true
+            else false
+        end as delivered,
+        case
+            when provider_open.dedupe_key is not null then true
+            else false
+        end as opened,
+        case
+            when provider_click.dedupe_key is not null then true
+            else false
+        end as clicked
+    from
+        rules_engine re
+    left join
+        email_api eq
+    on
+        re.dedupe_key = eq.dedupe_key
+        and
+        re.notification_event_type = eq.notification_event_type and re.rule_id !='suppressed'
+    left join
+        provider_delivery
+    on
+        re.dedupe_key = provider_delivery.dedupe_key
+        and
+        re.notification_event_type = provider_delivery.notification_event_type and re.rule_id !='suppressed'
+    left join
+        provider_open
+    on
+        re.dedupe_key = provider_open.dedupe_key
+        and
+        re.notification_event_type = provider_open.notification_event_type and re.rule_id !='suppressed'
+    left join
+        provider_click
+    on
+        re.dedupe_key = provider_click.dedupe_key
+        and
+        re.notification_event_type = provider_click.notification_event_type and re.rule_id !='suppressed'
+    where (eq.template_name is not null or re.rule_id = 'suppressed')
+),
+
+event_count as (
+    SELECT
+        notification_event_type,rule_id,template_name, count(*) as event_count
+    from
+        report
+    group by 1,2,3
+),
+
+
+event_count_aggregate as (
+    SELECT
+        notification_event_type, count(*) as total_event_count
+    from
+        report
+    group by 1
+),
+
+email_sent as (
+    SELECT
+        notification_event_type,rule_id,template_name, count(*) as sent_count
+    from
+        report
+    where email_status_code like '2%'
+    group by 1,2,3
+),
+
+email_delivered as (
+    SELECT
+        notification_event_type,rule_id,template_name, count(*) as delivered_count
+    from
+        report
+    where
+        delivered = true
+    group by 1,2,3
+),
+
+email_click as (
+    SELECT
+        notification_event_type,rule_id,template_name, count(*) as click_count
+    from
+        report
+    where
+        clicked = true
+    group by 1,2,3
+),
+
+email_open as (
+    SELECT
+        notification_event_type,rule_id,template_name, count(*) as open_count
+    from
+        report
+    where
+        opened = true
+    group by 1,2,3
+),
+
+final_report as (
+    SELECT
+            ec.notification_event_type,
+            ec.rule_id,
+            ec.template_name,
+            event_count,
+            total_event_count,
+            (event_count*100 / total_event_count) as percent_of_event,
+            sent_count as sent_count,
+            delivered_count as delivered_count,
+            delivered_count*100/sent_count as percent_delivery_rate,
+            case
+            when ec.rule_id = 'suppressed' then cast(ec.event_count as STRING)
+            else '-'
+            end as suppressed_count,
+            open_count,
+            click_count,
+            open_count*100/delivered_count as open_rate ,
+            click_count * 100 / delivered_count as click_rate
+        from
+            event_count ec
+        left join
+            event_count_aggregate eca
+        on
+            ec.notification_event_type=eca.notification_event_type
+        left join
+            email_sent es
+        on
+            ec.notification_event_type=es.notification_event_type and ec.rule_id=es.rule_id and ec.template_name=es.template_name
+        left join
+            email_delivered ed
+        on
+            ec.notification_event_type=ed.notification_event_type and ec.rule_id=ed.rule_id and ec.template_name=ed.template_name
+        left join
+            email_click eclick
+        on
+            ec.notification_event_type=eclick.notification_event_type and ec.rule_id=eclick.rule_id and ec.template_name=eclick.template_name
+        left join
+            email_open eo
+        on
+            ec.notification_event_type=eo.notification_event_type and ec.rule_id=eo.rule_id and ec.template_name=eo.template_name
+        where (ec.template_name is not null or ec.rule_id = 'suppressed')
+        order by 1,2
+)
+SELECT
+            notification_event_type,
+            rule_id,
+            template_name,
+            event_count,
+            total_event_count,
+            percent_of_event,
+            sent_count,
+            delivered_count,
+            percent_delivery_rate,
+            suppressed_count,
+            open_count,
+            click_count,
+            open_rate ,
+            click_rate
+from final_report"
+c83f8ac1-2a11-443f-a6fc-4b4c6dce0e4e,Peak_2024_2025,2024-11-05 15:52:36.331000+00:00,7,0.17,0.0084,80.63806264806529,0.27,,0,3497,500,14.3,jdsports,,,,,,,True,True,False,,jdsports,True,True,True,True,True,True,8.0,"
+WITH
+    go_live_dates AS (
+        SELECT DISTINCT retailer_moniker, product, MIN(go_live_date) OVER (PARTITION BY retailer_moniker, product) go_live
+        FROM `analytics.v_go_live_dates`
+        WHERE product = 'Returns'
+        and retailer_moniker = 'jdsports'
+        ),
+    sf AS (
+        SELECT DISTINCT
+            retailer AS _retailer_moniker,
+            category as retailer_category
+        FROM `analytics.v_retailer_category`
+        ),
+    t as (
+        SELECT
+            IF(_retailer_moniker IS NOT NULL, retailer, 'average') AS retailer,
+            sf.retailer_category,
+            e.remove_from_benchmark,
+            e.show_individual_rate,
+            SUM(return_value) AS return_value, SUM(order_value) AS order_value,
+            IF(SUM(order_value) > 0, 100 * SUM(return_value)/SUM(order_value), 0) AS pct_return_rate
+        FROM `reporting.return_rate_agg` p
+            LEFT JOIN sf on sf._retailer_moniker = p.retailer
+            LEFT JOIN `reporting.returns_ret","
+WITH
+    go_live_dates AS (
+        SELECT DISTINCT retailer_moniker, product, MIN(go_live_date) OVER (PARTITION BY retailer_moniker, product) go_live
+        FROM `analytics.v_go_live_dates`
+        WHERE product = 'Returns'
+        and retailer_moniker = 'jdsports'
+        ),
+    sf AS (
+        SELECT DISTINCT
+            retailer AS _retailer_moniker,
+            category as retailer_category
+        FROM `analytics.v_retailer_category`
+        ),
+    t as (
+        SELECT
+            IF(_retailer_moniker IS NOT NULL, retailer, 'average') AS retailer,
+            sf.retailer_category,
+            e.remove_from_benchmark,
+            e.show_individual_rate,
+            SUM(return_value) AS return_value, SUM(order_value) AS order_value,
+            IF(SUM(order_value) > 0, 100 * SUM(return_value)/SUM(order_value), 0) AS pct_return_rate
+        FROM `reporting.return_rate_agg` p
+            LEFT JOIN sf on sf._retailer_moniker = p.retailer
+            LEFT JOIN `reporting.returns_retailers_to_exclude` e ON LOWER(p.retailer) = LOWER(e.retailer_moniker)
+            LEFT JOIN go_live_dates g ON LOWER(p.retailer) = LOWER(g.retailer_moniker)
+        WHERE day between DATE('2024-10-20') AND DATE('2024-11-03')
+            AND LOWER(order_locale) = LOWER('en_US')
+            AND LOWER(return_locale) = LOWER('en_US')
+            AND (day >= g.go_live OR g.go_live IS NULL)
+            AND (e.show_individual_rate IS NULL OR e.show_individual_rate = true)
+        GROUP BY retailer, retailer_category, e.remove_from_benchmark, e.show_individual_rate
+        HAVING (return_value > 0 AND pct_return_rate < 100 AND order_value > 0)
+    ),
+    category_benchmarks AS (
+      SELECT retailer_category, AVG(pct_return_rate) AS benchmark_return_rate
+      FROM t
+      GROUP BY retailer_category
+    ),
+    rates AS (
+        SELECT DISTINCT
+            retailer,
+            CASE
+                WHEN retailer != 'average' THEN 1
+                WHEN retailer = 'average' THEN 2
+            END as priority,
+            CASE
+                WHEN show_individual_rate = false THEN null
+                WHEN (show_individual_rate IS NULL OR show_individual_rate = true)
+                THEN IFNULL(COALESCE(IF(retailer = 'jdsports', pct_return_rate, null), IF(retailer = 'average', pct_return_rate, null)), 0)
+            END AS percent_return_rate,
+            CASE
+                WHEN show_individual_rate = false THEN null
+                WHEN (show_individual_rate IS NULL OR show_individual_rate = true)
+                THEN IFNULL(COALESCE(IF(retailer = 'jdsports', pct_return_rate - benchmark_return_rate, null), IF(retailer = 'average', pct_return_rate - benchmark_return_rate, null)), 0)
+            END AS percent_diff_from_benchmark
+        FROM (
+            SELECT t.retailer_category, retailer, return_value, order_value, pct_return_rate,
+              show_individual_rate,
+              IF(t.retailer_category IS NOT NULL AND (remove_from_benchmark IS NULL OR remove_from_benchmark != true),
+                benchmark_return_rate,
+                (SELECT AVG(pct_return_rate) FROM t)) AS benchmark_return_rate
+            FROM t
+              left join category_benchmarks cb on t.retailer_category = cb.retailer_category
+            )
+        WHERE retailer = 'jdsports' OR (retailer = 'average' AND (show_individual_rate = true or show_individual_rate is null))
+    )
+SELECT retailer, percent_return_rate, percent_diff_from_benchmark
+FROM rates
+ORDER BY priority
+LIMIT 1
+"
+ff1a25f8-55ab-4891-b2f6-36ccba4f28c2,Baseline_2025_Sep_Oct,2025-10-28 15:05:23.738000+00:00,7,0.1,0.005,45.44459764351968,1.04,,0,3032,500,16.5,average,,,,,,category,True,True,False,,average,True,True,True,True,True,True,9.0,"
+--revenue_retention
+WITH gift_or_exchanges AS (
+    select
+        retailer_moniker, retailer_category, SUM(pct_returns) AS pct_revenue_retained,
+        IF(retailer_moniker != 'average', AVG(SUM(pct_returns)) OVER (PARTITION BY retailer_category), AVG(SUM(pct_returns)) OVER ()) AS benchmark_pct_revenue_retained
+    from (
+        select distinct
+            retailer_moniker, retailer_category,
+            narvar_product, gift_return,  refund_option,
+            if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_returns
+        from (
+            with sf AS (
+                SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+                FROM analytics.v_retailer_category
+                WHERE retailer IS NOT NULL AND category IS NOT NULL
+                )
+            select
+    ","
+--revenue_retention
+WITH gift_or_exchanges AS (
+    select
+        retailer_moniker, retailer_category, SUM(pct_returns) AS pct_revenue_retained,
+        IF(retailer_moniker != 'average', AVG(SUM(pct_returns)) OVER (PARTITION BY retailer_category), AVG(SUM(pct_returns)) OVER ()) AS benchmark_pct_revenue_retained
+    from (
+        select distinct
+            retailer_moniker, retailer_category,
+            narvar_product, gift_return,  refund_option,
+            if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_returns
+        from (
+            with sf AS (
+                SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+                FROM analytics.v_retailer_category
+                WHERE retailer IS NOT NULL AND category IS NOT NULL
+                )
+            select
+                IF(sf._retailer_moniker IS NOT NULL, t.retailer_moniker, 'average') AS retailer_moniker,
+                retailer_category,
+                narvar_product, gift_return, refund_option,
+                sum(return_qty * item_price) as value_returns_received,
+                row_number() over(partition by t.retailer_moniker, retailer_category, sf._retailer_moniker, return_process_info_id, return_process_item_id order by return_last_modified_date desc) as rnk
+            from
+                reporting.t_return_details t LEFT JOIN sf on sf._retailer_moniker = t.retailer_moniker
+            where
+                return_status != 'cancelled'
+                and return_created_date between '2025-09-27' and '2025-10-26'
+                and lower(locale) = lower('en_US')
+            group by
+                t.retailer_moniker, retailer_category, sf._retailer_moniker,
+                gift_return, refund_option, narvar_product, return_process_info_id, return_process_item_id, return_last_modified_date
+            )
+        where rnk = 1
+        group by retailer_moniker, retailer_category, narvar_product, gift_return, refund_option
+        )
+    where narvar_product = 'exchange' or gift_return = true or refund_option in ('gift_card','GIFT_CARD','instant_store_credit','store_credit')
+    group by retailer_moniker, retailer_category
+    )
+SELECT IFNULL(pct_revenue_retained, 0) as percent_revenue_retention, IFNULL(pct_revenue_retained - benchmark_retained, 0) AS percent_diff_from_benchmark
+FROM (
+    SELECT DISTINCT
+        (SELECT ROUND(pct_revenue_retained, 2) FROM gift_or_exchanges WHERE LOWER(retailer_moniker) = LOWER('jcpenney')) AS pct_revenue_retained,
+        ROUND(COALESCE(
+                (SELECT benchmark_pct_revenue_retained FROM gift_or_exchanges WHERE LOWER(retailer_moniker) = LOWER('jcpenney')),
+                (SELECT benchmark_pct_revenue_retained FROM gift_or_exchanges WHERE retailer_moniker = 'average')
+            ),
+        2) AS benchmark_retained
+    FROM gift_or_exchanges
+    )
+"
+033aea9d-50bf-42b1-940d-6255309ab458,Baseline_2025_Sep_Oct,2025-10-06 13:13:12.384000+00:00,8,0.11,0.0053,46.43044619422572,1.62,,0,2940,500,17.0,average,,,,,,category,True,True,False,,average,True,True,True,True,True,True,9.0,"
+--gift_card_rate
+WITH
+  gift_returns AS (
+    select retailer_moniker, retailer_category, sum(pct_gift_card) as pct_gift_card,
+       IF(retailer_moniker != 'average', AVG(sum(pct_gift_card)) OVER (PARTITION BY retailer_category), AVG(sum(pct_gift_card)) OVER ()) AS benchmark_pct_gift_card
+    from (
+      select
+        retailer_moniker, retailer_category,
+        gift_return,
+        refund_option,
+        narvar_product,
+        if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received))
+        OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_gift_card
+      from (
+         with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+          select
+              IF(sf._retailer_moniker IS NOT NUL","
+--gift_card_rate
+WITH
+  gift_returns AS (
+    select retailer_moniker, retailer_category, sum(pct_gift_card) as pct_gift_card,
+       IF(retailer_moniker != 'average', AVG(sum(pct_gift_card)) OVER (PARTITION BY retailer_category), AVG(sum(pct_gift_card)) OVER ()) AS benchmark_pct_gift_card
+    from (
+      select
+        retailer_moniker, retailer_category,
+        gift_return,
+        refund_option,
+        narvar_product,
+        if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received))
+        OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_gift_card
+      from (
+         with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+          select
+              IF(sf._retailer_moniker IS NOT NULL, t.retailer_moniker, 'average') AS retailer_moniker,
+              retailer_category,
+              narvar_product,
+              gift_return,
+              refund_option,
+              sum(return_qty * item_price) as value_returns_received,
+              row_number() over(partition by t.retailer_moniker, retailer_category, sf._retailer_moniker, return_process_info_id, return_process_item_id order by return_last_modified_date desc) as rnk
+              from
+                  reporting.t_return_details t LEFT JOIN sf on sf._retailer_moniker = t.retailer_moniker
+              where
+              return_status != 'cancelled'
+              and return_created_date between '2025-08-31' and '2025-09-29'
+              and lower(locale) = lower('en_US')
+          group by
+              t.retailer_moniker, retailer_category, sf._retailer_moniker,
+              gift_return, refund_option, narvar_product, return_process_info_id, return_process_item_id, return_last_modified_date
+          )
+      where rnk = 1
+      group by retailer_moniker, retailer_category, gift_return, refund_option, narvar_product
+      )
+    where (gift_return = true or refund_option in ('gift_card','GIFT_CARD','instant_store_credit','store_credit')) and narvar_product != 'exchange'
+    group by retailer_moniker, retailer_category
+  )
+
+SELECT IFNULL(pct_gift_card, 0) as percent_gift_card_rate, IFNULL(pct_gift_card - benchmark_pct_gift_card, 0) AS percent_diff_from_benchmark
+FROM (
+    SELECT DISTINCT
+        (SELECT ROUND(pct_gift_card, 2) FROM gift_returns WHERE LOWER(retailer_moniker) = LOWER('gregnormancollection')) AS pct_gift_card,
+        ROUND(COALESCE(
+          (SELECT benchmark_pct_gift_card FROM gift_returns WHERE LOWER(retailer_moniker) = LOWER('gregnormancollection')),
+          (SELECT benchmark_pct_gift_card FROM gift_returns WHERE retailer_moniker = 'average')
+        ), 2) AS benchmark_pct_gift_card
+    FROM gift_returns
+    )
+"
+40d988ac-cd7d-43a9-a8c6-5d959a5e94e5,Peak_2024_2025,2025-01-22 14:29:17.133000+00:00,8,0.2,0.0098,84.11844271936015,1.12,,0,2491,500,20.1,average,,,,,,category,True,True,False,,average,True,True,True,True,True,True,9.0,"
+--exchange_rate
+WITH exchanges AS (
+    select retailer_moniker, retailer_category, pct_exchange,
+       IF(retailer_moniker != 'average', AVG(pct_exchange) OVER (PARTITION BY retailer_category), AVG(pct_exchange) OVER ()) AS benchmark_pct_exchange
+    from (
+    select
+        retailer_moniker, retailer_category,
+        narvar_product, if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0,
+        100 * sum(value_returns_received)/SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_exchange
+    from (
+        with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+        select
+            IF(sf._retailer_moniker IS NOT NULL, t.retailer_moniker, 'average') AS retailer_moniker,
+            retailer_category,
+            narvar","
+--exchange_rate
+WITH exchanges AS (
+    select retailer_moniker, retailer_category, pct_exchange,
+       IF(retailer_moniker != 'average', AVG(pct_exchange) OVER (PARTITION BY retailer_category), AVG(pct_exchange) OVER ()) AS benchmark_pct_exchange
+    from (
+    select
+        retailer_moniker, retailer_category,
+        narvar_product, if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0,
+        100 * sum(value_returns_received)/SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_exchange
+    from (
+        with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+        select
+            IF(sf._retailer_moniker IS NOT NULL, t.retailer_moniker, 'average') AS retailer_moniker,
+            retailer_category,
+            narvar_product,
+            sum(return_qty * item_price) as value_returns_received,
+            row_number() over (partition by t.retailer_moniker, retailer_category, sf._retailer_moniker,return_process_info_id, return_process_item_id order by return_last_modified_date desc)
+as rnk
+        from
+            reporting.t_return_details t LEFT JOIN sf on sf._retailer_moniker = t.retailer_moniker
+        where
+            return_status != 'cancelled'
+            and return_created_date between '2024-12-23' and '2025-01-21'
+            and LOWER(locale) = LOWER('en_US')
+        group by
+            t.retailer_moniker, retailer_category, sf._retailer_moniker,
+            narvar_product, return_process_info_id, return_process_item_id, return_last_modified_date
+        )
+    where rnk = 1
+    group by retailer_moniker, retailer_category, narvar_product
+    )
+    where narvar_product = 'exchange'
+  )
+SELECT IFNULL(pct_exchange, 0) as percent_exchange_rate, IFNULL(pct_exchange - benchmark_pct_exchange, 0) AS percent_diff_from_benchmark
+FROM (
+    SELECT DISTINCT
+        (SELECT ROUND(pct_exchange, 2) FROM exchanges WHERE LOWER(retailer_moniker) = LOWER('smithoptics')) AS pct_exchange,
+        ROUND(COALESCE(
+            (SELECT benchmark_pct_exchange FROM exchanges WHERE LOWER(retailer_moniker) = LOWER('smithoptics')),
+            (SELECT benchmark_pct_exchange FROM exchanges WHERE retailer_moniker = 'average')
+            ), 2) AS benchmark_pct_exchange
+        FROM exchanges
+    )
+"
+494f8663-d234-40c5-911d-bd25326c9b97,Baseline_2025_Sep_Oct,2025-10-06 14:54:48.833000+00:00,10,0.06,0.0031,20.507326840811867,92.75,,0,4982,500,10.0,,,,,,,,True,True,False,,NO_RETAILER,False,True,True,True,True,True,11.0,"
+--sms_click_through_rate_engagement
+--Click through rates by SMS type over time
+WITH
+sms_delivered AS (
+    SELECT DISTINCT
+      sms_date, trigger_type,
+      nrfid AS sms_nrfid,
+      ncid AS sms_ncid
+    FROM (
+          SELECT * EXCEPT (event_ts, checkout_locale, notification_event_type),
+              COALESCE(MIN(IF(narvar_tracer_id IS NULL, NULL, DATE(event_ts))) OVER w_tracer, MIN(IF(sms_message_id IS NULL, NULL, DATE(event_ts))) OVER w_msg, MIN(IF(dedupe_key IS NULL, NULL, DATE(event_ts))) OVER w_dedupe) AS sms_date,
+              COALESCE(MAX(IF(narvar_tracer_id IS NULL, NULL, checkout_locale)) OVER w_tracer, MAX(IF(sms_message_id IS NULL, NULL, checkout_locale)) OVER w_msg, MAX(IF(dedupe_key IS NULL, NULL, checkout_locale)) OVER w_dedupe) AS locale,
+              COALESCE(MAX(IF(narvar_tracer_id IS NULL, NULL, notification_event_type)) OVER w_tracer, MAX(IF(sms_message_id IS NULL, NULL, notification_event_type)) OVER w_msg, MAX(IF(dedupe_key IS NULL, NULL, notification_even","
+--sms_click_through_rate_engagement
+--Click through rates by SMS type over time
+WITH
+sms_delivered AS (
+    SELECT DISTINCT
+      sms_date, trigger_type,
+      nrfid AS sms_nrfid,
+      ncid AS sms_ncid
+    FROM (
+          SELECT * EXCEPT (event_ts, checkout_locale, notification_event_type),
+              COALESCE(MIN(IF(narvar_tracer_id IS NULL, NULL, DATE(event_ts))) OVER w_tracer, MIN(IF(sms_message_id IS NULL, NULL, DATE(event_ts))) OVER w_msg, MIN(IF(dedupe_key IS NULL, NULL, DATE(event_ts))) OVER w_dedupe) AS sms_date,
+              COALESCE(MAX(IF(narvar_tracer_id IS NULL, NULL, checkout_locale)) OVER w_tracer, MAX(IF(sms_message_id IS NULL, NULL, checkout_locale)) OVER w_msg, MAX(IF(dedupe_key IS NULL, NULL, checkout_locale)) OVER w_dedupe) AS locale,
+              COALESCE(MAX(IF(narvar_tracer_id IS NULL, NULL, notification_event_type)) OVER w_tracer, MAX(IF(sms_message_id IS NULL, NULL, notification_event_type)) OVER w_msg, MAX(IF(dedupe_key IS NULL, NULL, notification_event_type)) OVER w_dedupe) AS trigger_type
+          FROM `analytics.v_messaging_sms`
+          WHERE event_ts BETWEEN '2025-08-31' AND '2025-09-29'
+              AND retailer_moniker = LOWER('nike')
+              AND (
+                  (LOWER(sms_message_status) LIKE '%deliv%'
+                  AND LOWER(sms_message_status) NOT LIKE '%undel%'
+                  AND service_name IN ('twilio_webhook_gcf', 'vivaconnect_webhook'))
+                  OR
+                  service_name IN ('sms-service', 'sms_service', 'notification_postprocessor_service')
+              )
+              WINDOW
+                  w_msg AS (PARTITION BY sms_message_id),
+                  w_tracer AS (PARTITION BY narvar_tracer_id),
+                  w_dedupe AS (PARTITION BY dedupe_key)
+              )
+    WHERE
+        nrfid IS NOT NULL AND ncid IS NOT NULL
+        AND LOWER(locale) = LOWER('en_US')
+    ),
+track_visits AS (
+    (SELECT
+        REPLACE(ARRAY_REVERSE(REGEXP_EXTRACT_ALL(page_url, ""nrfid=[a-zA-Z0-9_.+-]+""))[SAFE_OFFSET(0)], ""nrfid="", """") AS nrfid,
+        REPLACE(ARRAY_REVERSE(REGEXP_EXTRACT_ALL(page_url, ""ncid=[a-zA-Z0-9_.+-]+""))[SAFE_OFFSET(0)], ""ncid="", """") AS ncid,
+    FROM `track.track_fe`
+    WHERE
+        event_ts BETWEEN '2025-08-31' AND TIMESTAMP_ADD('2025-09-29', INTERVAL 72 HOUR)
+        AND page_retailer_moniker = LOWER('nike')
+        AND LOWER(page_url) LIKE '%nrfid%'
+        AND LOWER(page_url_locale) = LOWER('en_US'))
+
+    UNION ALL
+
+   (SELECT
+        REPLACE(ARRAY_REVERSE(REGEXP_EXTRACT_ALL(page_url, ""nrfid=[a-zA-Z0-9_.+-]+""))[SAFE_OFFSET(0)], ""nrfid="", """") AS nrfid,
+        REPLACE(ARRAY_REVERSE(REGEXP_EXTRACT_ALL(page_url, ""ncid=[a-zA-Z0-9_.+-]+""))[SAFE_OFFSET(0)], ""ncid="", """") AS ncid,
+    FROM `analytics.v_component_platform`
+    WHERE
+        event_ts BETWEEN '2025-08-31' AND TIMESTAMP_ADD('2025-09-29', INTERVAL 72 HOUR)
+        AND page_retailer_moniker = LOWER('nike')
+        AND LOWER(page_url) LIKE '%nrfid%'
+        AND LOWER(page_url_locale) = LOWER('en_US')
+    )
+  ),
+new_hub AS (
+    SELECT
+        sms_date as day, trigger_type,
+        COUNTIF(nrfid IS NOT NULL) AS count_distinct_numerator,
+        COUNT(DISTINCT sms_nrfid) AS count_distinct_denominator
+    FROM (
+        SELECT DISTINCT
+            sms_date, m.mapped_value AS trigger_type,
+            sms_nrfid, t.nrfid
+        FROM (sms_delivered sd
+            LEFT JOIN `messaging.campaign_mapping` m
+                ON sd.trigger_type = m.sparkpost_campaign_id)
+            LEFT JOIN track_visits t
+                ON sms_nrfid = t.nrfid
+        )
+    GROUP BY sms_date, trigger_type
+    ORDER BY sms_date, trigger_type
+  ),
+old_hub AS (
+     SELECT
+         DATE(wl.event_ts) AS day,
+         wl.trigger_type,
+         COUNT(distinct tr.event_tracking_number) AS count_distinct_numerator,
+         COUNT(distinct wl.tracking_number) AS count_distinct_denominator
+     FROM `analytics.v_watch_list_hub_sms` wl LEFT JOIN
+          (SELECT event_ts, event_tracking_number, page_url
+            FROM `track.track_fe`
+            WHERE event_ts BETWEEN '2025-08-31' AND '2025-09-29'
+            AND page_retailer_moniker = LOWER('nike')) tr
+           ON tr.page_url = wl.long_url
+           AND tr.event_ts >= wl.event_ts
+     WHERE wl.event_ts BETWEEN '2025-08-31' AND '2025-09-29'
+       AND wl.notification_channel = 'sms'
+       AND retailer_moniker = LOWER('nike')
+       AND LOWER(checkout_locale) = LOWER('en_US')
+     GROUP BY 1, 2
+     ORDER BY 1, 2
+)
+
+
+SELECT day, trigger_type,
+       SUM(count_distinct_numerator) AS count_distinct_numerator,
+       SUM(count_distinct_denominator) AS count_distinct_denominator,
+       IF(SUM(count_distinct_numerator) > 0,
+          ROUND(100*sum(count_distinct_numerator)/SUM(count_distinct_denominator), 2),
+          0) AS percent_click_through_rate
+FROM (
+      (SELECT * FROM new_hub)
+      UNION ALL
+      (SELECT * FROM old_hub)
+    ) where trigger_type is not null and trim(trigger_type) != ''
+GROUP BY 1,2
+ORDER BY 1,2
+"
+081c00fd-86a4-4e84-8954-8490fe8a9460,Peak_2024_2025,2025-01-27 17:24:44.037000+00:00,11,0.38,0.0189,117.36522108843538,17.09,,0,1560,500,32.1,sitkagear,,,,,,looker,True,True,False,,sitkagear,True,False,False,False,False,False,1.0,"SELECT T.order_number AS order_number, T.order_date AS order_date, T.product_sku AS product_sku, T.item_name AS item_name, T.item_id AS item_id, T.return_qty AS return_qty, T.return_override_code AS return_override_code, T.rma_number AS rma_number, T.gift_return AS gift_return, T.tracking_number AS tracking_number, T.return_created_date AS return_created_date, T.return_status AS return_status, T.return_tracking_status AS return_tracking_status, T.return_shipped_date AS return_shipped_date, T.return_edd_date AS return_edd_date, T.return_delivered_date AS return_delivered_date, T.return_reason AS return_reason, T.return_reason_code AS return_reason_code, T.user_comment AS user_comment, T.return_method AS return_method, T.carrier AS carrier, T.return_service_method AS return_service_method, T.locale AS locale, T.origin_zip AS origin_zip, T.origin_city AS origin_city, T.origin_state AS origin_state, T.dest_zip AS dest_zip, T.dest_city AS dest_city, T.dest_state AS dest_state, T.exchange_or","SELECT T.order_number AS order_number, T.order_date AS order_date, T.product_sku AS product_sku, T.item_name AS item_name, T.item_id AS item_id, T.return_qty AS return_qty, T.return_override_code AS return_override_code, T.rma_number AS rma_number, T.gift_return AS gift_return, T.tracking_number AS tracking_number, T.return_created_date AS return_created_date, T.return_status AS return_status, T.return_tracking_status AS return_tracking_status, T.return_shipped_date AS return_shipped_date, T.return_edd_date AS return_edd_date, T.return_delivered_date AS return_delivered_date, T.return_reason AS return_reason, T.return_reason_code AS return_reason_code, T.user_comment AS user_comment, T.return_method AS return_method, T.carrier AS carrier, T.return_service_method AS return_service_method, T.locale AS locale, T.origin_zip AS origin_zip, T.origin_city AS origin_city, T.origin_state AS origin_state, T.dest_zip AS dest_zip, T.dest_city AS dest_city, T.dest_state AS dest_state, T.exchange_order_number AS exchange_order_number, T.exchange_product_sku AS exchange_product_sku, T.exchange_item_name AS exchange_item_name, T.exchange_color AS exchange_color, T.exchange_size AS exchange_size, T.exchange_qty AS exchange_qty, T.parent_sku AS parent_sku
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'sitkagear' ) AND ( T.return_created_date >= '2024-10-01' AND T.return_created_date <= '2025-01-27' ) AND ( ( T.locale = 'en_US' ) ) AND ( lower(T.order_number) = '2706620' )
+ORDER BY T.return_created_date ASC
+LIMIT 25 OFFSET 0
+;"
+f8792b40-6103-4594-bb14-0a688f437ed9,Baseline_2025_Sep_Oct,2025-10-13 15:58:37.438000+00:00,11,0.02,0.0011,7.013970138828254,0.6,,0,358,358,100.0,anntaylor,,,,,,engagement,True,True,False,,anntaylor,True,False,True,False,False,False,1.0,"SELECT COUNT( distinct distinct_event ) AS count_distinct_distinct_event, DATE_TRUNC( DATE( T.event_ts ), day ) AS day
+FROM analytics.v_component_platform_marketing_engagement AS T
+WHERE ( T.event_ts >= '2025-06-01' AND T.event_ts <= '2025-06-07' ) AND ( T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'anntaylor' )
+GROUP BY day
+ORDER BY day ASC
+;","SELECT COUNT( distinct distinct_event ) AS count_distinct_distinct_event, DATE_TRUNC( DATE( T.event_ts ), day ) AS day
+FROM analytics.v_component_platform_marketing_engagement AS T
+WHERE ( T.event_ts >= '2025-06-01' AND T.event_ts <= '2025-06-07' ) AND ( T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'anntaylor' )
+GROUP BY day
+ORDER BY day ASC
+;"
+dd2ee742-ec49-426b-b0e5-e074a7ca4cca,Peak_2024_2025,2024-12-12 12:07:48.685000+00:00,11,0.26,0.0129,81.35543262166134,7.11,,0,202,202,100.0,carhartt,,,,,,looker,True,True,False,,carhartt,True,False,False,False,False,False,1.0,"SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'carhartt' ) AND ( T.return_created_date >= '2024-01-01' AND T.return_created_date <= '2024-12-11' )
+;","SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'carhartt' ) AND ( T.return_created_date >= '2024-01-01' AND T.return_created_date <= '2024-12-11' )
+;"
+a618e9fd-02f0-4851-95cd-7f4721fac3f2,Peak_2024_2025,2025-01-02 14:49:21.884000+00:00,12,0.12,0.006,35.49360071737181,0.16,,0,3505,500,14.3,maisonette,,,,,,,True,True,False,,maisonette,True,True,True,True,True,True,8.0,"
+WITH
+    go_live_dates AS (
+        SELECT DISTINCT retailer_moniker, product, MIN(go_live_date) OVER (PARTITION BY retailer_moniker, product) go_live
+        FROM `analytics.v_go_live_dates`
+        WHERE product = 'Returns'
+        and retailer_moniker = 'maisonette'
+        ),
+    sf AS (
+        SELECT DISTINCT
+            retailer AS _retailer_moniker,
+            category as retailer_category
+        FROM `analytics.v_retailer_category`
+        ),
+    t as (
+        SELECT
+            IF(_retailer_moniker IS NOT NULL, retailer, 'average') AS retailer,
+            sf.retailer_category,
+            e.remove_from_benchmark,
+            e.show_individual_rate,
+            SUM(return_value) AS return_value, SUM(order_value) AS order_value,
+            IF(SUM(order_value) > 0, 100 * SUM(return_value)/SUM(order_value), 0) AS pct_return_rate
+        FROM `reporting.return_rate_agg` p
+            LEFT JOIN sf on sf._retailer_moniker = p.retailer
+            LEFT JOIN `reporting.returns_r","
+WITH
+    go_live_dates AS (
+        SELECT DISTINCT retailer_moniker, product, MIN(go_live_date) OVER (PARTITION BY retailer_moniker, product) go_live
+        FROM `analytics.v_go_live_dates`
+        WHERE product = 'Returns'
+        and retailer_moniker = 'maisonette'
+        ),
+    sf AS (
+        SELECT DISTINCT
+            retailer AS _retailer_moniker,
+            category as retailer_category
+        FROM `analytics.v_retailer_category`
+        ),
+    t as (
+        SELECT
+            IF(_retailer_moniker IS NOT NULL, retailer, 'average') AS retailer,
+            sf.retailer_category,
+            e.remove_from_benchmark,
+            e.show_individual_rate,
+            SUM(return_value) AS return_value, SUM(order_value) AS order_value,
+            IF(SUM(order_value) > 0, 100 * SUM(return_value)/SUM(order_value), 0) AS pct_return_rate
+        FROM `reporting.return_rate_agg` p
+            LEFT JOIN sf on sf._retailer_moniker = p.retailer
+            LEFT JOIN `reporting.returns_retailers_to_exclude` e ON LOWER(p.retailer) = LOWER(e.retailer_moniker)
+            LEFT JOIN go_live_dates g ON LOWER(p.retailer) = LOWER(g.retailer_moniker)
+        WHERE day between DATE('2023-01-02') AND DATE('2023-12-31')
+            AND LOWER(order_locale) = LOWER('en_US')
+            AND LOWER(return_locale) = LOWER('en_US')
+            AND (day >= g.go_live OR g.go_live IS NULL)
+            AND (e.show_individual_rate IS NULL OR e.show_individual_rate = true)
+        GROUP BY retailer, retailer_category, e.remove_from_benchmark, e.show_individual_rate
+        HAVING (return_value > 0 AND pct_return_rate < 100 AND order_value > 0)
+    ),
+    category_benchmarks AS (
+      SELECT retailer_category, AVG(pct_return_rate) AS benchmark_return_rate
+      FROM t
+      GROUP BY retailer_category
+    ),
+    rates AS (
+        SELECT DISTINCT
+            retailer,
+            CASE
+                WHEN retailer != 'average' THEN 1
+                WHEN retailer = 'average' THEN 2
+            END as priority,
+            CASE
+                WHEN show_individual_rate = false THEN null
+                WHEN (show_individual_rate IS NULL OR show_individual_rate = true)
+                THEN IFNULL(COALESCE(IF(retailer = 'maisonette', pct_return_rate, null), IF(retailer = 'average', pct_return_rate, null)), 0)
+            END AS percent_return_rate,
+            CASE
+                WHEN show_individual_rate = false THEN null
+                WHEN (show_individual_rate IS NULL OR show_individual_rate = true)
+                THEN IFNULL(COALESCE(IF(retailer = 'maisonette', pct_return_rate - benchmark_return_rate, null), IF(retailer = 'average', pct_return_rate - benchmark_return_rate, null)), 0)
+            END AS percent_diff_from_benchmark
+        FROM (
+            SELECT t.retailer_category, retailer, return_value, order_value, pct_return_rate,
+              show_individual_rate,
+              IF(t.retailer_category IS NOT NULL AND (remove_from_benchmark IS NULL OR remove_from_benchmark != true),
+                benchmark_return_rate,
+                (SELECT AVG(pct_return_rate) FROM t)) AS benchmark_return_rate
+            FROM t
+              left join category_benchmarks cb on t.retailer_category = cb.retailer_category
+            )
+        WHERE retailer = 'maisonette' OR (retailer = 'average' AND (show_individual_rate = true or show_individual_rate is null))
+    )
+SELECT retailer, percent_return_rate, percent_diff_from_benchmark
+FROM rates
+ORDER BY priority
+LIMIT 1
+"
+378d2c8a-1745-4f23-98f0-ca1495a590dc,Peak_2024_2025,2024-12-17 16:05:54.293000+00:00,14,0.01,0.0006,2.830283531067766,1.58,,0,499,499,100.0,patagonia,,,,,,details,True,True,False,,patagonia,True,False,False,False,False,False,2.0,"
+--average_days_transit
+select
+    IFNULL(round(avg(shipped_to_delivered_days), 1), 0) as average_days_transit
+from
+    (select distinct
+        return_process_info_id,
+        shipped_to_delivered_days
+    from
+        reporting.t_return_details
+    where
+        retailer_moniker = 'patagonia'
+        and lower(locale) = lower('en_US')
+        and return_status != 'cancelled'
+        and shipped_to_delivered_days > -1
+        and return_created_date between '2024-01-01' and '2024-12-16'
+    )
+","
+--average_days_transit
+select
+    IFNULL(round(avg(shipped_to_delivered_days), 1), 0) as average_days_transit
+from
+    (select distinct
+        return_process_info_id,
+        shipped_to_delivered_days
+    from
+        reporting.t_return_details
+    where
+        retailer_moniker = 'patagonia'
+        and lower(locale) = lower('en_US')
+        and return_status != 'cancelled'
+        and shipped_to_delivered_days > -1
+        and return_created_date between '2024-01-01' and '2024-12-16'
+    )
+"
+4cabc4ae-f63a-43c6-9ec4-b4f587868112,Baseline_2025_Sep_Oct,2025-10-26 21:13:20.343000+00:00,15,0.59,0.0294,136.76370256803372,10.95,,0,2503,500,20.0,average,,,,,,category,True,True,False,,average,True,True,True,True,True,True,9.0,"
+--exchange_rate
+WITH exchanges AS (
+    select retailer_moniker, retailer_category, pct_exchange,
+       IF(retailer_moniker != 'average', AVG(pct_exchange) OVER (PARTITION BY retailer_category), AVG(pct_exchange) OVER ()) AS benchmark_pct_exchange
+    from (
+    select
+        retailer_moniker, retailer_category,
+        narvar_product, if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0,
+        100 * sum(value_returns_received)/SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_exchange
+    from (
+        with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+        select
+            IF(sf._retailer_moniker IS NOT NULL, t.retailer_moniker, 'average') AS retailer_moniker,
+            retailer_category,
+            narvar","
+--exchange_rate
+WITH exchanges AS (
+    select retailer_moniker, retailer_category, pct_exchange,
+       IF(retailer_moniker != 'average', AVG(pct_exchange) OVER (PARTITION BY retailer_category), AVG(pct_exchange) OVER ()) AS benchmark_pct_exchange
+    from (
+    select
+        retailer_moniker, retailer_category,
+        narvar_product, if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0,
+        100 * sum(value_returns_received)/SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_exchange
+    from (
+        with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+        select
+            IF(sf._retailer_moniker IS NOT NULL, t.retailer_moniker, 'average') AS retailer_moniker,
+            retailer_category,
+            narvar_product,
+            sum(return_qty * item_price) as value_returns_received,
+            row_number() over (partition by t.retailer_moniker, retailer_category, sf._retailer_moniker,return_process_info_id, return_process_item_id order by return_last_modified_date desc)
+as rnk
+        from
+            reporting.t_return_details t LEFT JOIN sf on sf._retailer_moniker = t.retailer_moniker
+        where
+            return_status != 'cancelled'
+            and return_created_date between '2025-01-01' and '2025-10-25'
+            and LOWER(locale) = LOWER('en_US')
+        group by
+            t.retailer_moniker, retailer_category, sf._retailer_moniker,
+            narvar_product, return_process_info_id, return_process_item_id, return_last_modified_date
+        )
+    where rnk = 1
+    group by retailer_moniker, retailer_category, narvar_product
+    )
+    where narvar_product = 'exchange'
+  )
+SELECT IFNULL(pct_exchange, 0) as percent_exchange_rate, IFNULL(pct_exchange - benchmark_pct_exchange, 0) AS percent_diff_from_benchmark
+FROM (
+    SELECT DISTINCT
+        (SELECT ROUND(pct_exchange, 2) FROM exchanges WHERE LOWER(retailer_moniker) = LOWER('careismaticbrands')) AS pct_exchange,
+        ROUND(COALESCE(
+            (SELECT benchmark_pct_exchange FROM exchanges WHERE LOWER(retailer_moniker) = LOWER('careismaticbrands')),
+            (SELECT benchmark_pct_exchange FROM exchanges WHERE retailer_moniker = 'average')
+            ), 2) AS benchmark_pct_exchange
+        FROM exchanges
+    )
+"
+d720ab79-48ab-4195-ac20-238caaee94f7,Peak_2024_2025,2024-11-04 10:27:29.249000+00:00,17,0.06,0.0029,11.660775402569714,0.25,,0,3533,500,14.2,russellandbromley,,,,,,,True,True,False,,russellandbromley,True,True,True,True,True,True,8.0,"
+WITH
+    go_live_dates AS (
+        SELECT DISTINCT retailer_moniker, product, MIN(go_live_date) OVER (PARTITION BY retailer_moniker, product) go_live
+        FROM `analytics.v_go_live_dates`
+        WHERE product = 'Returns'
+        and retailer_moniker = 'russellandbromley'
+        ),
+    sf AS (
+        SELECT DISTINCT
+            retailer AS _retailer_moniker,
+            category as retailer_category
+        FROM `analytics.v_retailer_category`
+        ),
+    t as (
+        SELECT
+            IF(_retailer_moniker IS NOT NULL, retailer, 'average') AS retailer,
+            sf.retailer_category,
+            e.remove_from_benchmark,
+            e.show_individual_rate,
+            SUM(return_value) AS return_value, SUM(order_value) AS order_value,
+            IF(SUM(order_value) > 0, 100 * SUM(return_value)/SUM(order_value), 0) AS pct_return_rate
+        FROM `reporting.return_rate_agg` p
+            LEFT JOIN sf on sf._retailer_moniker = p.retailer
+            LEFT JOIN `reporting.re","
+WITH
+    go_live_dates AS (
+        SELECT DISTINCT retailer_moniker, product, MIN(go_live_date) OVER (PARTITION BY retailer_moniker, product) go_live
+        FROM `analytics.v_go_live_dates`
+        WHERE product = 'Returns'
+        and retailer_moniker = 'russellandbromley'
+        ),
+    sf AS (
+        SELECT DISTINCT
+            retailer AS _retailer_moniker,
+            category as retailer_category
+        FROM `analytics.v_retailer_category`
+        ),
+    t as (
+        SELECT
+            IF(_retailer_moniker IS NOT NULL, retailer, 'average') AS retailer,
+            sf.retailer_category,
+            e.remove_from_benchmark,
+            e.show_individual_rate,
+            SUM(return_value) AS return_value, SUM(order_value) AS order_value,
+            IF(SUM(order_value) > 0, 100 * SUM(return_value)/SUM(order_value), 0) AS pct_return_rate
+        FROM `reporting.return_rate_agg` p
+            LEFT JOIN sf on sf._retailer_moniker = p.retailer
+            LEFT JOIN `reporting.returns_retailers_to_exclude` e ON LOWER(p.retailer) = LOWER(e.retailer_moniker)
+            LEFT JOIN go_live_dates g ON LOWER(p.retailer) = LOWER(g.retailer_moniker)
+        WHERE day between DATE('2024-09-29') AND DATE('2024-10-28')
+            AND LOWER(order_locale) = LOWER('en_GB')
+            AND LOWER(return_locale) = LOWER('en_GB')
+            AND (day >= g.go_live OR g.go_live IS NULL)
+            AND (e.show_individual_rate IS NULL OR e.show_individual_rate = true)
+        GROUP BY retailer, retailer_category, e.remove_from_benchmark, e.show_individual_rate
+        HAVING (return_value > 0 AND pct_return_rate < 100 AND order_value > 0)
+    ),
+    category_benchmarks AS (
+      SELECT retailer_category, AVG(pct_return_rate) AS benchmark_return_rate
+      FROM t
+      GROUP BY retailer_category
+    ),
+    rates AS (
+        SELECT DISTINCT
+            retailer,
+            CASE
+                WHEN retailer != 'average' THEN 1
+                WHEN retailer = 'average' THEN 2
+            END as priority,
+            CASE
+                WHEN show_individual_rate = false THEN null
+                WHEN (show_individual_rate IS NULL OR show_individual_rate = true)
+                THEN IFNULL(COALESCE(IF(retailer = 'russellandbromley', pct_return_rate, null), IF(retailer = 'average', pct_return_rate, null)), 0)
+            END AS percent_return_rate,
+            CASE
+                WHEN show_individual_rate = false THEN null
+                WHEN (show_individual_rate IS NULL OR show_individual_rate = true)
+                THEN IFNULL(COALESCE(IF(retailer = 'russellandbromley', pct_return_rate - benchmark_return_rate, null), IF(retailer = 'average', pct_return_rate - benchmark_return_rate, null)), 0)
+            END AS percent_diff_from_benchmark
+        FROM (
+            SELECT t.retailer_category, retailer, return_value, order_value, pct_return_rate,
+              show_individual_rate,
+              IF(t.retailer_category IS NOT NULL AND (remove_from_benchmark IS NULL OR remove_from_benchmark != true),
+                benchmark_return_rate,
+                (SELECT AVG(pct_return_rate) FROM t)) AS benchmark_return_rate
+            FROM t
+              left join category_benchmarks cb on t.retailer_category = cb.retailer_category
+            )
+        WHERE retailer = 'russellandbromley' OR (retailer = 'average' AND (show_individual_rate = true or show_individual_rate is null))
+    )
+SELECT retailer, percent_return_rate, percent_diff_from_benchmark
+FROM rates
+ORDER BY priority
+LIMIT 1
+"
+36d89667-8b29-4471-99a6-0fc7e58a4225,Baseline_2025_Sep_Oct,2025-10-08 15:10:47.625000+00:00,19,1.04,0.0512,190.42145848227963,14.3,,0,2918,500,17.1,average,,,,,,category,True,True,False,,average,True,True,True,True,True,True,9.0,"
+--gift_card_rate
+WITH
+  gift_returns AS (
+    select retailer_moniker, retailer_category, sum(pct_gift_card) as pct_gift_card,
+       IF(retailer_moniker != 'average', AVG(sum(pct_gift_card)) OVER (PARTITION BY retailer_category), AVG(sum(pct_gift_card)) OVER ()) AS benchmark_pct_gift_card
+    from (
+      select
+        retailer_moniker, retailer_category,
+        gift_return,
+        refund_option,
+        narvar_product,
+        if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received))
+        OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_gift_card
+      from (
+         with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+          select
+              IF(sf._retailer_moniker IS NOT NUL","
+--gift_card_rate
+WITH
+  gift_returns AS (
+    select retailer_moniker, retailer_category, sum(pct_gift_card) as pct_gift_card,
+       IF(retailer_moniker != 'average', AVG(sum(pct_gift_card)) OVER (PARTITION BY retailer_category), AVG(sum(pct_gift_card)) OVER ()) AS benchmark_pct_gift_card
+    from (
+      select
+        retailer_moniker, retailer_category,
+        gift_return,
+        refund_option,
+        narvar_product,
+        if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received))
+        OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_gift_card
+      from (
+         with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+          select
+              IF(sf._retailer_moniker IS NOT NULL, t.retailer_moniker, 'average') AS retailer_moniker,
+              retailer_category,
+              narvar_product,
+              gift_return,
+              refund_option,
+              sum(return_qty * item_price) as value_returns_received,
+              row_number() over(partition by t.retailer_moniker, retailer_category, sf._retailer_moniker, return_process_info_id, return_process_item_id order by return_last_modified_date desc) as rnk
+              from
+                  reporting.t_return_details t LEFT JOIN sf on sf._retailer_moniker = t.retailer_moniker
+              where
+              return_status != 'cancelled'
+              and return_created_date between '2024-09-07' and '2025-09-01'
+              and lower(locale) = lower('en_US')
+          group by
+              t.retailer_moniker, retailer_category, sf._retailer_moniker,
+              gift_return, refund_option, narvar_product, return_process_info_id, return_process_item_id, return_last_modified_date
+          )
+      where rnk = 1
+      group by retailer_moniker, retailer_category, gift_return, refund_option, narvar_product
+      )
+    where (gift_return = true or refund_option in ('gift_card','GIFT_CARD','instant_store_credit','store_credit')) and narvar_product != 'exchange'
+    group by retailer_moniker, retailer_category
+  )
+
+SELECT IFNULL(pct_gift_card, 0) as percent_gift_card_rate, IFNULL(pct_gift_card - benchmark_pct_gift_card, 0) AS percent_diff_from_benchmark
+FROM (
+    SELECT DISTINCT
+        (SELECT ROUND(pct_gift_card, 2) FROM gift_returns WHERE LOWER(retailer_moniker) = LOWER('patagonia')) AS pct_gift_card,
+        ROUND(COALESCE(
+          (SELECT benchmark_pct_gift_card FROM gift_returns WHERE LOWER(retailer_moniker) = LOWER('patagonia')),
+          (SELECT benchmark_pct_gift_card FROM gift_returns WHERE retailer_moniker = 'average')
+        ), 2) AS benchmark_pct_gift_card
+    FROM gift_returns
+    )
+"
+0050273f-430b-47ea-bcca-f57b5d0f116e,Peak_2024_2025,2024-11-08 14:31:26.247000+00:00,28,0.15,0.0072,18.505366473661912,0.29,,0,3485,500,14.3,crocs,,,,,,,True,True,False,,crocs,True,True,True,True,True,True,8.0,"
+WITH
+    go_live_dates AS (
+        SELECT DISTINCT retailer_moniker, product, MIN(go_live_date) OVER (PARTITION BY retailer_moniker, product) go_live
+        FROM `analytics.v_go_live_dates`
+        WHERE product = 'Returns'
+        and retailer_moniker = 'crocs'
+        ),
+    sf AS (
+        SELECT DISTINCT
+            retailer AS _retailer_moniker,
+            category as retailer_category
+        FROM `analytics.v_retailer_category`
+        ),
+    t as (
+        SELECT
+            IF(_retailer_moniker IS NOT NULL, retailer, 'average') AS retailer,
+            sf.retailer_category,
+            e.remove_from_benchmark,
+            e.show_individual_rate,
+            SUM(return_value) AS return_value, SUM(order_value) AS order_value,
+            IF(SUM(order_value) > 0, 100 * SUM(return_value)/SUM(order_value), 0) AS pct_return_rate
+        FROM `reporting.return_rate_agg` p
+            LEFT JOIN sf on sf._retailer_moniker = p.retailer
+            LEFT JOIN `reporting.returns_retail","
+WITH
+    go_live_dates AS (
+        SELECT DISTINCT retailer_moniker, product, MIN(go_live_date) OVER (PARTITION BY retailer_moniker, product) go_live
+        FROM `analytics.v_go_live_dates`
+        WHERE product = 'Returns'
+        and retailer_moniker = 'crocs'
+        ),
+    sf AS (
+        SELECT DISTINCT
+            retailer AS _retailer_moniker,
+            category as retailer_category
+        FROM `analytics.v_retailer_category`
+        ),
+    t as (
+        SELECT
+            IF(_retailer_moniker IS NOT NULL, retailer, 'average') AS retailer,
+            sf.retailer_category,
+            e.remove_from_benchmark,
+            e.show_individual_rate,
+            SUM(return_value) AS return_value, SUM(order_value) AS order_value,
+            IF(SUM(order_value) > 0, 100 * SUM(return_value)/SUM(order_value), 0) AS pct_return_rate
+        FROM `reporting.return_rate_agg` p
+            LEFT JOIN sf on sf._retailer_moniker = p.retailer
+            LEFT JOIN `reporting.returns_retailers_to_exclude` e ON LOWER(p.retailer) = LOWER(e.retailer_moniker)
+            LEFT JOIN go_live_dates g ON LOWER(p.retailer) = LOWER(g.retailer_moniker)
+        WHERE day between DATE('2024-01-01') AND DATE('2024-11-07')
+            AND LOWER(order_locale) = LOWER('en_CA')
+            AND LOWER(return_locale) = LOWER('en_CA')
+            AND (day >= g.go_live OR g.go_live IS NULL)
+            AND (e.show_individual_rate IS NULL OR e.show_individual_rate = true)
+        GROUP BY retailer, retailer_category, e.remove_from_benchmark, e.show_individual_rate
+        HAVING (return_value > 0 AND pct_return_rate < 100 AND order_value > 0)
+    ),
+    category_benchmarks AS (
+      SELECT retailer_category, AVG(pct_return_rate) AS benchmark_return_rate
+      FROM t
+      GROUP BY retailer_category
+    ),
+    rates AS (
+        SELECT DISTINCT
+            retailer,
+            CASE
+                WHEN retailer != 'average' THEN 1
+                WHEN retailer = 'average' THEN 2
+            END as priority,
+            CASE
+                WHEN show_individual_rate = false THEN null
+                WHEN (show_individual_rate IS NULL OR show_individual_rate = true)
+                THEN IFNULL(COALESCE(IF(retailer = 'crocs', pct_return_rate, null), IF(retailer = 'average', pct_return_rate, null)), 0)
+            END AS percent_return_rate,
+            CASE
+                WHEN show_individual_rate = false THEN null
+                WHEN (show_individual_rate IS NULL OR show_individual_rate = true)
+                THEN IFNULL(COALESCE(IF(retailer = 'crocs', pct_return_rate - benchmark_return_rate, null), IF(retailer = 'average', pct_return_rate - benchmark_return_rate, null)), 0)
+            END AS percent_diff_from_benchmark
+        FROM (
+            SELECT t.retailer_category, retailer, return_value, order_value, pct_return_rate,
+              show_individual_rate,
+              IF(t.retailer_category IS NOT NULL AND (remove_from_benchmark IS NULL OR remove_from_benchmark != true),
+                benchmark_return_rate,
+                (SELECT AVG(pct_return_rate) FROM t)) AS benchmark_return_rate
+            FROM t
+              left join category_benchmarks cb on t.retailer_category = cb.retailer_category
+            )
+        WHERE retailer = 'crocs' OR (retailer = 'average' AND (show_individual_rate = true or show_individual_rate is null))
+    )
+SELECT retailer, percent_return_rate, percent_diff_from_benchmark
+FROM rates
+ORDER BY priority
+LIMIT 1
+"
+461d9f06-8153-44f0-b4c5-6761ecaafcbf,Baseline_2025_Sep_Oct,2025-09-03 14:02:47.432000+00:00,37,0.79,0.0391,76.20414280361827,32.28,,0,1521,500,32.9,eileenfisher,,,,,,looker,True,True,False,,eileenfisher,True,False,False,False,False,False,1.0,"SELECT T.order_number AS order_number, T.order_date AS order_date, T.product_sku AS product_sku, T.item_name AS item_name, T.item_id AS item_id, T.return_qty AS return_qty, T.return_override_code AS return_override_code, T.rma_number AS rma_number, T.gift_return AS gift_return, T.tracking_number AS tracking_number, T.return_created_date AS return_created_date, T.return_status AS return_status, T.return_tracking_status AS return_tracking_status, T.return_shipped_date AS return_shipped_date, T.return_edd_date AS return_edd_date, T.return_delivered_date AS return_delivered_date, T.return_reason AS return_reason, T.return_reason_code AS return_reason_code, T.user_comment AS user_comment, T.return_method AS return_method, T.carrier AS carrier, T.return_service_method AS return_service_method, T.locale AS locale, T.origin_zip AS origin_zip, T.origin_city AS origin_city, T.origin_state AS origin_state, T.dest_zip AS dest_zip, T.dest_city AS dest_city, T.dest_state AS dest_state, T.exchange_or","SELECT T.order_number AS order_number, T.order_date AS order_date, T.product_sku AS product_sku, T.item_name AS item_name, T.item_id AS item_id, T.return_qty AS return_qty, T.return_override_code AS return_override_code, T.rma_number AS rma_number, T.gift_return AS gift_return, T.tracking_number AS tracking_number, T.return_created_date AS return_created_date, T.return_status AS return_status, T.return_tracking_status AS return_tracking_status, T.return_shipped_date AS return_shipped_date, T.return_edd_date AS return_edd_date, T.return_delivered_date AS return_delivered_date, T.return_reason AS return_reason, T.return_reason_code AS return_reason_code, T.user_comment AS user_comment, T.return_method AS return_method, T.carrier AS carrier, T.return_service_method AS return_service_method, T.locale AS locale, T.origin_zip AS origin_zip, T.origin_city AS origin_city, T.origin_state AS origin_state, T.dest_zip AS dest_zip, T.dest_city AS dest_city, T.dest_state AS dest_state, T.exchange_order_number AS exchange_order_number, T.exchange_product_sku AS exchange_product_sku, T.exchange_item_name AS exchange_item_name, T.exchange_color AS exchange_color, T.exchange_size AS exchange_size, T.exchange_qty AS exchange_qty, T.parent_sku AS parent_sku
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'eileenfisher' ) AND ( T.return_created_date >= '2025-01-01' AND T.return_created_date <= '2025-09-02' ) AND ( ( T.locale = 'en_US' ) )
+ORDER BY T.return_created_date ASC
+LIMIT 25 OFFSET 0
+;"
+b753aafc-0ef3-4621-bdd6-62bf46335f2e,Baseline_2025_Sep_Oct,2025-10-07 17:31:55.299000+00:00,45,0.09,0.0044,7.057799013563502,1.63,,0,2920,500,17.1,average,,,,,,category,True,True,False,,average,True,True,True,True,True,True,9.0,"
+--gift_card_rate
+WITH
+  gift_returns AS (
+    select retailer_moniker, retailer_category, sum(pct_gift_card) as pct_gift_card,
+       IF(retailer_moniker != 'average', AVG(sum(pct_gift_card)) OVER (PARTITION BY retailer_category), AVG(sum(pct_gift_card)) OVER ()) AS benchmark_pct_gift_card
+    from (
+      select
+        retailer_moniker, retailer_category,
+        gift_return,
+        refund_option,
+        narvar_product,
+        if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received))
+        OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_gift_card
+      from (
+         with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+          select
+              IF(sf._retailer_moniker IS NOT NUL","
+--gift_card_rate
+WITH
+  gift_returns AS (
+    select retailer_moniker, retailer_category, sum(pct_gift_card) as pct_gift_card,
+       IF(retailer_moniker != 'average', AVG(sum(pct_gift_card)) OVER (PARTITION BY retailer_category), AVG(sum(pct_gift_card)) OVER ()) AS benchmark_pct_gift_card
+    from (
+      select
+        retailer_moniker, retailer_category,
+        gift_return,
+        refund_option,
+        narvar_product,
+        if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received))
+        OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_gift_card
+      from (
+         with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+          select
+              IF(sf._retailer_moniker IS NOT NULL, t.retailer_moniker, 'average') AS retailer_moniker,
+              retailer_category,
+              narvar_product,
+              gift_return,
+              refund_option,
+              sum(return_qty * item_price) as value_returns_received,
+              row_number() over(partition by t.retailer_moniker, retailer_category, sf._retailer_moniker, return_process_info_id, return_process_item_id order by return_last_modified_date desc) as rnk
+              from
+                  reporting.t_return_details t LEFT JOIN sf on sf._retailer_moniker = t.retailer_moniker
+              where
+              return_status != 'cancelled'
+              and return_created_date between '2025-08-31' and '2025-09-29'
+              and lower(locale) = lower('en_US')
+          group by
+              t.retailer_moniker, retailer_category, sf._retailer_moniker,
+              gift_return, refund_option, narvar_product, return_process_info_id, return_process_item_id, return_last_modified_date
+          )
+      where rnk = 1
+      group by retailer_moniker, retailer_category, gift_return, refund_option, narvar_product
+      )
+    where (gift_return = true or refund_option in ('gift_card','GIFT_CARD','instant_store_credit','store_credit')) and narvar_product != 'exchange'
+    group by retailer_moniker, retailer_category
+  )
+
+SELECT IFNULL(pct_gift_card, 0) as percent_gift_card_rate, IFNULL(pct_gift_card - benchmark_pct_gift_card, 0) AS percent_diff_from_benchmark
+FROM (
+    SELECT DISTINCT
+        (SELECT ROUND(pct_gift_card, 2) FROM gift_returns WHERE LOWER(retailer_moniker) = LOWER('zimmermann')) AS pct_gift_card,
+        ROUND(COALESCE(
+          (SELECT benchmark_pct_gift_card FROM gift_returns WHERE LOWER(retailer_moniker) = LOWER('zimmermann')),
+          (SELECT benchmark_pct_gift_card FROM gift_returns WHERE retailer_moniker = 'average')
+        ), 2) AS benchmark_pct_gift_card
+    FROM gift_returns
+    )
+"
+413eb521-7f27-4638-b7b4-b37906ee7711,Peak_2024_2025,2024-12-12 10:41:17.380000+00:00,45,1.16,0.0572,91.0654616191642,52.53,,0,1565,500,31.9,pokemoncenter,,,,,,looker,True,True,False,,pokemoncenter,True,False,False,False,False,False,1.0,"SELECT T.order_number AS order_number, T.order_date AS order_date, T.product_sku AS product_sku, T.item_name AS item_name, T.item_id AS item_id, T.return_qty AS return_qty, T.return_override_code AS return_override_code, T.rma_number AS rma_number, T.gift_return AS gift_return, T.tracking_number AS tracking_number, T.return_created_date AS return_created_date, T.return_status AS return_status, T.return_tracking_status AS return_tracking_status, T.return_shipped_date AS return_shipped_date, T.return_edd_date AS return_edd_date, T.return_delivered_date AS return_delivered_date, T.return_reason AS return_reason, T.return_reason_code AS return_reason_code, T.user_comment AS user_comment, T.return_method AS return_method, T.carrier AS carrier, T.return_service_method AS return_service_method, T.locale AS locale, T.origin_zip AS origin_zip, T.origin_city AS origin_city, T.origin_state AS origin_state, T.dest_zip AS dest_zip, T.dest_city AS dest_city, T.dest_state AS dest_state, T.exchange_or","SELECT T.order_number AS order_number, T.order_date AS order_date, T.product_sku AS product_sku, T.item_name AS item_name, T.item_id AS item_id, T.return_qty AS return_qty, T.return_override_code AS return_override_code, T.rma_number AS rma_number, T.gift_return AS gift_return, T.tracking_number AS tracking_number, T.return_created_date AS return_created_date, T.return_status AS return_status, T.return_tracking_status AS return_tracking_status, T.return_shipped_date AS return_shipped_date, T.return_edd_date AS return_edd_date, T.return_delivered_date AS return_delivered_date, T.return_reason AS return_reason, T.return_reason_code AS return_reason_code, T.user_comment AS user_comment, T.return_method AS return_method, T.carrier AS carrier, T.return_service_method AS return_service_method, T.locale AS locale, T.origin_zip AS origin_zip, T.origin_city AS origin_city, T.origin_state AS origin_state, T.dest_zip AS dest_zip, T.dest_city AS dest_city, T.dest_state AS dest_state, T.exchange_order_number AS exchange_order_number, T.exchange_product_sku AS exchange_product_sku, T.exchange_item_name AS exchange_item_name, T.exchange_color AS exchange_color, T.exchange_size AS exchange_size, T.exchange_qty AS exchange_qty, T.parent_sku AS parent_sku
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'pokemoncenter' ) AND ( T.return_created_date >= '2024-01-01' AND T.return_created_date <= '2024-12-11' ) AND ( ( T.locale = 'en_GB' ) ) AND ( lower(T.order_number) = '12601660' )
+ORDER BY T.return_created_date ASC
+LIMIT 25 OFFSET 0
+;"
+ff5d92c2-b3f8-42d9-8f03-cc0951e9f24f,Peak_2024_2025,2024-11-25 20:24:25.367000+00:00,46,0.04,0.0021,3.2740951606344044,20.54,,0,3782,500,13.2,average,,,,,,rates,True,True,False,,average,True,True,True,True,True,True,13.0,"
+--emails_open_rate
+WITH dates AS (
+      SELECT DATE('2024-10-26') AS s, DATE('2024-11-24') AS e, MAX(email_sent_date) AS last_rollup_date,
+          DATE(CURRENT_TIMESTAMP()) AS c, DATE_SUB(DATE(CURRENT_TIMESTAMP()), INTERVAL 3 DAY) t_days_ago
+      FROM `reporting.email_engagement_daily_rollup`
+      ),
+    emails_open_rate AS (
+        SELECT IF(SUM(delivered) > 0, SUM(opened)/SUM(delivered), 0) AS percent_open_rate
+        FROM (
+            SELECT SUM(emails_opened) AS opened, SUM(emails_delivered) AS delivered
+            FROM `reporting.email_engagement_daily_rollup`, dates
+            WHERE
+                dates.s <= dates.last_rollup_date
+                AND email_sent_date >= dates.s AND email_sent_date <= dates.e
+                AND LOWER(retailer_moniker) = LOWER('lensdirect')
+                AND LOWER(locale) = LOWER('en_US')
+
+            UNION ALL
+
+            SELECT COUNTIF(email_opened = true) AS opened, COUNT(*) AS delivered
+            FROM
+                (SELECT
+  ","
+--emails_open_rate
+WITH dates AS (
+      SELECT DATE('2024-10-26') AS s, DATE('2024-11-24') AS e, MAX(email_sent_date) AS last_rollup_date,
+          DATE(CURRENT_TIMESTAMP()) AS c, DATE_SUB(DATE(CURRENT_TIMESTAMP()), INTERVAL 3 DAY) t_days_ago
+      FROM `reporting.email_engagement_daily_rollup`
+      ),
+    emails_open_rate AS (
+        SELECT IF(SUM(delivered) > 0, SUM(opened)/SUM(delivered), 0) AS percent_open_rate
+        FROM (
+            SELECT SUM(emails_opened) AS opened, SUM(emails_delivered) AS delivered
+            FROM `reporting.email_engagement_daily_rollup`, dates
+            WHERE
+                dates.s <= dates.last_rollup_date
+                AND email_sent_date >= dates.s AND email_sent_date <= dates.e
+                AND LOWER(retailer_moniker) = LOWER('lensdirect')
+                AND LOWER(locale) = LOWER('en_US')
+
+            UNION ALL
+
+            SELECT COUNTIF(email_opened = true) AS opened, COUNT(*) AS delivered
+            FROM
+                (SELECT
+                    message_id,
+                    COALESCE(MIN(IF(type = 'injection', DATE(timestamp), NULL)), MIN(IF(type = 'delivery', DATE(timestamp), NULL))) AS email_sent_date,
+                    LOGICAL_OR(IF(type = 'delivery', true, false)) AS email_delivered,
+                    LOGICAL_OR(IF(type = 'out_of_band', true, false)) AS out_of_band,
+                    LOGICAL_OR(IF(type LIKE '%open' OR type = 'click', true, false)) AS email_opened
+                FROM `analytics.v_sparkpost`, dates
+                WHERE
+                    dates.e > dates.last_rollup_date
+                    AND DATE(timestamp) BETWEEN GREATEST(dates.s, dates.t_days_ago) AND LEAST(dates.e, dates.c)
+                    AND LOWER(retailer_moniker) = LOWER('lensdirect')
+                    AND LOWER(locale) = LOWER('en_US')
+                    AND is_narvar_recipient IS FALSE
+                GROUP BY message_id), dates
+            WHERE email_sent_date > dates.last_rollup_date
+                AND email_delivered = true AND out_of_band = false
+            )
+  ),
+  benchmark_email_open_rate AS (
+    WITH sf AS (
+        SELECT DISTINCT
+            retailer AS _retailer_moniker,
+            category as retailer_category
+        FROM `narvar-data-lake.analytics.v_retailer_category`
+    ),
+    open_rates AS (
+        SELECT DISTINCT
+            IF(_retailer_moniker IS NOT NULL, retailer_moniker, 'average') AS retailer_moniker, retailer_category, _retailer_moniker,
+            IF(_retailer_moniker IS NOT NULL, AVG(open_rate) OVER (PARTITION BY retailer_category), AVG(open_rate) OVER ()) AS benchmark_open_rate
+        FROM (
+            SELECT r.retailer_moniker, retailer_category, sf._retailer_moniker,
+                IF(SUM(emails_delivered) > 0, SUM(emails_opened)/SUM(emails_delivered), 0) AS open_rate
+            FROM `reporting.email_engagement_daily_rollup` r
+                LEFT JOIN sf on sf._retailer_moniker = r.retailer_moniker,
+                dates
+            WHERE
+                email_sent_date >= LEAST(dates.last_rollup_date, DATE('2024-10-26')) AND email_sent_date <= DATE('2024-11-24')
+                AND LOWER(locale) = LOWER('en_US')
+            GROUP BY r.retailer_moniker, retailer_category, sf._retailer_moniker
+            )
+        )
+    SELECT
+      DISTINCT COALESCE(
+          (SELECT benchmark_open_rate FROM open_rates WHERE LOWER(retailer_moniker) = LOWER('lensdirect')),
+          (SELECT benchmark_open_rate FROM open_rates WHERE retailer_moniker = 'average')
+        ) AS benchmark_open_rate
+    FROM open_rates
+    )
+SELECT
+  ROUND(percent_open_rate * 100, 2) AS percent_open_rate,
+  ROUND((percent_open_rate - (SELECT benchmark_open_rate FROM benchmark_email_open_rate))*100, 2) AS percent_diff_from_benchmark
+FROM emails_open_rate
+"
+34ccc8af-0085-4caf-8e47-d8c9a59cb4e4,Peak_2024_2025,2024-12-16 08:26:26.976000+00:00,48,0.06,0.0027,4.137781845411432,6.68,,0,425,425,100.0,razer,,,,,,assets,True,True,False,,razer,True,False,True,False,False,False,1.0,"SELECT COUNT( distinct distinct_event ) AS count_distinct_distinct_event, T.asset_id AS asset_id, T.link_href AS link_href, T.name AS name
+FROM analytics.v_component_platform_marketing_assets AS T
+WHERE ( T.event_ts >= '2024-11-16' AND T.event_ts <= '2024-12-15' ) AND ( T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'razer' )
+GROUP BY T.asset_id, T.link_href, T.name
+ORDER BY count_distinct_distinct_event DESC
+;","SELECT COUNT( distinct distinct_event ) AS count_distinct_distinct_event, T.asset_id AS asset_id, T.link_href AS link_href, T.name AS name
+FROM analytics.v_component_platform_marketing_assets AS T
+WHERE ( T.event_ts >= '2024-11-16' AND T.event_ts <= '2024-12-15' ) AND ( T.type = 'OUTBOUND_SHIPPING' ) AND ( T.retailer_moniker = 'razer' )
+GROUP BY T.asset_id, T.link_href, T.name
+ORDER BY count_distinct_distinct_event DESC
+;"
+1c29ffdf-5111-4c5a-a92f-32d26a1112bb,Baseline_2025_Sep_Oct,2025-10-02 17:42:14.650000+00:00,74,2.0,0.0986,95.88399471429143,34.86,,0,159,159,100.0,,,,,,,,False,False,False,,NO_RETAILER,False,False,False,False,False,False,1.0,"--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('outerknown'), '2025-08-31', '2025-09-29', [LOWER('en_US')])
+","--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('outerknown'), '2025-08-31', '2025-09-29', [LOWER('en_US')])
+"
+16f3a296-aa3c-4dc8-a950-bbf7b20035f4,Baseline_2025_Sep_Oct,2025-10-31 20:05:05.838000+00:00,75,1.5,0.0742,71.5751306303327,149.76,,0,3562,500,14.0,,,,,,,category,True,True,False,,NO_RETAILER,False,True,True,True,True,True,10.0,"
+--sms_opt_in_rate_package
+WITH
+  sms_tracking_numbers AS
+    (
+      (
+        SELECT event_ts, retailer_moniker, tracking_number,
+        FROM `analytics.v_consumer_notification_preferences`
+        WHERE event_ts BETWEEN TIMESTAMP_SUB('2025-09-01', INTERVAL 14 DAY) AND '2025-10-30'
+        AND LOWER(checkout_locale) = LOWER('en_US')
+        AND notification_channel LIKE '%sms%'
+        AND notification_preference_level = 'tracking'
+        AND user_action = 'SUBSCRIBE'
+      )
+      UNION ALL
+      (
+        SELECT event_ts, retailer_moniker, tracking_number
+        FROM `analytics.v_watch_list_hub_sms`
+        WHERE event_ts BETWEEN TIMESTAMP_SUB('2025-09-01', INTERVAL 14 DAY) AND '2025-10-30'
+        AND LOWER(checkout_locale) = LOWER('en_US')
+        AND notification_channel LIKE '%sms%'
+        AND notification_preference_level = 'package'
+        AND user_action = 'SUBSCRIBE'
+      )
+    ),
+    all_tracking_numbers AS
+    (WITH sf AS (
+        SELECT DISTINCT retailer, category","
+--sms_opt_in_rate_package
+WITH
+  sms_tracking_numbers AS
+    (
+      (
+        SELECT event_ts, retailer_moniker, tracking_number,
+        FROM `analytics.v_consumer_notification_preferences`
+        WHERE event_ts BETWEEN TIMESTAMP_SUB('2025-09-01', INTERVAL 14 DAY) AND '2025-10-30'
+        AND LOWER(checkout_locale) = LOWER('en_US')
+        AND notification_channel LIKE '%sms%'
+        AND notification_preference_level = 'tracking'
+        AND user_action = 'SUBSCRIBE'
+      )
+      UNION ALL
+      (
+        SELECT event_ts, retailer_moniker, tracking_number
+        FROM `analytics.v_watch_list_hub_sms`
+        WHERE event_ts BETWEEN TIMESTAMP_SUB('2025-09-01', INTERVAL 14 DAY) AND '2025-10-30'
+        AND LOWER(checkout_locale) = LOWER('en_US')
+        AND notification_channel LIKE '%sms%'
+        AND notification_preference_level = 'package'
+        AND user_action = 'SUBSCRIBE'
+      )
+    ),
+    all_tracking_numbers AS
+    (WITH sf AS (
+        SELECT DISTINCT retailer, category AS retailer_category
+        FROM analytics.v_retailer_category
+      )
+      SELECT DISTINCT
+        retailer_category,
+        IF(sf.retailer IS NOT NULL, t.page_retailer_moniker, 'average') AS benchmark_retailer_moniker,
+        t.page_retailer_moniker AS retailer_moniker,
+        event_tracking_number
+      FROM `analytics.v_track_fe` t LEFT JOIN sf on LOWER(sf.retailer) = LOWER(t.page_retailer_moniker)
+      WHERE event_ts BETWEEN '2025-09-01' AND '2025-10-30'
+        AND LOWER(page_url_locale) = LOWER('en_US')
+
+      UNION ALL
+       SELECT DISTINCT
+        retailer_category,
+        IF(sf.retailer IS NOT NULL, c.page_retailer_moniker, 'average') AS benchmark_retailer_moniker,
+        c.page_retailer_moniker AS retailer_moniker,
+        event_tracking_number
+      FROM `analytics.v_component_platform` c LEFT JOIN sf on LOWER(sf.retailer) = LOWER(c.page_retailer_moniker)
+      WHERE event_ts BETWEEN '2025-09-01' AND '2025-10-30'
+        AND LOWER(page_url_locale) = LOWER('en_US')
+    ),
+opt_in_rates AS (
+  SELECT
+    retailer_moniker, benchmark_retailer_moniker, retailer_category, sms_optin_rate,
+    IF(benchmark_retailer_moniker != 'average',
+        AVG(sms_optin_rate) OVER (PARTITION BY retailer_category),
+        AVG(sms_optin_rate) OVER ()
+        ) AS benchmark_sms_optin_rate
+  FROM (
+    SELECT retailer_moniker, benchmark_retailer_moniker, retailer_category,
+        COUNT(DISTINCT tracking_number) AS numerator,
+        COUNT(DISTINCT event_tracking_number) AS denominator,
+        IF(COUNT(*) > 0, ROUND(COUNTIF(tracking_number IS NOT NULL)/COUNT(*) * 100, 2), 0) AS sms_optin_rate
+    FROM (
+        SELECT DISTINCT a.retailer_moniker, a.benchmark_retailer_moniker, a.retailer_category, a.event_tracking_number, s.tracking_number
+        FROM all_tracking_numbers a
+          LEFT JOIN sms_tracking_numbers s
+          ON LOWER(a.retailer_moniker) = LOWER(s.retailer_moniker) AND LOWER(a.event_tracking_number) = LOWER(s.tracking_number)
+        )
+    GROUP BY retailer_moniker, benchmark_retailer_moniker, retailer_category
+    )
+  WHERE numerator != 0
+  )
+SELECT
+    SUM(IFNULL(sms_optin_rate, 0)) as percent_sms_optin_rate,
+    SUM(IFNULL(sms_optin_rate - benchmark_sms_optin_rate, 0)) AS percent_diff_from_benchmark
+FROM (
+    SELECT DISTINCT
+        ROUND(sms_optin_rate, 2) AS sms_optin_rate,
+        ROUND(benchmark_sms_optin_rate, 2) AS benchmark_sms_optin_rate
+    FROM opt_in_rates
+    WHERE retailer_moniker = LOWER('lululemon')
+
+    UNION ALL
+
+    SELECT 0 AS sms_optin_rate, 0 as benchmark_sms_optin_rate
+    )
+"
+52192490-c7c6-4516-ba4a-fb0d8f236dda,Baseline_2025_Sep_Oct,2025-10-14 10:55:13.749000+00:00,80,1.72,0.0851,76.5779824442277,31.33,,0,155,155,100.0,,,,,,,,False,False,False,,NO_RETAILER,False,False,False,False,False,False,1.0,"--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('narvar'), '2025-09-11', '2025-10-10', [LOWER('en_US')])
+","--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('narvar'), '2025-09-11', '2025-10-10', [LOWER('en_US')])
+"
+036bbf2c-a5ec-4d00-a42f-2f366d3fa834,Peak_2024_2025,2024-12-10 21:23:20.030000+00:00,81,2.09,0.1032,92.08119093090446,13.91,,0,2501,500,20.0,average,,,,,,category,True,True,False,,average,True,True,True,True,True,True,9.0,"
+--exchange_rate
+WITH exchanges AS (
+    select retailer_moniker, retailer_category, pct_exchange,
+       IF(retailer_moniker != 'average', AVG(pct_exchange) OVER (PARTITION BY retailer_category), AVG(pct_exchange) OVER ()) AS benchmark_pct_exchange
+    from (
+    select
+        retailer_moniker, retailer_category,
+        narvar_product, if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0,
+        100 * sum(value_returns_received)/SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_exchange
+    from (
+        with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+        select
+            IF(sf._retailer_moniker IS NOT NULL, t.retailer_moniker, 'average') AS retailer_moniker,
+            retailer_category,
+            narvar","
+--exchange_rate
+WITH exchanges AS (
+    select retailer_moniker, retailer_category, pct_exchange,
+       IF(retailer_moniker != 'average', AVG(pct_exchange) OVER (PARTITION BY retailer_category), AVG(pct_exchange) OVER ()) AS benchmark_pct_exchange
+    from (
+    select
+        retailer_moniker, retailer_category,
+        narvar_product, if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0,
+        100 * sum(value_returns_received)/SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_exchange
+    from (
+        with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+        select
+            IF(sf._retailer_moniker IS NOT NULL, t.retailer_moniker, 'average') AS retailer_moniker,
+            retailer_category,
+            narvar_product,
+            sum(return_qty * item_price) as value_returns_received,
+            row_number() over (partition by t.retailer_moniker, retailer_category, sf._retailer_moniker,return_process_info_id, return_process_item_id order by return_last_modified_date desc)
+as rnk
+        from
+            reporting.t_return_details t LEFT JOIN sf on sf._retailer_moniker = t.retailer_moniker
+        where
+            return_status != 'cancelled'
+            and return_created_date between '2024-01-01' and '2024-12-09'
+            and LOWER(locale) = LOWER('en_US')
+        group by
+            t.retailer_moniker, retailer_category, sf._retailer_moniker,
+            narvar_product, return_process_info_id, return_process_item_id, return_last_modified_date
+        )
+    where rnk = 1
+    group by retailer_moniker, retailer_category, narvar_product
+    )
+    where narvar_product = 'exchange'
+  )
+SELECT IFNULL(pct_exchange, 0) as percent_exchange_rate, IFNULL(pct_exchange - benchmark_pct_exchange, 0) AS percent_diff_from_benchmark
+FROM (
+    SELECT DISTINCT
+        (SELECT ROUND(pct_exchange, 2) FROM exchanges WHERE LOWER(retailer_moniker) = LOWER('rag-bone-returns')) AS pct_exchange,
+        ROUND(COALESCE(
+            (SELECT benchmark_pct_exchange FROM exchanges WHERE LOWER(retailer_moniker) = LOWER('rag-bone-returns')),
+            (SELECT benchmark_pct_exchange FROM exchanges WHERE retailer_moniker = 'average')
+            ), 2) AS benchmark_pct_exchange
+        FROM exchanges
+    )
+"
+d7c5b024-2902-4456-b85a-92ec7f6f2e24,Peak_2024_2025,2025-01-10 18:02:41.241000+00:00,83,2.26,0.1115,97.8492497410824,16.37,,0,3034,500,16.5,average,,,,,,category,True,True,False,,average,True,True,True,True,True,True,9.0,"
+--revenue_retention
+WITH gift_or_exchanges AS (
+    select
+        retailer_moniker, retailer_category, SUM(pct_returns) AS pct_revenue_retained,
+        IF(retailer_moniker != 'average', AVG(SUM(pct_returns)) OVER (PARTITION BY retailer_category), AVG(SUM(pct_returns)) OVER ()) AS benchmark_pct_revenue_retained
+    from (
+        select distinct
+            retailer_moniker, retailer_category,
+            narvar_product, gift_return,  refund_option,
+            if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_returns
+        from (
+            with sf AS (
+                SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+                FROM analytics.v_retailer_category
+                WHERE retailer IS NOT NULL AND category IS NOT NULL
+                )
+            select
+    ","
+--revenue_retention
+WITH gift_or_exchanges AS (
+    select
+        retailer_moniker, retailer_category, SUM(pct_returns) AS pct_revenue_retained,
+        IF(retailer_moniker != 'average', AVG(SUM(pct_returns)) OVER (PARTITION BY retailer_category), AVG(SUM(pct_returns)) OVER ()) AS benchmark_pct_revenue_retained
+    from (
+        select distinct
+            retailer_moniker, retailer_category,
+            narvar_product, gift_return,  refund_option,
+            if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_returns
+        from (
+            with sf AS (
+                SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+                FROM analytics.v_retailer_category
+                WHERE retailer IS NOT NULL AND category IS NOT NULL
+                )
+            select
+                IF(sf._retailer_moniker IS NOT NULL, t.retailer_moniker, 'average') AS retailer_moniker,
+                retailer_category,
+                narvar_product, gift_return, refund_option,
+                sum(return_qty * item_price) as value_returns_received,
+                row_number() over(partition by t.retailer_moniker, retailer_category, sf._retailer_moniker, return_process_info_id, return_process_item_id order by return_last_modified_date desc) as rnk
+            from
+                reporting.t_return_details t LEFT JOIN sf on sf._retailer_moniker = t.retailer_moniker
+            where
+                return_status != 'cancelled'
+                and return_created_date between '2024-01-01' and '2024-12-31'
+                and lower(locale) = lower('en_US')
+            group by
+                t.retailer_moniker, retailer_category, sf._retailer_moniker,
+                gift_return, refund_option, narvar_product, return_process_info_id, return_process_item_id, return_last_modified_date
+            )
+        where rnk = 1
+        group by retailer_moniker, retailer_category, narvar_product, gift_return, refund_option
+        )
+    where narvar_product = 'exchange' or gift_return = true or refund_option in ('gift_card','GIFT_CARD','instant_store_credit','store_credit')
+    group by retailer_moniker, retailer_category
+    )
+SELECT IFNULL(pct_revenue_retained, 0) as percent_revenue_retention, IFNULL(pct_revenue_retained - benchmark_retained, 0) AS percent_diff_from_benchmark
+FROM (
+    SELECT DISTINCT
+        (SELECT ROUND(pct_revenue_retained, 2) FROM gift_or_exchanges WHERE LOWER(retailer_moniker) = LOWER('exofficio')) AS pct_revenue_retained,
+        ROUND(COALESCE(
+                (SELECT benchmark_pct_revenue_retained FROM gift_or_exchanges WHERE LOWER(retailer_moniker) = LOWER('exofficio')),
+                (SELECT benchmark_pct_revenue_retained FROM gift_or_exchanges WHERE retailer_moniker = 'average')
+            ),
+        2) AS benchmark_retained
+    FROM gift_or_exchanges
+    )
+"
+4f14595a-e867-40ac-89de-9d5949c31f1a,Peak_2024_2025,2025-01-02 20:11:47.935000+00:00,92,3.06,0.1513,118.67768008007147,60.13,,0,161,161,100.0,,,,,,,,False,False,False,,NO_RETAILER,False,False,False,False,False,False,1.0,"--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('champssports'), '2024-11-17', '2024-12-16', [LOWER('en_US')])
+","--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('champssports'), '2024-11-17', '2024-12-16', [LOWER('en_US')])
+"
+0e2ef987-ec9a-436e-9f87-b4fc563d1528,Peak_2024_2025,2024-12-06 01:25:10.930000+00:00,96,1.78,0.0881,66.63142815620652,14.84,,0,2910,500,17.2,average,,,,,,category,True,True,False,,average,True,True,True,True,True,True,9.0,"
+--gift_card_rate
+WITH
+  gift_returns AS (
+    select retailer_moniker, retailer_category, sum(pct_gift_card) as pct_gift_card,
+       IF(retailer_moniker != 'average', AVG(sum(pct_gift_card)) OVER (PARTITION BY retailer_category), AVG(sum(pct_gift_card)) OVER ()) AS benchmark_pct_gift_card
+    from (
+      select
+        retailer_moniker, retailer_category,
+        gift_return,
+        refund_option,
+        narvar_product,
+        if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received))
+        OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_gift_card
+      from (
+         with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+          select
+              IF(sf._retailer_moniker IS NOT NUL","
+--gift_card_rate
+WITH
+  gift_returns AS (
+    select retailer_moniker, retailer_category, sum(pct_gift_card) as pct_gift_card,
+       IF(retailer_moniker != 'average', AVG(sum(pct_gift_card)) OVER (PARTITION BY retailer_category), AVG(sum(pct_gift_card)) OVER ()) AS benchmark_pct_gift_card
+    from (
+      select
+        retailer_moniker, retailer_category,
+        gift_return,
+        refund_option,
+        narvar_product,
+        if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received))
+        OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_gift_card
+      from (
+         with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+          select
+              IF(sf._retailer_moniker IS NOT NULL, t.retailer_moniker, 'average') AS retailer_moniker,
+              retailer_category,
+              narvar_product,
+              gift_return,
+              refund_option,
+              sum(return_qty * item_price) as value_returns_received,
+              row_number() over(partition by t.retailer_moniker, retailer_category, sf._retailer_moniker, return_process_info_id, return_process_item_id order by return_last_modified_date desc) as rnk
+              from
+                  reporting.t_return_details t LEFT JOIN sf on sf._retailer_moniker = t.retailer_moniker
+              where
+              return_status != 'cancelled'
+              and return_created_date between '2024-01-01' and '2024-12-04'
+              and lower(locale) = lower('en_US')
+          group by
+              t.retailer_moniker, retailer_category, sf._retailer_moniker,
+              gift_return, refund_option, narvar_product, return_process_info_id, return_process_item_id, return_last_modified_date
+          )
+      where rnk = 1
+      group by retailer_moniker, retailer_category, gift_return, refund_option, narvar_product
+      )
+    where (gift_return = true or refund_option in ('gift_card','GIFT_CARD','instant_store_credit','store_credit')) and narvar_product != 'exchange'
+    group by retailer_moniker, retailer_category
+  )
+
+SELECT IFNULL(pct_gift_card, 0) as percent_gift_card_rate, IFNULL(pct_gift_card - benchmark_pct_gift_card, 0) AS percent_diff_from_benchmark
+FROM (
+    SELECT DISTINCT
+        (SELECT ROUND(pct_gift_card, 2) FROM gift_returns WHERE LOWER(retailer_moniker) = LOWER('ariat')) AS pct_gift_card,
+        ROUND(COALESCE(
+          (SELECT benchmark_pct_gift_card FROM gift_returns WHERE LOWER(retailer_moniker) = LOWER('ariat')),
+          (SELECT benchmark_pct_gift_card FROM gift_returns WHERE retailer_moniker = 'average')
+        ), 2) AS benchmark_pct_gift_card
+    FROM gift_returns
+    )
+"
+f1f3f5a5-455b-45ab-abfa-8a322b9358f6,Peak_2024_2025,2024-11-13 14:02:17.557000+00:00,105,0.2,0.0097,6.729384282295742,6.54,,0,203,203,100.0,partstown,,,,,,looker,True,True,False,,partstown,True,False,False,False,False,False,1.0,"SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'partstown' ) AND ( T.return_created_date >= '2024-01-01' AND T.return_created_date <= '2024-11-12' )
+;","SELECT COUNT( * ) AS count
+FROM analytics.v_return_details_looker AS T
+WHERE ( T.retailer_moniker = 'partstown' ) AND ( T.return_created_date >= '2024-01-01' AND T.return_created_date <= '2024-11-12' )
+;"
+49f648dd-696d-42f0-8360-a541a2139cc7,Baseline_2025_Sep_Oct,2025-09-05 13:44:05.052000+00:00,108,0.93,0.046,30.994371430155827,9.3,,0,2918,500,17.1,average,,,,,,category,True,True,False,,average,True,True,True,True,True,True,9.0,"
+--gift_card_rate
+WITH
+  gift_returns AS (
+    select retailer_moniker, retailer_category, sum(pct_gift_card) as pct_gift_card,
+       IF(retailer_moniker != 'average', AVG(sum(pct_gift_card)) OVER (PARTITION BY retailer_category), AVG(sum(pct_gift_card)) OVER ()) AS benchmark_pct_gift_card
+    from (
+      select
+        retailer_moniker, retailer_category,
+        gift_return,
+        refund_option,
+        narvar_product,
+        if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received))
+        OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_gift_card
+      from (
+         with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+          select
+              IF(sf._retailer_moniker IS NOT NUL","
+--gift_card_rate
+WITH
+  gift_returns AS (
+    select retailer_moniker, retailer_category, sum(pct_gift_card) as pct_gift_card,
+       IF(retailer_moniker != 'average', AVG(sum(pct_gift_card)) OVER (PARTITION BY retailer_category), AVG(sum(pct_gift_card)) OVER ()) AS benchmark_pct_gift_card
+    from (
+      select
+        retailer_moniker, retailer_category,
+        gift_return,
+        refund_option,
+        narvar_product,
+        if(SUM(sum(value_returns_received)) OVER (PARTITION BY retailer_moniker, retailer_category) > 0, 100 * sum(value_returns_received)/SUM(sum(value_returns_received))
+        OVER (PARTITION BY retailer_moniker, retailer_category), 0) as pct_gift_card
+      from (
+         with sf AS (
+            SELECT DISTINCT retailer as _retailer_moniker, category as retailer_category
+            FROM analytics.v_retailer_category
+            WHERE retailer IS NOT NULL AND category IS NOT NULL
+            )
+          select
+              IF(sf._retailer_moniker IS NOT NULL, t.retailer_moniker, 'average') AS retailer_moniker,
+              retailer_category,
+              narvar_product,
+              gift_return,
+              refund_option,
+              sum(return_qty * item_price) as value_returns_received,
+              row_number() over(partition by t.retailer_moniker, retailer_category, sf._retailer_moniker, return_process_info_id, return_process_item_id order by return_last_modified_date desc) as rnk
+              from
+                  reporting.t_return_details t LEFT JOIN sf on sf._retailer_moniker = t.retailer_moniker
+              where
+              return_status != 'cancelled'
+              and return_created_date between '2025-01-01' and '2025-09-04'
+              and lower(locale) = lower('en_US')
+          group by
+              t.retailer_moniker, retailer_category, sf._retailer_moniker,
+              gift_return, refund_option, narvar_product, return_process_info_id, return_process_item_id, return_last_modified_date
+          )
+      where rnk = 1
+      group by retailer_moniker, retailer_category, gift_return, refund_option, narvar_product
+      )
+    where (gift_return = true or refund_option in ('gift_card','GIFT_CARD','instant_store_credit','store_credit')) and narvar_product != 'exchange'
+    group by retailer_moniker, retailer_category
+  )
+
+SELECT IFNULL(pct_gift_card, 0) as percent_gift_card_rate, IFNULL(pct_gift_card - benchmark_pct_gift_card, 0) AS percent_diff_from_benchmark
+FROM (
+    SELECT DISTINCT
+        (SELECT ROUND(pct_gift_card, 2) FROM gift_returns WHERE LOWER(retailer_moniker) = LOWER('nicandzoe')) AS pct_gift_card,
+        ROUND(COALESCE(
+          (SELECT benchmark_pct_gift_card FROM gift_returns WHERE LOWER(retailer_moniker) = LOWER('nicandzoe')),
+          (SELECT benchmark_pct_gift_card FROM gift_returns WHERE retailer_moniker = 'average')
+        ), 2) AS benchmark_pct_gift_card
+    FROM gift_returns
+    )
+"
+f1e1aa11-d596-4c12-b677-d0cce428baaa,Baseline_2025_Sep_Oct,2025-10-01 15:03:33.638000+00:00,118,2.26,0.1115,68.48000775089304,34.46,,0,156,156,100.0,,,,,,,,False,False,False,,NO_RETAILER,False,False,False,False,False,False,1.0,"--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('medline'), '2025-08-31', '2025-09-29', [LOWER('en_US')])
+","--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('medline'), '2025-08-31', '2025-09-29', [LOWER('en_US')])
+"
+fdda562e-8c52-419b-b8cc-28c46f1a4cd6,Baseline_2025_Sep_Oct,2025-09-09 16:11:32.126000+00:00,142,0.36,0.0176,9.026283029616762,22.64,,0,2294,500,21.8,wowshop,,,,,,looker,True,True,False,,wowshop,True,False,True,True,True,True,4.0,"
+--most returned items
+with
+    t_quantities as (
+        select item_name, return_qty, record_count, product_image_url, dense_rank() over (order by return_qty desc) as item_rn,
+            return_reason, reason_qty, reason_count, row_number() over (partition by item_name order by reason_count desc) as reason_rn
+        from (
+            select distinct
+                item_name, return_reason,
+                sum(reason_qty) over (partition by item_name) as return_qty,
+                sum(reason_qty) over (partition by item_name, return_reason) as reason_qty,
+                max(product_image_url) over (partition by item_name) as product_image_url,
+                count(1) over (partition by item_name, return_reason) as reason_count,
+                count(1) over (partition by item_name) AS record_count
+            from (
+                select
+                    item_name, return_reason,
+                    sum(return_qty) as reason_qty,
+                    max(product_image_url) a","
+--most returned items
+with
+    t_quantities as (
+        select item_name, return_qty, record_count, product_image_url, dense_rank() over (order by return_qty desc) as item_rn,
+            return_reason, reason_qty, reason_count, row_number() over (partition by item_name order by reason_count desc) as reason_rn
+        from (
+            select distinct
+                item_name, return_reason,
+                sum(reason_qty) over (partition by item_name) as return_qty,
+                sum(reason_qty) over (partition by item_name, return_reason) as reason_qty,
+                max(product_image_url) over (partition by item_name) as product_image_url,
+                count(1) over (partition by item_name, return_reason) as reason_count,
+                count(1) over (partition by item_name) AS record_count
+            from (
+                select
+                    item_name, return_reason,
+                    sum(return_qty) as reason_qty,
+                    max(product_image_url) as product_image_url,
+                    row_number() over (partition by return_process_info_id, return_process_item_id order by return_last_modified_date desc) as rnk
+                from
+                    analytics.v_return_details_looker
+                where
+                    retailer_moniker = 'wowshop'
+                    and lower(locale) = lower('en_ES')
+                    and return_status != 'cancelled'
+                    and item_name is not null and length(trim(item_name)) > 0
+                    and return_created_date between '2025-01-01' and '2025-09-08'
+                group by
+                    item_name, return_reason, return_process_info_id, return_process_item_id, return_last_modified_date
+                )
+            where rnk = 1
+            order by item_name, reason_count desc
+        )
+    )
+select
+    item_name, return_qty, product_image_url,
+    string_agg(
+        concat(
+            return_reason, ':=',
+            cast(reason_qty as string), ':=',
+            cast(round(((reason_qty / return_qty) * 100), 1) as string), '%%'
+            ),
+        ""^|"" order by reason_qty desc
+    ) as reason_statistics
+from
+    t_quantities
+where item_rn <= 5 and reason_rn <= 3
+group by item_name, return_qty, product_image_url
+order by return_qty desc
+"
+d05959cb-96bd-4174-b71a-09dda95a08fe,Baseline_2025_Sep_Oct,2025-09-17 04:12:45.248000+00:00,184,4.35,0.2147,84.9290902970813,60.4,,0,159,159,100.0,,,,,,,,False,False,False,,NO_RETAILER,False,False,False,False,False,False,1.0,"--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('balsamhill'), '2025-08-01', '2025-09-15', [LOWER('en_US')])
+","--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('balsamhill'), '2025-08-01', '2025-09-15', [LOWER('en_US')])
+"
+e973d44d-9a98-4ef1-a1da-7e4e3858a8a1,Peak_2024_2025,2024-12-06 14:55:37.222000+00:00,227,26.75,1.3213,422.9346208580765,350.09,,0,165,165,100.0,,,,,,,,False,False,False,,NO_RETAILER,False,False,False,False,False,False,1.0,"--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('roadrunnersports'), '2024-01-01', '2024-12-05', [LOWER('en_US')])
+","--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('roadrunnersports'), '2024-01-01', '2024-12-05', [LOWER('en_US')])
+"
+0b8690cf-5ef6-4ede-b9f2-89622a84cae1,Baseline_2025_Sep_Oct,2025-09-25 14:10:02.967000+00:00,381,6.67,0.3296,62.951285169826946,597.18,,0,3561,500,14.0,,,,,,,category,True,True,False,,NO_RETAILER,False,True,True,True,True,True,10.0,"
+--sms_opt_in_rate_package
+WITH
+  sms_tracking_numbers AS
+    (
+      (
+        SELECT event_ts, retailer_moniker, tracking_number,
+        FROM `analytics.v_consumer_notification_preferences`
+        WHERE event_ts BETWEEN TIMESTAMP_SUB('2025-01-01', INTERVAL 14 DAY) AND '2025-09-25'
+        AND LOWER(checkout_locale) = LOWER('en_US')
+        AND notification_channel LIKE '%sms%'
+        AND notification_preference_level = 'tracking'
+        AND user_action = 'SUBSCRIBE'
+      )
+      UNION ALL
+      (
+        SELECT event_ts, retailer_moniker, tracking_number
+        FROM `analytics.v_watch_list_hub_sms`
+        WHERE event_ts BETWEEN TIMESTAMP_SUB('2025-01-01', INTERVAL 14 DAY) AND '2025-09-25'
+        AND LOWER(checkout_locale) = LOWER('en_US')
+        AND notification_channel LIKE '%sms%'
+        AND notification_preference_level = 'package'
+        AND user_action = 'SUBSCRIBE'
+      )
+    ),
+    all_tracking_numbers AS
+    (WITH sf AS (
+        SELECT DISTINCT retailer, category","
+--sms_opt_in_rate_package
+WITH
+  sms_tracking_numbers AS
+    (
+      (
+        SELECT event_ts, retailer_moniker, tracking_number,
+        FROM `analytics.v_consumer_notification_preferences`
+        WHERE event_ts BETWEEN TIMESTAMP_SUB('2025-01-01', INTERVAL 14 DAY) AND '2025-09-25'
+        AND LOWER(checkout_locale) = LOWER('en_US')
+        AND notification_channel LIKE '%sms%'
+        AND notification_preference_level = 'tracking'
+        AND user_action = 'SUBSCRIBE'
+      )
+      UNION ALL
+      (
+        SELECT event_ts, retailer_moniker, tracking_number
+        FROM `analytics.v_watch_list_hub_sms`
+        WHERE event_ts BETWEEN TIMESTAMP_SUB('2025-01-01', INTERVAL 14 DAY) AND '2025-09-25'
+        AND LOWER(checkout_locale) = LOWER('en_US')
+        AND notification_channel LIKE '%sms%'
+        AND notification_preference_level = 'package'
+        AND user_action = 'SUBSCRIBE'
+      )
+    ),
+    all_tracking_numbers AS
+    (WITH sf AS (
+        SELECT DISTINCT retailer, category AS retailer_category
+        FROM analytics.v_retailer_category
+      )
+      SELECT DISTINCT
+        retailer_category,
+        IF(sf.retailer IS NOT NULL, t.page_retailer_moniker, 'average') AS benchmark_retailer_moniker,
+        t.page_retailer_moniker AS retailer_moniker,
+        event_tracking_number
+      FROM `analytics.v_track_fe` t LEFT JOIN sf on LOWER(sf.retailer) = LOWER(t.page_retailer_moniker)
+      WHERE event_ts BETWEEN '2025-01-01' AND '2025-09-25'
+        AND LOWER(page_url_locale) = LOWER('en_US')
+
+      UNION ALL
+       SELECT DISTINCT
+        retailer_category,
+        IF(sf.retailer IS NOT NULL, c.page_retailer_moniker, 'average') AS benchmark_retailer_moniker,
+        c.page_retailer_moniker AS retailer_moniker,
+        event_tracking_number
+      FROM `analytics.v_component_platform` c LEFT JOIN sf on LOWER(sf.retailer) = LOWER(c.page_retailer_moniker)
+      WHERE event_ts BETWEEN '2025-01-01' AND '2025-09-25'
+        AND LOWER(page_url_locale) = LOWER('en_US')
+    ),
+opt_in_rates AS (
+  SELECT
+    retailer_moniker, benchmark_retailer_moniker, retailer_category, sms_optin_rate,
+    IF(benchmark_retailer_moniker != 'average',
+        AVG(sms_optin_rate) OVER (PARTITION BY retailer_category),
+        AVG(sms_optin_rate) OVER ()
+        ) AS benchmark_sms_optin_rate
+  FROM (
+    SELECT retailer_moniker, benchmark_retailer_moniker, retailer_category,
+        COUNT(DISTINCT tracking_number) AS numerator,
+        COUNT(DISTINCT event_tracking_number) AS denominator,
+        IF(COUNT(*) > 0, ROUND(COUNTIF(tracking_number IS NOT NULL)/COUNT(*) * 100, 2), 0) AS sms_optin_rate
+    FROM (
+        SELECT DISTINCT a.retailer_moniker, a.benchmark_retailer_moniker, a.retailer_category, a.event_tracking_number, s.tracking_number
+        FROM all_tracking_numbers a
+          LEFT JOIN sms_tracking_numbers s
+          ON LOWER(a.retailer_moniker) = LOWER(s.retailer_moniker) AND LOWER(a.event_tracking_number) = LOWER(s.tracking_number)
+        )
+    GROUP BY retailer_moniker, benchmark_retailer_moniker, retailer_category
+    )
+  WHERE numerator != 0
+  )
+SELECT
+    SUM(IFNULL(sms_optin_rate, 0)) as percent_sms_optin_rate,
+    SUM(IFNULL(sms_optin_rate - benchmark_sms_optin_rate, 0)) AS percent_diff_from_benchmark
+FROM (
+    SELECT DISTINCT
+        ROUND(sms_optin_rate, 2) AS sms_optin_rate,
+        ROUND(benchmark_sms_optin_rate, 2) AS benchmark_sms_optin_rate
+    FROM opt_in_rates
+    WHERE retailer_moniker = LOWER('fsastore')
+
+    UNION ALL
+
+    SELECT 0 AS sms_optin_rate, 0 as benchmark_sms_optin_rate
+    )
+"
+2511f0a3-4689-45ea-80e9-bfd72d114fe5,Peak_2024_2025,2024-12-17 10:36:57.130000+00:00,1834,12.99,0.6418,25.491050125184888,369.57,,0,158,158,100.0,,,,,,,,False,False,False,,NO_RETAILER,False,False,False,False,False,False,1.0,"--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('samsonite'), '2024-01-01', '2024-12-16', [LOWER('fr_BE')])
+","--sms_opt_in_rate_order
+SELECT * FROM `narvar-data-lake.analytics.order_sms_optin_rate_hub`(LOWER('samsonite'), '2024-01-01', '2024-12-16', [LOWER('fr_BE')])
+"

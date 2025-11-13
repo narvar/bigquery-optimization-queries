@@ -3,5 +3,7 @@ narvar/analysis_peak_2025_sonnet45/results/looker_full_2025_analysis_*.csv
 narvar/analysis_peak_2025_sonnet45/results/looker_retailer_summary_*.csv
 narvar/analysis_peak_2025_sonnet45/results/hub_full_2025_analysis_*.csv
 narvar/analysis_peak_2025_sonnet45/results/hub_retailer_summary_*.csv
+narvar/analysis_peak_2025_sonnet45/results/hub_analytics_api_full_analysis_*.csv
+narvar/analysis_peak_2025_sonnet45/results/hub_analytics_api_retailer_summary_*.csv
 narvar/analysis_peak_2025_sonnet45/results/monitor_retailer_performance_*.csv
 narvar/analysis_peak_2025_sonnet45/results/monitor_reservation_breakdown_*.csv

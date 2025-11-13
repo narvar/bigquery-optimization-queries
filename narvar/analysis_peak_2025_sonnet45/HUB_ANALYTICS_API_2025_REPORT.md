@@ -142,6 +142,75 @@ The platform demonstrates that **proper query optimization can achieve perfect Q
 
 ---
 
+## 🎯 Retailer Attribution Results
+
+### **Attribution Success Rate: 80.3%** (Better than Looker!)
+
+| Attribution Quality | Count | % of Total | Explanation |
+|---------------------|-------|------------|-------------|
+| **HIGH** | 651,703 | 80.3% | Direct retailer_moniker match |
+| **MEDIUM** | 185 | 0.0% | JOIN conditions or comments |
+| **AGGREGATE** | 96,724 | 11.9% | Multi-retailer analytics |
+| **NOT_APPLICABLE** | 3,290 | 0.4% | No retailer field in query |
+| **FAILED** | 60,128 | 7.4% | Pattern extraction failed |
+
+**Total Successfully Attributed**: 651,888 queries (80.3%)
+
+**Comparison to Looker**: Hub Analytics has **BETTER attribution rate** (80.3% vs 72.9%) despite being a backend API!
+
+### **Extraction Methods Used**
+
+| Method | Count | % of Total | Pattern Description |
+|--------|-------|------------|---------------------|
+| **EQUALS** | 651,703 | 80.3% | `WHERE retailer_moniker = 'value'` |
+| **AGGREGATE_DASHBOARD** | 96,724 | 11.9% | Multi-retailer aggregations |
+| **NO_MATCH** | 60,128 | 7.4% | Pattern failed |
+| **NO_FIELD** | 3,290 | 0.4% | Query doesn't reference retailer |
+| **JOIN** | 185 | 0.0% | JOIN conditions on retailer |
+
+**Pattern Success**: Achieved 80.3% with primarily Pattern 1 (retailer_moniker = 'value'), showing Hub Analytics queries have **consistent, predictable structure**.
+
+---
+
+## 👥 Top 20 Retailers by Query Volume
+
+| Rank | Retailer | Queries | % of Attributed | Avg Daily | vs. Looker Rank |
+|------|----------|---------|----------------|-----------|-----------------|
+| 1 | **average** | 53,092 | 8.1% | 144 | Not in Looker Top 20 |
+| 2 | patagonia | 13,459 | 2.1% | 36 | Not in Looker Top 20 |
+| 3 | theory | 12,025 | 1.8% | 33 | #16 in Looker |
+| 4 | jdsports-emea | 11,551 | 1.8% | 31 | Not in Looker Top 20 |
+| 5 | narvar | 11,520 | 1.8% | 31 | Not in Looker Top 20 |
+| 6 | brownells | 11,214 | 1.7% | 30 | Not in Looker Top 20 |
+| 7 | partstown | 8,472 | 1.3% | 23 | Not in Looker Top 20 |
+| 8 | clarks | 7,736 | 1.2% | 21 | Not in Looker Top 20 |
+| 9 | seasaltcornwall | 7,414 | 1.1% | 20 | Not in Looker Top 20 |
+| 10 | beautyworks | 7,049 | 1.1% | 19 | Not in Looker Top 20 |
+| 11 | newbalance | 6,893 | 1.1% | 19 | Not in Looker Top 20 |
+| 12 | canadagoose | 6,523 | 1.0% | 18 | Not in Looker Top 20 |
+| 13 | onrunning | 6,467 | 1.0% | 18 | #13 in Looker |
+| 14 | asics | 6,010 | 0.9% | 16 | #3 in Looker |
+| 15 | burtonsnowboards | 5,807 | 0.9% | 16 | Not in Looker Top 20 |
+| 16 | landsend | 5,677 | 0.9% | 15 | #5 in Looker |
+| 17 | tiffany | 5,435 | 0.8% | 15 | Not in Looker Top 20 |
+| 18 | carhartt | 4,884 | 0.7% | 13 | Not in Looker Top 20 |
+| 19 | sitkagear | 4,848 | 0.7% | 13 | Not in Looker Top 20 |
+| 20 | chanel | 4,787 | 0.7% | 13 | Not in Looker Top 20 |
+
+**Top 20 Total**: 201,367 queries (30.9% of successfully attributed queries)
+
+**Critical Finding**: **Different retailer distribution** than Looker!
+- Only 5 retailers overlap in Top 20: theory, onrunning, asics, landsend, chanel
+- **"average"** dominates Hub Analytics (8.1%) but not in Looker Top 20
+- Hub Analytics serves **different retailers** or **different use cases** than Looker
+
+**Retailer Concentration**:
+- Top 5: 101,647 queries (15.6% of attributed)
+- Top 20: 201,367 queries (30.9% of attributed)
+- **Lower concentration** than Looker (22%) - more evenly distributed usage
+
+---
+
 ## ⚠️ Quality of Service Analysis
 
 ### **Overall QoS Performance - PERFECT! 🏆**
@@ -433,17 +502,30 @@ This report was generated using the following code artifacts:
 
 ### **SQL Queries**
 
-1. **Hub Analytics API Performance Analysis**
+1. **Pattern Discovery (Sample Analysis)**
+   - File: `queries/phase2_consumer_analysis/hub_analytics_api_pattern_discovery.sql`
+   - Purpose: Sample 200 Hub Analytics queries to test retailer extraction patterns
+   - Cost: $0.19 (38 GB scan)
+   - Results: `results/hub_analytics_api_pattern_discovery_20251112_211901.csv` (60 queries)
+   - Finding: 80% retailer attribution success rate!
+
+2. **Full 2025 Hub Analytics API Analysis with Retailer Attribution**
+   - File: `queries/phase2_consumer_analysis/hub_analytics_api_full_analysis.sql`
+   - Purpose: Analyze all 812,030 Hub Analytics queries with retailer attribution
+   - Cost: $0.85 (173.92 GB scan)
+   - Results: `results/hub_analytics_api_full_analysis_20251112_212149.csv` (812,030 rows)
+   - Key Features:
+     * Retailer extraction (80.3% success rate)
+     * Reservation type mapping and cost correction
+     * Full query text join to audit logs
+     * Query complexity analysis
+     * Aggregate dashboard detection
+
+3. **Hub Analytics API Performance Analysis** (Initial)
    - File: `queries/phase2_consumer_analysis/hub_analytics_api_performance.sql`
-   - Purpose: Analyze all Hub Analytics API queries for 2025 periods
+   - Purpose: Initial period-level analysis (before retailer attribution)
    - Cost: $0.018 (3.74 GB scan)
    - Results: `results/hub_analytics_api_performance_20251112_205931.csv` (2 periods)
-   - Key Features:
-     * Period-level aggregations (volume, cost, QoS, complexity)
-     * Reservation type mapping and cost correction
-     * Hourly and daily usage patterns
-     * Top 20 expensive queries per period
-     * Query complexity analysis
 
 ### **Python Scripts**
 
@@ -452,26 +534,37 @@ This report was generated using the following code artifacts:
    - Purpose: Dry-run queries to estimate BigQuery scan costs
    - Used for: Validating query cost before execution
 
-2. **Hub Analytics Analysis Execution**
-   - File: `scripts/run_hub_analytics_api_analysis.py`
-   - Purpose: Execute Hub Analytics query and generate summary
+2. **Pattern Discovery Execution**
+   - File: `scripts/run_hub_analytics_pattern_discovery.py`
+   - Purpose: Execute pattern discovery and test retailer extraction
+   - Output: CSV file + console summary
+
+3. **Full Hub Analytics Analysis Execution**
+   - File: `scripts/run_hub_analytics_full_analysis.py`
+   - Purpose: Execute full analysis query with retailer attribution
    - Output: 
-     * `results/hub_analytics_api_performance_20251112_205931.csv`
+     * `results/hub_analytics_api_full_analysis_20251112_212149.csv` (812,030 rows)
+     * `results/hub_analytics_api_retailer_summary_20251112_212149.csv` (retailer-level metrics)
      * Console summary with key statistics
+
+4. **Hub Analytics API Analysis** (Initial)
+   - File: `scripts/run_hub_analytics_api_analysis.py`
+   - Purpose: Initial period-level analysis
+   - Output: Period-level summary
 
 ### **Analysis Workflow**
 
 ```bash
-# Step 1: Cost Check
-python scripts/check_query_cost.py queries/phase2_consumer_analysis/hub_analytics_api_performance.sql
-# → $0.018 (3.74 GB scan)
+# Step 1: Pattern Discovery (test retailer extraction)
+python scripts/run_hub_analytics_pattern_discovery.py
+# → Discovered 80% success rate (better than Looker!)
 
-# Step 2: Execute Analysis
-python scripts/run_hub_analytics_api_analysis.py
-# → 812,010 queries, 0% violations, $2,714 cost
+# Step 2: Full Analysis (apply patterns to all data)
+python scripts/run_hub_analytics_full_analysis.py
+# → 80.3% final success rate (812,030 queries)
 
 # Step 3: Generate Report (this document)
-# Manual synthesis of findings
+# Manual synthesis of findings with retailer attribution
 ```
 
 ### **Data Lineage**
@@ -479,14 +572,18 @@ python scripts/run_hub_analytics_api_analysis.py
 ```
 narvar-data-lake.query_opt.traffic_classification (43.8M jobs, Phase 1)
          ↓ (Filter: consumer_subcategory = 'ANALYTICS_API')
-    Hub Analytics API jobs (812,010 queries)
-         ↓ (Aggregate: period-level metrics, reservation info)
-    Period statistics (2 periods analyzed)
-         ↓ (Analyze: QoS, cost, patterns, complexity)
+    Hub Analytics API jobs (812,030 queries)
+         ↓ (Join: audit logs for full query text)
+    Hub Analytics with full text
+         ↓ (Apply: retailer extraction patterns)
+    Hub Analytics with retailer attribution (80.3% success)
+         ↓ (Aggregate: retailer-level metrics)
+    Retailer summary (200+ retailers × 2 periods)
+         ↓ (Analyze: QoS, cost, patterns)
     This report (HUB_ANALYTICS_API_2025_REPORT.md)
 ```
 
-**Why No Retailer Attribution?** Hub Analytics API is a **backend service** serving all retailers through a unified API. Individual queries don't have retailer identifiers - the API aggregates data across all retailers.
+**Retailer Attribution Discovery**: Originally assumed Hub Analytics API had no retailer attribution (centralized API). Pattern discovery revealed **80.3% of queries DO have retailer_moniker filters** - Hub Analytics serves retailer-specific analytics through the API!
 
 ---
 
@@ -628,20 +725,36 @@ narvar-data-lake.query_opt.traffic_classification (43.8M jobs, Phase 1)
 
 ## 📊 Data Files Generated
 
-### **Primary Dataset**
+### **Primary Dataset** (Full Analysis with Retailer Attribution)
+- **File**: `results/hub_analytics_api_full_analysis_20251112_212149.csv`
+- **Rows**: 812,030 queries
+- **Columns**: 25+ fields (job_id, retailer_attribution, execution times, costs, QoS status, reservation type)
+- **Size**: ~150 MB (excluded from git via .gitignore)
+
+### **Retailer Summary**
+- **File**: `results/hub_analytics_api_retailer_summary_20251112_212149.csv`
+- **Rows**: 200+ unique retailers × 2 periods
+- **Aggregations**: queries, avg/median/P95 execution, slot-hours, cost, QoS violations per retailer
+
+### **Initial Period Summary** (Before Retailer Attribution)
 - **File**: `results/hub_analytics_api_performance_20251112_205931.csv`
 - **Rows**: 2 (one per period)
-- **Columns**: 30+ fields (period stats, cost breakdown, QoS metrics, complexity, reservation info)
-- **Size**: <1 KB (aggregated summary, not per-query)
+- **Use**: Initial analysis before retailer attribution discovery
 
-### **Data Structure**
-Each row represents one analysis period with:
-- Volume metrics: total_queries, unique_users, unique_projects, days_in_period
-- Execution metrics: avg/p50/p95/p99/max execution_seconds
-- Resource metrics: slot_hours, concurrent_slots, cost
-- QoS metrics: violations, violation_pct
-- Reservation breakdown: queries and costs by reservation type
-- Complexity metrics: joins, group_by, window_functions, CTEs, query_length
+### **Pattern Discovery Sample**
+- **File**: `results/hub_analytics_api_pattern_discovery_20251112_211901.csv`
+- **Rows**: 60 sample queries
+- **Use**: Pattern validation and debugging
+
+### **Data Structure** (Full Analysis)
+Each row represents one query with:
+- Identifiers: job_id, project_id, analysis_period_label
+- Timing: start_time, execution_time_seconds, hour_of_day, day_of_week
+- Resources: slot_hours, concurrent_slots, gb_scanned, cost
+- Reservation: reservation_type (RESERVED_SHARED_POOL, ON_DEMAND)
+- Retailer: retailer_attribution, attribution_quality, extraction_method
+- QoS: qos_status, is_qos_violation, qos_violation_seconds
+- Complexity: has_joins, has_group_by, has_cte, has_window_functions, query_length
 
 ---
 
@@ -729,8 +842,10 @@ The **Hub Analytics API** platform is Narvar's **flagship dashboard backend** wi
 ---
 
 **Report Date**: November 12, 2025  
-**Analysis Cost**: $0.018 (3.74 GB scan)  
-**Data Coverage**: 812,010 queries, 12 months, $2,714 in Hub Analytics API costs  
+**Analysis Cost**: $1.04 ($0.19 pattern discovery + $0.85 full analysis with retailer attribution)  
+**Data Coverage**: 812,030 queries, 200+ retailers, 12 months, $2,714 in Hub Analytics API costs  
 
-**Status**: ✅ **COMPLETE** - Serves as optimization benchmark for all platforms
+**Status**: ✅ **COMPLETE** - Serves as optimization benchmark with retailer-level insights
+
+**Key Discovery**: Hub Analytics API DOES have retailer attribution (80.3% success) - not a purely centralized API as initially assumed. Top retailer is "average" with 53,092 queries (8.1%).
 
