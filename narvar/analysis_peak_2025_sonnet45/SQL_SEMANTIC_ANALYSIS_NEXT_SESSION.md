@@ -9,8 +9,12 @@ I'm building a **reusable SQL Query Semantic Analysis Framework** to understand 
 
 **PROJECT CONTEXT**:
 - **Parent Project**: BigQuery capacity optimization for Narvar (Peak 2025-2026)
-- **Current Need**: Understand which business functions are most important to Hub/Monitor/Metabase users
-- **Broader Goal**: Create reusable framework for any SQL log analysis scenario
+- **Completed (Nov 12, 2025)**: Analyzed **1.25M queries** across **3 platforms**:
+  * Hub Analytics API (ANALYTICS_API): 812K queries, 80.3% retailer attribution, 0% violations
+  * Looker (HUB): 236K queries, 72.9% retailer attribution, 2.6% violations
+  * Monitor (MONITOR): 205K queries, 100% retailer attribution, 2.21% violations
+- **Current Need**: Understand which **business functions** are most important to users (e.g., Return Analysis, Delivery Tracking, Order Status)
+- **Broader Goal**: Create reusable framework for any SQL log analysis scenario (Metabase, Airflow, etc.)
 
 **WHY THIS MATTERS**:
 1. **Optimization Focus**: Prioritize queries that matter most to business
@@ -19,6 +23,37 @@ I'm building a **reusable SQL Query Semantic Analysis Framework** to understand 
 4. **Capacity Planning**: Predict load based on business cycles
 5. **Cost Attribution**: Attribute costs to business functions, not just users
 
+**SPECIFIC ANALYTICAL DIMENSIONS TO EXTRACT**:
+1. **Time Filtering Patterns**:
+   - How far back in time are queries looking? (1 day, 7 days, 30 days, 90 days, 1 year, all-time)
+   - Are users looking at recent data vs historical trends?
+   - Outlier detection: Queries scanning unnecessarily large time ranges
+   - Common patterns: `WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL X DAY/MONTH/YEAR)`
+   - Distribution: % of queries by lookback period (recent vs historical)
+
+2. **Query Granularity** (Transactional vs Aggregated):
+   - **Transactional Lookups**: Specific entity queries (tracking_number, order_number, shipment_id, return_id)
+     * Pattern: `WHERE tracking_number = 'ABC123'`
+     * Use case: "Find status of specific shipment"
+   - **Aggregated Analytics**: Grouped by attributes (carrier, region, locale, country, retailer, product_category)
+     * Pattern: `GROUP BY carrier, region`
+     * Use case: "Carrier performance by region"
+   - **Granularity distribution**: % transactional vs % aggregated queries
+
+3. **Geographic Dimensions**:
+   - Locale/Country groupings and filters
+   - Regional performance analytics (GROUP BY country, locale)
+   - Cross-border analytics (multi-region comparisons)
+   - Pattern: Presence of `locale`, `country`, `region` in GROUP BY or WHERE clauses
+
+4. **Business Function Categories** (Based on Merchant Requirements):
+   - **Returns Analytics**: Return rates, refund amounts, return reasons, return workflows (CORE requirement)
+   - **Delivery/Shipment Analytics**: Carrier performance, delivery SLAs, transit times
+   - **Order Analytics**: Order status, order volume, conversion metrics
+   - **Campaign Analytics**: Marketing campaign tracking, rollout performance
+   - **Usage Analytics**: Feature adoption, agent usage, customer engagement (C&C value)
+   - **Data Integration**: Connector usage (Patchworks), scheduled reports, Google Analytics tagging
+
 ---
 
 ## 📚 BACKGROUND READING
@@ -26,8 +61,10 @@ I'm building a **reusable SQL Query Semantic Analysis Framework** to understand 
 **Priority order** (read before starting):
 
 1. @SQL_QUERY_SEMANTIC_ANALYSIS_FRAMEWORK.md - Complete analysis of approaches, tools, and recommendations
-2. @AI_SESSION_CONTEXT.md - Parent project context (optional background)
-3. @INV6_HUB_QOS_RESULTS.md - Hub QoS crisis (motivating use case)
+2. @HUB_ANALYTICS_API_2025_REPORT.md - Hub Analytics (812K queries, 0% violations, 80.3% retailer attribution)
+3. @LOOKER_2025_ANALYSIS_REPORT.md - Looker dashboards (236K queries, 72.9% retailer attribution)
+4. @MONITOR_2025_ANALYSIS_REPORT.md - Monitor APIs (205K queries, 100% retailer attribution)
+5. @AI_SESSION_CONTEXT.md - Parent project context (optional background)
 
 ---
 
@@ -58,6 +95,13 @@ GROUP BY retailer_moniker
   "complexity_score": 6,
   "has_joins": true,
   "has_temporal_filter": true,
+  "time_range_days": 365,
+  "lookback_pattern": "1 year (365 days)",
+  "query_granularity": "aggregated",
+  "aggregation_dimensions": ["retailer_moniker"],
+  "filter_dimensions": ["return_reason", "return_date"],
+  "geographic_analysis": false,
+  "transactional_lookup": false,
   "classification_confidence": 0.95,
   "classification_method": "rule-based"
 }
@@ -96,7 +140,7 @@ Query → SQL Parser (sqlglot) → Extract Features
 **Goal**: Discover business function taxonomy
 
 **Tasks**:
-1. Extract 500-1,000 diverse Hub/Monitor queries
+1. Extract 500-1,000 diverse queries from Hub Analytics API, Looker, and/or Monitor
 2. Generate embeddings (sentence-transformers or OpenAI)
 3. Cluster queries (K-means/HDBSCAN) into 20-50 groups
 4. LLM describes each cluster (GPT-4o-mini or Claude Haiku)
@@ -149,7 +193,7 @@ Query → SQL Parser (sqlglot) → Extract Features
 **Goal**: Scale to full dataset and integrate with BigQuery
 
 **Tasks**:
-1. Process all Hub queries (2025)
+1. Process all platform queries (Hub Analytics API, Looker, Monitor - 1.25M total for 2025)
 2. Create BigQuery table: `query_opt.query_classifications`
 3. Join with `traffic_classification`
 4. Generate analysis report
@@ -256,9 +300,9 @@ sql_semantic_analysis/
 - [ ] Rule improvement over time
 
 ### **Phase 4 (Production)**:
-- [ ] All 2025 Hub queries classified
+- [ ] All 2025 platform queries classified (Hub Analytics API, Looker, Monitor)
 - [ ] BigQuery table created and populated
-- [ ] Analysis report with business insights
+- [ ] Analysis report with business insights by platform
 - [ ] Documentation for future maintenance
 
 ---
@@ -283,14 +327,16 @@ sql_semantic_analysis/
 
 **Useful for**: Getting complete SQL for complex queries
 
-### **3. Hub Pattern Discovery Results** (Sample data):
+### **3. Platform Pattern Discovery Results** (Sample data):
 ```
--- File: results/hub_pattern_discovery_20251112_130121.csv
--- Contains: 60 Hub queries with full text, patterns extracted, QoS metrics
--- Success rate: 60% retailer extraction
+-- Hub Analytics API: results/hub_analytics_api_pattern_discovery_20251112_211901.csv
+--   60 queries, 80% retailer extraction success
+-- Looker: results/hub_pattern_discovery_20251112_130121.csv  
+--   60 queries, 60% initial success (improved to 72.9% in full analysis)
+-- Monitor: Pre-attributed in classification table (100% success via MD5 matching)
 ```
 
-**Useful for**: Understanding Hub query patterns
+**Useful for**: Understanding query patterns across all three platforms
 
 ---
 
@@ -428,6 +474,13 @@ What level of detail do you want in the output?
   "key_columns": ["retailer_moniker", "return_reason", "refund_amount"],
   "query_type": "aggregation",
   "complexity_score": 6,
+  "time_range_days": 90,
+  "lookback_pattern": "Q1 2024 (90 days)",
+  "query_granularity": "aggregated",
+  "aggregation_dimensions": ["retailer_moniker"],
+  "filter_dimensions": ["return_reason", "return_date"],
+  "geographic_analysis": false,
+  "transactional_lookup": false,
   "optimization_potential": "high"
 }
 ```
@@ -446,10 +499,10 @@ What level of detail do you want in the output?
 
 Once complete, this framework will support:
 
-### **Scenario 1: Hub Dashboard Analysis** (Current need)
+### **Scenario 1: Platform Dashboard Analysis** (Current need)
 ```python
-# Classify all Hub queries
-results = analyzer.classify_queries('HUB', period='2025')
+# Classify Hub Analytics API queries
+results = analyzer.classify_queries('ANALYTICS_API', period='2025')
 
 # Group by business function
 summary = results.groupby('business_function').agg({
@@ -458,7 +511,8 @@ summary = results.groupby('business_function').agg({
     'cost': 'sum'
 })
 
-# Find: "Return Analysis queries consume 40% of Hub capacity"
+# Find: "Return Analysis queries consume 40% of Hub Analytics capacity"
+# Can apply same approach to Looker (HUB subcategory) or Monitor
 ```
 
 ### **Scenario 2: Metabase User Support**
@@ -512,17 +566,28 @@ When starting this sub-project session:
 
 **Parent Project Files**:
 - `AI_SESSION_CONTEXT.md` - Overall BigQuery optimization project
-- `INV6_HUB_QOS_RESULTS.md` - Hub QoS crisis (39% violations)
-- `results/hub_pattern_discovery_20251112_130121.csv` - Sample Hub queries
+- `PHASE1_FINAL_REPORT.md` - Traffic classification (43.8M jobs)
+- `PEAK_2025_2026_STRATEGY_EXEC_REPORT.md` - Strategic recommendations
 
-**Sub-Project Files** (to create):
-- `sql_semantic_analysis/` - Framework code
+**Completed Platform Analyses** (November 12, 2025):
+- `HUB_ANALYTICS_API_2025_REPORT.md` - 812K queries, 80.3% retailer attribution, 0% violations
+- `LOOKER_2025_ANALYSIS_REPORT.md` - 236K queries, 72.9% retailer attribution, 2.6% violations
+- `MONITOR_2025_ANALYSIS_REPORT.md` - 205K queries, 100% retailer attribution, 2.21% violations
+- `LOOKER_VS_HUB_ANALYTICS_COMPARISON.md` - Platform comparison summary
+
+**Pattern Discovery Results** (Sample data for framework development):
+- `results/hub_analytics_api_pattern_discovery_20251112_211901.csv` - Hub Analytics API (60 queries)
+- `results/hub_pattern_discovery_20251112_130121.csv` - Looker (60 queries)
+- Monitor queries available in classification table (no pattern discovery needed)
+
+**Sub-Project Files** (to create in new session):
+- `sql_semantic_analysis/` - Framework code directory
 - `docs/taxonomy_discovery_report.md` - Phase 1 findings
 - `results/business_function_taxonomy.json` - Category definitions
 
 **Key BigQuery Tables**:
-- `narvar-data-lake.query_opt.traffic_classification` - Classified jobs (43.8M)
-- `narvar-data-lake.doitintl_cmp_bq.cloudaudit_googleapis_com_data_access` - Full query text
+- `narvar-data-lake.query_opt.traffic_classification` - Classified jobs (43.8M, includes all platforms)
+- `narvar-data-lake.doitintl_cmp_bq.cloudaudit_googleapis_com_data_access` - Full query text for audit log joins
 
 ---
 
@@ -540,9 +605,18 @@ When starting this sub-project session:
 ## 🚨 IMPORTANT NOTES
 
 ### **Data Privacy**:
-- Hub queries may contain retailer-specific data
+- Hub Analytics API and Looker queries may contain retailer-specific data
 - When using external LLM APIs, consider data sensitivity
 - Option: Use local models for sensitive queries
+
+### **Service Account Coverage**:
+- Hub Analytics API currently captures 2 service accounts:
+  * `analytics-api-bigquery-access@narvar-data-lake.iam.gserviceaccount.com` (98.5% of queries)
+  * `analytics-api-bigquery-access@narvar-qa-202121.iam.gserviceaccount.com` (1.5% of queries)
+- **Note**: `analytics-api-bigquery-access2` mentioned by Elliott Feng was NOT found in Nov 2024-Oct 2025 data
+  * May be in different timeframe or planned for future
+  * Regex pattern `r'analytics-api-bigquery-access'` WILL match if it exists (includes any suffix)
+  * Verified 812,010 total queries captured from existing accounts
 
 ### **Query Sampling Strategy**:
 - **Stratified sampling**: Get diverse query types
@@ -581,12 +655,95 @@ When starting this sub-project session:
 
 ---
 
+## 📋 MERCHANT/RETAILER ANALYTICS REQUIREMENTS (Reference)
+
+**Source**: Retailer feedback and product requirements
+
+### **1. Advanced Business and Product Analytics**
+
+**Returns Analytics (CORE - Highest Priority)**:
+- Comprehensive, sophisticated reporting for entire returns workflow
+- Core returns metrics and KPIs
+- Return rates, refund amounts, return reasons analysis
+- Returns workflow optimization insights
+- **Framework Should Identify**: Queries focused on returns tables, return-related metrics
+
+**Analytics Improvements - Geographic Grouping**:
+- Consolidate and report by locales/countries
+- Regional performance visibility (Hub, Monitor, all reporting interfaces)
+- Cross-border analytics
+- **Framework Should Identify**: Queries with locale/country dimensions, geographic GROUP BY
+
+### **2. Data Access and Integration**
+
+**Data Connectors**:
+- Patchworks integration (connect Narvar data with commerce systems)
+- Google Analytics tagging support for Narvar recommendations
+- **Framework Should Identify**: Integration-related queries, external data joins
+
+**Self-Service Reporting**:
+- More data within Narvar Hub
+- Brand-scheduled reports (self-service)
+- Reduce manual data pulls
+- **Framework Should Identify**: Scheduled/recurring queries, automated report generation
+
+### **3. Campaign & Usage Tracking**
+
+**Campaign Analytics**:
+- Marketing campaign performance tracking
+- Product rollout analysis
+- Campaign ROI measurement
+- **Framework Should Identify**: Campaign-tagged queries, time-bound promotional analysis
+
+**Usage Analytics (C&C Value)**:
+- Feature usage tracking (agents and retailers)
+- Instrumentation improvements
+- Value quantification metrics
+- **Framework Should Identify**: Usage tracking queries, instrumentation data queries
+
+---
+
+### **How Framework Should Address These Requirements**
+
+**Expected Insights After Classification**:
+```
+Business Function Distribution:
+- Returns Analytics: 45% of queries, $800/month cost (VALIDATE: Is this matching merchant needs?)
+- Delivery/Shipment Analytics: 30% of queries
+- Order Analytics: 15% of queries
+- Campaign Analytics: 5% of queries
+- Usage Analytics: 5% of queries
+
+Time Range Patterns:
+- Recent (1-7 days): 40% of queries (operational monitoring)
+- Medium (30-90 days): 35% of queries (trend analysis)
+- Historical (>90 days): 25% of queries (year-over-year comparison)
+
+Query Granularity:
+- Transactional lookups: 60% (shipment/order status checks)
+- Aggregated analytics: 40% (KPIs, dashboards)
+
+Geographic Analysis:
+- 25% of queries include locale/country dimensions
+- Top dimensions: country, locale, region
+```
+
+**Optimization Applications**:
+- If Returns Analytics = 45% of cost, prioritize returns query optimization
+- If most queries look at recent data (1-7 days), optimize with aggressive partitioning
+- If transactional lookups dominate, create indexes on tracking_number, order_number
+- If geographic analytics growing, add locale/country clustering to tables
+
+---
+
 **Repository**: https://github.com/narvar/bigquery-optimization-queries/tree/main/narvar/analysis_peak_2025_sonnet45
 
 **Key Documents**:
 - Framework Analysis: [SQL_QUERY_SEMANTIC_ANALYSIS_FRAMEWORK.md](./SQL_QUERY_SEMANTIC_ANALYSIS_FRAMEWORK.md)
 - Parent Project: [AI_SESSION_CONTEXT.md](./AI_SESSION_CONTEXT.md)
-- Hub Crisis: [INV6_HUB_QOS_RESULTS.md](./INV6_HUB_QOS_RESULTS.md)
+- Hub Analytics API: [HUB_ANALYTICS_API_2025_REPORT.md](./HUB_ANALYTICS_API_2025_REPORT.md)
+- Looker: [LOOKER_2025_ANALYSIS_REPORT.md](./LOOKER_2025_ANALYSIS_REPORT.md)
+- Monitor: [MONITOR_2025_ANALYSIS_REPORT.md](./MONITOR_2025_ANALYSIS_REPORT.md)
 
 **Start the new session with this prompt!** 🎯
 
