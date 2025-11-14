@@ -1,0 +1,3 @@
+Waiting on bqjob_r6bb970de9db07001_0000019a840fb020_1 ... (0s) Current status: RUNNING                                                                                      Waiting on bqjob_r6bb970de9db07001_0000019a840fb020_1 ... (0s) Current status: DONE   
+pricing_model,job_count,total_slot_hours,cost_if_all_reserved,cost_if_all_ondemand,method_b_actual_cost,avg_cost_per_job_reserved,avg_cost_per_job_ondemand,sample_reservation_names
+ON_DEMAND_OR_EMPTY,6255,502014.82,24799.53,68643.96,68643.96,3.9648,10.976,
