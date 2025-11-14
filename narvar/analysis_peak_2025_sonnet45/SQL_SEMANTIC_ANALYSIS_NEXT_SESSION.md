@@ -367,7 +367,7 @@ What approach do you prefer:
 - Phase 3 + Phase 4 later
 - Incremental value
 
-**→ Your Answer**: _________________________
+**→ Your Answer**: Option C
 
 ---
 
@@ -393,7 +393,7 @@ Which LLM approach do you prefer:
 - ⚠️ Limited coverage (70-80%)
 - ⚠️ Requires manual rule creation
 
-**→ Your Answer**: _________________________
+**→ Your Answer**: I would like to use the most effective LLM model which is available in GCP Vertex AI via API. Please research and advise.
 
 ---
 
@@ -414,7 +414,7 @@ Do you know the main business functions users care about?
 - **Action**: Run full Phase 1 (clustering + LLM)
 - **Start from scratch**
 
-**→ Your Answer**: _________________________
+**→ Your Answer**: Option B (but let's discuss based on ## 📋 MERCHANT/RETAILER ANALYTICS REQUIREMENTS (Reference) hereunder)
 
 **If A or B, please list known categories:**
 1. _________________________
@@ -447,7 +447,7 @@ How should this framework integrate with your workflow?
 **Option D**: All of the above
 - Core library + multiple interfaces
 
-**→ Your Answer**: _________________________
+**→ Your Answer**: I would start with Option B and Option C
 
 ---
 
@@ -491,7 +491,7 @@ What level of detail do you want in the output?
 - Cost reduction opportunities
 - Alternative query patterns
 
-**→ Your Answer**: _________________________
+**→ Your Answer**: Option B with possible extension to Option C
 
 ---
 
