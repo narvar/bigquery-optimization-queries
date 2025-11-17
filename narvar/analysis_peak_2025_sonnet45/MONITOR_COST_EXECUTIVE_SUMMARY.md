@@ -1,8 +1,9 @@
-# Monitor Platform Pricing Strategy - Executive Summary
+# Monitor Platform Cost Analysis - Executive Summary
 
-**For:** Product Management  
+**For:** Product Management & Data Engineering  
 **Date:** November 17, 2025 (Updated from Nov 14, 2025)  
-**Status:** ✅ **COMPLETE** - All 7 base tables + infrastructure validated ($263,084/year total)
+**Status:** ✅ **COMPLETE** - All 7 base tables + infrastructure validated ($263,084/year total)  
+**Companion Document:** See [MONITOR_PRICING_STRATEGY.md](MONITOR_PRICING_STRATEGY.md) for pricing options and financial scenarios
 
 ---
 
@@ -11,8 +12,8 @@
 **Monitor platform costs $263,084/year** (validated Nov 17, 2025) to serve 284 retailers who currently receive it free/bundled.
 
 **MAJOR UPDATE (Nov 14-17):** 
-- Resolved cost calculation errors and discovered orders table
-- Previous estimate of $598K was inflated by 2.13x due to incorrect Method B approach [[memory:11214888]]
+- Resolved cost calculation methodology (Method A vs Method B) [[memory:11214888]]
+- Discovered orders table via Dataflow billing analysis
 - **ALL 7 base tables now validated** with complete cost breakdown
 - Composer/Airflow infrastructure costs attributed (5.78% = $531/year)
 
@@ -20,7 +21,7 @@
 
 **Cost per retailer:** $263,084 / 284 = **$926/year average**
 
-**Decision Needed:** How should we price Monitor for cost recovery and/or profitability?
+**Next Step:** See [MONITOR_PRICING_STRATEGY.md](MONITOR_PRICING_STRATEGY.md) for pricing recommendations and financial scenarios.
 
 ---
 
@@ -43,8 +44,7 @@
 | **Consumption** | $6,418 | 2.4% | Customer queries | ✅ Validated |
 | **TOTAL** | **$263,084** | **100%** | | ✅ **COMPLETE** |
 
-**Previous estimate:** $598K (WRONG - inflated by flawed audit log analysis)  
-**Corrected estimate:** $263K (validated via DoIT billing + traffic classification + code review)
+**Validation:** All costs validated via DoIT billing + traffic classification + code review + table metadata
 
 ---
 
@@ -412,16 +412,32 @@ v_return_rate_agg ← [narvar-data-lake.reporting.return_rate_agg]
 
 **4. Product Team Workshop:**
 - Present complete findings ($263K platform cost - all tables validated)
-- Decide on pricing model (tiered recommended)
-- Approve margin targets
-- Define rollout strategy
+- Review pricing strategy options (see MONITOR_PRICING_STRATEGY.md)
+- Decide on pricing model, margin targets, rollout strategy
 - **Timeline:** Schedule when ready
+
+---
+
+## 🎯 For Pricing Strategy
+
+This document focuses on **COST ANALYSIS**. For **PRICING STRATEGY**, see:
+
+**➡️ [MONITOR_PRICING_STRATEGY.md](MONITOR_PRICING_STRATEGY.md)**
+
+Contains:
+- Pricing strategy options (Tiered, Usage-based, Hybrid)
+- Cost attribution models
+- Financial scenarios and revenue projections
+- Risk analysis and mitigation strategies
+- Decisions needed from Product team
+- Rollout recommendations
 
 ---
 
 ## 📞 Questions?
 
-**For technical details:** Review supporting documentation (links above)  
+**For cost analysis details:** Review supporting documentation (links above)  
+**For pricing strategy:** See [MONITOR_PRICING_STRATEGY.md](MONITOR_PRICING_STRATEGY.md)  
 **For strategic discussion:** Contact Data Engineering + Product teams  
 **For immediate questions:** See [Product Team Review Document](https://github.com/narvar/bigquery-optimization-queries/blob/main/narvar/analysis_peak_2025_sonnet45/MONITOR_TOTAL_COST_REVIEW_FOR_PRODUCT_TEAM.md)
 
@@ -468,5 +484,5 @@ v_return_rate_agg ← [narvar-data-lake.reporting.return_rate_agg]
 
 ---
 
-*Updated Nov 17, 2025: Complete cost analysis with all 7 base tables validated. Platform cost is $263,084/year - Previous estimate of $598K was inflated 2.3x due to incorrect Method B approach. Cost breakdown includes detailed references to code, data sources, and billing line items for full transparency and auditability.*
+*Updated Nov 17, 2025: Complete cost analysis with all 7 base tables validated. Platform cost is $263,084/year validated via Method A (traffic_classification table + billing data). Cost breakdown includes detailed references to code, data sources, and billing line items for full transparency and auditability.*
 
