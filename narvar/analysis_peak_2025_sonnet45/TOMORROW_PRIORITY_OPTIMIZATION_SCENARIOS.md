@@ -4,8 +4,10 @@
 **For:** Julia Le (Data Engineering) + Product Team  
 **Requested By:** Julia Le  
 **Priority:** 🚨 TOP PRIORITY (before other analysis)  
-**Estimated Time:** 6 hours (full day)  
+**Estimated Time:** 7.5 hours (full day)  
 **Status:** 📋 Ready to start
+
+**Key Addition:** Query pattern profiling to understand actual data freshness and retention needs
 
 ---
 
@@ -75,6 +77,12 @@
 
 **Primary target:** orders table (82% of storage = $20,430/year)
 
+**Data-driven approach:** Profile actual query patterns to understand realistic retention needs
+- Parse date filters from query_text_sample (ship_date, order_date, etc.)
+- Calculate lookback period distribution (1 month, 3 months, 6 months, 1 year, >1 year)
+- Example: "95% of queries filter to last 90 days" → 6-month retention is safe
+- Example: "Only 3 retailers query >1 year" → Archive old data, keep accessible separately
+
 ---
 
 ### Combined Scenarios (Matrix)
@@ -89,9 +97,9 @@
 
 ---
 
-## 📋 Analysis Plan (6 hours)
+## 📋 Analysis Plan (7.5 hours)
 
-### Morning Session (3 hours)
+### Morning Session (4.5 hours)
 
 **1. Latency Scenario Analysis (2 hours)**
 
@@ -106,21 +114,85 @@
 
 ---
 
-**2. Retention Scenario Analysis (1 hour)**
+**2. Query Pattern Analysis - Date Range & Freshness Profiling (1.5 hours)**
+
+**Part A: How far back do customers query? (Retention insights)**
+
+**Tasks:**
+- [ ] Profile shipments queries: Date range lookback patterns
+  - Analyze ship_date, order_date filters in query_text_sample
+  - Calculate: % queries covering last 1 month, 3 months, 6 months, 1 year, >1 year
+  - Break down by retailer (fashionnova vs others)
+- [ ] Profile orders queries: Date range patterns
+- [ ] Profile return_item_details queries: Date range patterns
+- [ ] Identify which queries actually need >1 year of data
+
+**Example insights for retention:**
+- "99% of queries cover only last 3 months"
+- "Only 5 retailers query >1 year historical data"
+- "fashionnova queries last 6 months 95% of the time"
+
+---
+
+**Part B: How fresh does data need to be? (Latency insights)**
+
+**Tasks:**
+- [ ] Calculate data freshness requirements from query patterns:
+  - Compare query execution time vs data dates queried
+  - Example: Query runs at 3pm, filters for ship_date = today → needs real-time
+  - Example: Query runs at 3pm, filters for ship_date = yesterday → can tolerate 24hr delay
+- [ ] Analyze: "Age of data when queried"
+  - Calculate: query_time - MAX(ship_date in filter)
+  - Distribution: % queries looking at <1 hour old, <6 hours, <24 hours, >24 hours old data
+- [ ] Identify time-sensitive use cases:
+  - Which queries filter for "today" or "last hour"?
+  - Which retailers need near-real-time?
+  - Which dashboards are operational vs analytical?
+
+**Example insights for latency:**
+- "87% of queries look at data >24 hours old" → Daily batch is sufficient
+- "Only 12% of queries filter to 'today'" → Most don't need real-time
+- "fashionnova's queries average 3 days old data" → 24-hour latency OK
+- "5 retailers query within last hour" → These need real-time, others don't
+
+**Technical approach:**
+```sql
+-- Calculate data freshness at query time
+SELECT 
+  retailer_moniker,
+  -- Extract ship_date from WHERE clause
+  -- Compare: TIMESTAMP_DIFF(start_time, ship_date_filter, HOUR)
+  -- This shows: "How old is the data they're querying?"
+  CASE 
+    WHEN data_age_hours < 1 THEN 'Real-time (<1 hour)'
+    WHEN data_age_hours < 6 THEN 'Near-time (<6 hours)'
+    WHEN data_age_hours < 24 THEN 'Same-day (<24 hours)'
+    ELSE 'Historical (>24 hours)'
+  END as freshness_requirement,
+  COUNT(*) as queries
+GROUP BY 1, 2
+```
+
+**Deliverable:** Data-driven retention AND latency needs based on actual usage patterns
+
+---
+
+**3. Retention Scenario Analysis (1 hour)**
 
 **Tasks:**
 - [ ] Query current data distribution by year (orders, shipments, returns)
 - [ ] Calculate storage savings for each retention period
 - [ ] Estimate compute savings (smaller table scans)
-- [ ] Identify business impact (which queries/dashboards need historical data?)
+- [ ] **Use query pattern analysis** to validate realistic scenarios
+- [ ] Identify business impact (which queries/dashboards would break?)
 
-**Deliverable:** Retention scenarios with cost savings + business impact
+**Deliverable:** Retention scenarios with cost savings + business impact + usage validation
 
 ---
 
 ### Afternoon Session (3 hours)
 
-**3. Combined Scenario Matrix (1 hour)**
+**4. Combined Scenario Matrix (1 hour)**
 
 **Tasks:**
 - [ ] Create scenario comparison matrix
@@ -132,7 +204,7 @@
 
 ---
 
-**4. Technical Feasibility Assessment (1.5 hours)**
+**5. Technical Feasibility Assessment (1.5 hours)**
 
 **Tasks:**
 - [ ] How to implement batch MERGE operations (Airflow modifications)
@@ -145,7 +217,7 @@
 
 ---
 
-**5. Documentation & Recommendations (0.5 hours)**
+**6. Documentation & Recommendations (0.5 hours)**
 
 **Tasks:**
 - [ ] Create comprehensive scenario report
@@ -217,7 +289,10 @@
 ## 🚀 Tomorrow's Schedule
 
 **Priority Order:**
-1. ✅ **TOP PRIORITY:** Cost Optimization Scenarios (6 hours) - Julia's request
+1. ✅ **TOP PRIORITY:** Cost Optimization Scenarios (7.5 hours) - Julia's request
+   - Includes query pattern profiling for data-driven retention AND latency recommendations
+   - Profile: How far back do customers query? (retention)
+   - Profile: How fresh does data need to be? (latency)
 2. ⏸️ **DEFERRED:** fashionnova dashboard analysis
 3. ⏸️ **DEFERRED:** Scale to all 284 retailers
 
@@ -265,13 +340,19 @@
 ## ✅ Ready to Start Tomorrow
 
 **I'll begin with:**
-1. Current state data analysis (how much data by age, query patterns by latency)
-2. Cost modeling for each scenario
-3. Technical feasibility research
-4. Create comprehensive report for Julia
+1. **Query pattern profiling** - How far back do customers actually query? (date range analysis)
+2. **Current state data analysis** - Data distribution by age, query patterns by latency
+3. **Cost modeling** for each latency and retention scenario
+4. **Technical feasibility** research and implementation planning
+5. **Comprehensive report** for Julia with recommendations
+
+**Key Addition (per Cezar):**
+- Profile queries to understand actual date range usage
+- Example: If 99% of queries only look at last month, then keeping 3 years of data is wasteful
+- This will give us **data-driven retention recommendations** instead of guessing
 
 **Expected completion:** End of day tomorrow  
-**Output:** Decision-ready scenarios with costs, trade-offs, and implementation plans
+**Output:** Decision-ready scenarios with costs, trade-offs, implementation plans, and ACTUAL usage data
 
 ---
 
