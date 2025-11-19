@@ -1,5 +1,0 @@
-stress_state,total_jobs,qos_violations,qos_violation_pct,p95_execution_seconds,p99_execution_seconds,overall_violation_pct
-NORMAL,0,0,,,,nan
-INFO,0,0,,,,nan
-WARNING,0,0,,,,nan
-CRITICAL,4446,412,12.818333333333333,392.5,10319.5,9.27

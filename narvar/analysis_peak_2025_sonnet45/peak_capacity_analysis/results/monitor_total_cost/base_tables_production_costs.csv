@@ -1,0 +1,24 @@
+full_table_name,statement_type,etl_source_type,principal_email,etl_job_count,total_slot_hours,period_cost_usd,annual_cost_usd,avg_cost_per_job,avg_jobs_per_day,first_seen,last_seen
+monitor-base-us-prod.monitor_base.carrier_config,UPDATE,OTHER,cezar.mihaila@narvar.com,1,0.0,0.0,0.0,0.0001,0.0,2025-10-22 13:49:30.432489+00:00,2025-10-22 13:49:30.432489+00:00
+monitor-base-us-prod.monitor_base.carrier_config,INSERT,OTHER,julia.le@narvar.com,2,0.0,,,,0.0,2025-10-28 15:55:23.113149+00:00,2025-10-28 16:38:41.050954+00:00
+monitor-base-us-prod.monitor_base.carrier_config,INSERT,OTHER,eric.rops@narvar.com,18,0.02,,,,0.04,2024-09-10 01:31:45.160025+00:00,2025-10-07 14:24:28.085211+00:00
+monitor-base-us-prod.monitor_base.carrier_config,INSERT,OTHER,cezar.mihaila@narvar.com,1,0.0,,,,0.0,2025-10-20 16:34:05.743286+00:00,2025-10-20 16:34:05.743286+00:00
+monitor-base-us-qa.monitor_base.carrier_config,INSERT,OTHER,elliott.feng@narvar.com,1,0.0,,,,0.0,2024-12-09 18:21:33.671646+00:00,2024-12-09 18:21:33.671646+00:00
+narvar-data-lake.reporting.t_return_details,UPDATE,OTHER,monitor-shipment-noflake@monitor-base-us-prod.iam.gserviceaccount.com,20441,71622.49,2774.37,6658.49,0.1357,48.1,2024-09-01 00:01:48.297216+00:00,2025-10-31 23:31:32.235136+00:00
+narvar-data-lake.reporting.t_return_details,UPDATE,OTHER,eric.rops@narvar.com,39,341.07,82.1,197.03,5.864,0.09,2024-09-26 21:39:42.623132+00:00,2025-09-23 22:12:38.432897+00:00
+narvar-data-lake.reporting.t_return_details,UPDATE,OTHER,cezar.mihaila@narvar.com,6,22.14,38.58,92.6,12.8609,0.01,2025-08-06 16:08:38.828474+00:00,2025-10-20 20:47:12.083877+00:00
+narvar-data-lake.reporting.t_return_details,UPDATE,OTHER,elliott.feng@narvar.com,7,61.28,11.26,27.03,1.877,0.02,2025-07-25 22:58:51.380611+00:00,2025-09-03 20:59:02.746373+00:00
+narvar-data-lake.return_insights_base.return_item_details,MERGE,AIRFLOW,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,22187,507720.99,141724.48,340138.75,6.3949,52.2,2024-10-14 19:30:27.273054+00:00,2025-10-31 23:36:51.199497+00:00
+narvar-data-lake.return_insights_base.return_item_details,CREATE_TABLE_AS_SELECT,OTHER,julia.le@narvar.com,79,3054.82,145.63,349.5,1.8912,0.19,2024-10-01 16:00:15.744806+00:00,2025-09-30 14:31:29.735794+00:00
+narvar-data-lake.return_insights_base.return_item_details,CREATE_TABLE_AS_SELECT,AIRFLOW,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,28,42.95,2.08,4.99,0.0742,0.07,2024-10-11 15:48:43.209419+00:00,2024-10-11 23:35:54.409376+00:00
+narvar-data-lake.return_insights_base.return_item_details,UPDATE,OTHER,julia.le@narvar.com,2,1.4,0.1,0.23,0.0478,0.0,2025-02-28 21:40:28.084560+00:00,2025-06-20 16:29:40.992109+00:00
+narvar-data-lake.return_insights_base.return_item_details,MERGE,OTHER,julia.le@narvar.com,3,4050.02,0.0,0.0,0.0001,0.01,2024-10-14 16:33:53.008672+00:00,2024-10-15 18:36:38.347986+00:00
+narvar-data-lake.tmp.return_item_details,CREATE_TABLE_AS_SELECT,OTHER,saurabh.shrivastava@narvar.com,3,3.67,0.22,0.52,0.0724,0.01,2024-09-25 18:33:41.478181+00:00,2024-09-25 19:02:42.462971+00:00
+narvar-qa-202121.lightdash_test_belk.t_return_details,CREATE_TABLE_AS_SELECT,OTHER,eric.rops@narvar.com,1,0.0,0.02,0.05,0.0226,0.0,2025-10-05 06:02:28.972967+00:00,2025-10-05 06:02:28.972967+00:00
+narvar-qa-202121.lightdash_test_combined.t_return_details,CREATE_TABLE_AS_SELECT,OTHER,eric.rops@narvar.com,1,0.29,0.06,0.15,0.0622,0.0,2025-10-05 06:43:52.895854+00:00,2025-10-05 06:43:52.895854+00:00
+narvar-qa-202121.lightdash_test_levi.t_return_details,CREATE_TABLE_AS_SELECT,OTHER,eric.rops@narvar.com,1,0.01,0.02,0.05,0.0205,0.0,2025-10-05 06:02:58.148942+00:00,2025-10-05 06:02:58.148942+00:00
+narvar-qa-202121.reporting.t_return_details,UPDATE,OTHER,monitor-shipment-noflake@monitor-base-us-qa.iam.gserviceaccount.com,20442,223.97,11.07,26.56,0.0005,48.1,2024-09-01 00:02:53.759020+00:00,2025-10-31 23:34:54.955732+00:00
+narvar-qa-202121.reporting.t_return_details,UPDATE,OTHER,eric.rops@narvar.com,1,9.52,2.04,4.9,2.0437,0.0,2024-11-29 23:35:57.969591+00:00,2024-11-29 23:35:57.969591+00:00
+narvar-qa-202121.return_insights_base.return_item_details,MERGE,AIRFLOW,airflow-bq-job-user@narvar-qa-202121.iam.gserviceaccount.com,2425,2523.53,2544.95,6107.87,1.0495,5.71,2025-01-13 20:40:35.505565+00:00,2025-04-01 20:30:06.123121+00:00
+narvar-qa-202121.return_insights_base.return_item_details,CREATE_TABLE_AS_SELECT,OTHER,julia.le@narvar.com,8,13.16,3.67,8.8,0.4583,0.02,2024-12-12 14:48:51.214327+00:00,2025-05-08 00:56:36.907301+00:00
+narvar-qa-202121.return_insights_base.return_item_details,MERGE,OTHER,julia.le@narvar.com,1,0.88,0.08,0.2,0.0823,0.0,2025-01-14 20:22:01.423112+00:00,2025-01-14 20:22:01.423112+00:00

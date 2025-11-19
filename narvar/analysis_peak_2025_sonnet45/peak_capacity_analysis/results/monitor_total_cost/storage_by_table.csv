@@ -1,0 +1,6 @@
+table_name,row_count,size_gb,pct_of_total,attributed_storage_cost_annual
+orders,23758207469,88737.41,82.05,20430.1
+shipments,8938148532,19093.42,17.65,4395.9
+tnt_benchmarks_latest,1719301883,163.85,0.15,37.72
+ft_benchmarks_latest,1618536703,153.23,0.14,35.28
+carrier_config,239,0.0,0.0,0.0

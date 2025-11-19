@@ -1,0 +1,6 @@
+table_reference,table_type,is_monitor_base_shipments,reference_count,periods_used,total_slot_hours,avg_slot_hours_per_query,total_cost_usd,avg_cost_per_query,total_tb_scanned,avg_gb_per_query,queries_on_reserved,queries_on_demand,has_view_definition,first_seen_period,last_seen_period
+monitor-a679b28-us-prod.monitor.v_shipments,UNKNOWN,False,9712,2,25378.97,2.6132,1253.88,0.129106,677.03,71.38,9712,0,False,Baseline_2025_Sep_Oct,Peak_2024_2025
+monitor-a679b28-us-prod.monitor.v_shipments_events,UNKNOWN,False,2449,2,25150.91,10.2699,1242.44,0.507327,459.99,192.34,2449,0,False,Baseline_2025_Sep_Oct,Peak_2024_2025
+monitor-a679b28-us-prod.monitor.v_benchmark_ft,UNKNOWN,False,10,1,1.53,0.153,0.08,0.00758,0.37,37.86,10,0,False,Peak_2024_2025,Peak_2024_2025
+monitor-a679b28-us-prod.monitor.v_return_details,UNKNOWN,False,48,2,0.07,0.0015,0.01,0.000177,0.01,0.12,48,0,False,Baseline_2025_Sep_Oct,Peak_2024_2025
+monitor-a679b28-us-prod.monitor.v_return_rate_agg,UNKNOWN,False,3,1,0.03,0.01,0.0,0.000533,0.0,0.01,3,0,False,Baseline_2025_Sep_Oct,Baseline_2025_Sep_Oct

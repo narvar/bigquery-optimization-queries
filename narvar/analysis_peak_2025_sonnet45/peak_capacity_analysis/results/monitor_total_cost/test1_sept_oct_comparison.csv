@@ -1,0 +1,3 @@
+method,period_start,period_end,total_jobs,total_slot_hours,total_cost_usd,service_accounts,statement_types
+Method_A_Percentage,2024-09-01,2024-10-31,6256,505505.37,24971.96,monitor-base-us-prod@appspot.gserviceaccount.com,MERGE
+Method_B_Direct_Count,2024-09-01,2024-10-31,6255,502014.8209661111,68643.9607322216,monitor-base-us-prod@appspot.gserviceaccount.com,MERGE

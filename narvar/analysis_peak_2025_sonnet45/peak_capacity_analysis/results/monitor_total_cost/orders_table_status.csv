@@ -1,0 +1,2 @@
+table_name,row_count,size_gb,table_created,last_modified,days_since_last_update,table_status
+orders,23757992663,88736.76,2022-04-14 16:52:52,2025-11-14 21:22:28,0,ACTIVE - Updated this week
