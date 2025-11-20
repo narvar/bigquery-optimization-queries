@@ -1,0 +1,1730 @@
+Waiting on bqjob_r688d3777e05527af_0000019a9e92a5ac_1 ... (0s) Current status: RUNNING                                                                                      Waiting on bqjob_r688d3777e05527af_0000019a9e92a5ac_1 ... (0s) Current status: DONE   
+[
+  {
+    "bi_engine_statistics": null, 
+    "cache_hit": "false", 
+    "continuous": "false", 
+    "continuous_query_info": null, 
+    "creation_time": "2025-11-14 08:06:16", 
+    "destination_table": {
+      "dataset_id": "_076201dd8ab826a67bb9b2228cc5edff404b651a", 
+      "project_id": "monitor-a679b28-us-prod", 
+      "table_id": "anond773b47b_a678_40c4_8b3d_14746c2daba1"
+    }, 
+    "dml_statistics": null, 
+    "edition": "ENTERPRISE", 
+    "end_time": "2025-11-14 08:07:35", 
+    "error_result": null, 
+    "job_creation_reason": {
+      "code": "REQUESTED"
+    }, 
+    "job_id": "job_fkhGvQtTHmR_KAsgdhRJgZJDTkc0", 
+    "job_stages": [
+      {
+        "completed_parallel_inputs": "1", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "9", 
+        "compute_ms_max": "9", 
+        "compute_ratio_avg": "2.2117369507519905E-4", 
+        "compute_ratio_max": "2.2117369507519905E-4", 
+        "end_ms": "1763107578940", 
+        "id": "0", 
+        "input_stages": [], 
+        "name": "S00: Input", 
+        "parallel_inputs": "1", 
+        "read_ms_avg": "9", 
+        "read_ms_max": "9", 
+        "read_ratio_avg": "2.2117369507519905E-4", 
+        "read_ratio_max": "2.2117369507519905E-4", 
+        "records_read": "239", 
+        "records_written": "239", 
+        "shuffle_output_bytes": "3012", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "42", 
+        "start_ms": "1763107578900", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$20:carrier_moniker, $21:monitor_eligible", 
+              "FROM monitor-base-us-prod.monitor_base.carrier_config", 
+              "WHERE $21"
+            ]
+          }, 
+          {
+            "kind": "WRITE", 
+            "substeps": [
+              "$20", 
+              "TO __stage00_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "6", 
+        "wait_ms_max": "6", 
+        "wait_ratio_avg": "1.474491300501327E-4", 
+        "wait_ratio_max": "1.474491300501327E-4", 
+        "write_ms_avg": "5", 
+        "write_ms_max": "5", 
+        "write_ratio_avg": "1.2287427504177725E-4", 
+        "write_ratio_max": "1.2287427504177725E-4"
+      }, 
+      {
+        "completed_parallel_inputs": "1", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "14", 
+        "compute_ms_max": "14", 
+        "compute_ratio_avg": "3.4404797011697633E-4", 
+        "compute_ratio_max": "3.4404797011697633E-4", 
+        "end_ms": "1763107579034", 
+        "id": "2", 
+        "input_stages": [
+          "0"
+        ], 
+        "name": "S02: Output", 
+        "parallel_inputs": "1", 
+        "read_ms_avg": "0", 
+        "read_ms_max": "0", 
+        "read_ratio_avg": "0.0", 
+        "read_ratio_max": "0.0", 
+        "records_read": "239", 
+        "records_written": "1", 
+        "shuffle_output_bytes": "3057", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "27", 
+        "start_ms": "1763107578996", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$20", 
+              "FROM __stage00_output"
+            ]
+          }, 
+          {
+            "kind": "COMPUTE", 
+            "substeps": [
+              "$457 := if(less_or_equal(array_length($453), 1000), $453, NULL)", 
+              "$452 := if(greater(array_length($453), 1000), 1, 0)"
+            ]
+          }, 
+          {
+            "kind": "AGGREGATE", 
+            "substeps": [
+              "$450 := MIN($20)", 
+              "$451 := MAX($20)", 
+              "$453 := DISTINCT_ARRAY_AGG($454 LIMIT 1001)", 
+              "$455 := MAX($456)"
+            ]
+          }, 
+          {
+            "kind": "COMPUTE", 
+            "substeps": [
+              "$454 := if(less_or_equal(length($20), 1024), $20, NULL)", 
+              "$456 := length($20)"
+            ]
+          }, 
+          {
+            "kind": "WRITE", 
+            "substeps": [
+              "$450, $451, $452, $457, $455", 
+              "TO __stage02_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "50", 
+        "wait_ms_max": "50", 
+        "wait_ratio_avg": "0.0012287427504177725", 
+        "wait_ratio_max": "0.0012287427504177725", 
+        "write_ms_avg": "16", 
+        "write_ms_max": "16", 
+        "write_ratio_avg": "3.931976801336872E-4", 
+        "write_ratio_max": "3.931976801336872E-4"
+      }, 
+      {
+        "completed_parallel_inputs": "1522", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "8835", 
+        "compute_ms_max": "27800", 
+        "compute_ratio_avg": "0.2171188439988204", 
+        "compute_ratio_max": "0.6831809692322816", 
+        "end_ms": "1763107601007", 
+        "id": "3", 
+        "input_stages": [
+          "0"
+        ], 
+        "name": "S03: Join+", 
+        "parallel_inputs": "1522", 
+        "read_ms_avg": "586", 
+        "read_ms_max": "8592", 
+        "read_ratio_avg": "0.014400865034896295", 
+        "read_ratio_max": "0.21114715423179004", 
+        "records_read": "120975755", 
+        "records_written": "1265965764", 
+        "shuffle_output_bytes": "410431183820", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "19938233", 
+        "start_ms": "1763107579107", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$30:retailer_moniker, $31:carrier_moniker, $32:tracking_number, $33:order_number, $34:ship_date, $35:order_date, $36:origin_city, $37:origin_state, $38:origin_country, $39:origin_zip, $40:dest_city, $41:dest_state, $42:dest_country, $43:dest_zip, $45:retailer_partition, $46:events.event_country", 
+              "FROM monitor-base-us-prod.monitor_base.shipments", 
+              "WHERE and(equal($44, 0), equal($45, 639), equal($30, 'fashionnova'), between($31, '3pl', 'yodel'))"
+            ]
+          }, 
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$20", 
+              "FROM __stage00_output"
+            ]
+          }, 
+          {
+            "kind": "AGGREGATE", 
+            "substeps": [
+              "GROUP BY $380 := $340, $381 := $341, $382 := $342, $383 := $343, $384 := $345, $385 := $160, $386 := $349, $387 := $161, $388 := $353, $389 := $348, $390 := $352, $391 := $367, $392 := $368, $393 := $369, $394 := $370, $395 := $371"
+            ]
+          }, 
+          {
+            "kind": "COMPUTE", 
+            "substeps": [
+              "$140 := TO_NORMALIZED_BYTES($163)"
+            ]
+          }, 
+          {
+            "kind": "COMPUTE", 
+            "substeps": [
+              "$160 := trim(array_to_string(make_array($346, $347, $348), ', '), ',')", 
+              "$161 := trim(array_to_string(make_array($350, $351, $352), ', '), ',')", 
+              "$162 := trim(array_to_string(make_array($366, $365, $364), ', '), ',')", 
+              "$163 := MAKE_STRUCT($363, $362, $361, $360, $359, $358, $357, $356, $355)"
+            ]
+          }, 
+          {
+            "kind": "JOIN", 
+            "substeps": [
+              "$340 := $30, $341 := $31, $342 := $32, $343 := $33, $344 := $34, $345 := $35, $346 := $36, $347 := $37, $348 := $38, $349 := $39, $350 := $40, $351 := $41, $352 := $42, $353 := $43, $354 := $45, $355 := $56", 
+              "INNER HASH JOIN EACH  WITH ALL  ON $31 = $20"
+            ]
+          }, 
+          {
+            "kind": "WRITE", 
+            "substeps": [
+              "$380, $381, $382, $383, $399, $384, $389, $386, $390, $388, $400, $401, $385, $387, $397, $391", 
+              "TO __stage03_output", 
+              "BY HASH($380, $381, $382, $383, $384, $385, $386, $387, $388, $389, $390, $391, $392, $393, $394, $395)"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "152", 
+        "wait_ms_max": "790", 
+        "wait_ratio_avg": "0.0037353779612700286", 
+        "wait_ratio_max": "0.019414135456600805", 
+        "write_ms_avg": "63", 
+        "write_ms_max": "5336", 
+        "write_ratio_avg": "0.0015482158655263933", 
+        "write_ratio_max": "0.1311314263245847"
+      }, 
+      {
+        "completed_parallel_inputs": "509", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "1055", 
+        "compute_ms_max": "1818", 
+        "compute_ratio_avg": "0.025926472033815002", 
+        "compute_ratio_max": "0.04467708640519021", 
+        "end_ms": "1763107592203", 
+        "id": "4", 
+        "input_stages": [
+          "3"
+        ], 
+        "name": "S04: Repartition", 
+        "parallel_inputs": "509", 
+        "read_ms_avg": "0", 
+        "read_ms_max": "0", 
+        "read_ratio_avg": "0.0", 
+        "read_ratio_max": "0.0", 
+        "records_read": "91634387", 
+        "records_written": "91634387", 
+        "shuffle_output_bytes": "30116577610", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "1366999", 
+        "start_ms": "1763107588938", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "FROM __stage03_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "7773", 
+        "wait_ms_max": "8671", 
+        "wait_ratio_avg": "0.1910203479799469", 
+        "wait_ratio_max": "0.2130885677774501", 
+        "write_ms_avg": "68", 
+        "write_ms_max": "1117", 
+        "write_ratio_avg": "0.0016710901405681707", 
+        "write_ratio_max": "0.02745011304433304"
+      }, 
+      {
+        "completed_parallel_inputs": "502", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "1172", 
+        "compute_ms_max": "1909", 
+        "compute_ratio_avg": "0.02880173006979259", 
+        "compute_ratio_max": "0.04691339821095056", 
+        "end_ms": "1763107593163", 
+        "id": "5", 
+        "input_stages": [
+          "4", 
+          "3"
+        ], 
+        "name": "S05: Repartition", 
+        "parallel_inputs": "502", 
+        "read_ms_avg": "0", 
+        "read_ms_max": "0", 
+        "read_ratio_avg": "0.0", 
+        "read_ratio_max": "0.0", 
+        "records_read": "101867309", 
+        "records_written": "101867309", 
+        "shuffle_output_bytes": "33432378625", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "977580", 
+        "start_ms": "1763107591574", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "FROM __stage04_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "9155", 
+        "wait_ms_max": "9502", 
+        "wait_ratio_avg": "0.22498279760149414", 
+        "wait_ratio_max": "0.2335102722893935", 
+        "write_ms_avg": "14", 
+        "write_ms_max": "430", 
+        "write_ratio_avg": "3.4404797011697633E-4", 
+        "write_ratio_max": "0.010567187653592843"
+      }, 
+      {
+        "completed_parallel_inputs": "501", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "1257", 
+        "compute_ms_max": "2114", 
+        "compute_ratio_avg": "0.0308905927455028", 
+        "compute_ratio_max": "0.051951243487663425", 
+        "end_ms": "1763107594079", 
+        "id": "6", 
+        "input_stages": [
+          "5", 
+          "3"
+        ], 
+        "name": "S06: Repartition", 
+        "parallel_inputs": "501", 
+        "read_ms_avg": "0", 
+        "read_ms_max": "0", 
+        "read_ratio_avg": "0.0", 
+        "read_ratio_max": "0.0", 
+        "records_read": "109742719", 
+        "records_written": "109742719", 
+        "shuffle_output_bytes": "35981766940", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "1054980", 
+        "start_ms": "1763107592215", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "FROM __stage05_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "9699", 
+        "wait_ms_max": "10013", 
+        "wait_ratio_avg": "0.23835151872603952", 
+        "wait_ratio_max": "0.24606802319866314", 
+        "write_ms_avg": "19", 
+        "write_ms_max": "343", 
+        "write_ratio_avg": "4.669222451587536E-4", 
+        "write_ratio_max": "0.00842917526786592"
+      }, 
+      {
+        "completed_parallel_inputs": "488", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "1381", 
+        "compute_ms_max": "2680", 
+        "compute_ratio_avg": "0.03393787476653888", 
+        "compute_ratio_max": "0.0658606114223926", 
+        "end_ms": "1763107595498", 
+        "id": "7", 
+        "input_stages": [
+          "6", 
+          "3"
+        ], 
+        "name": "S07: Repartition", 
+        "parallel_inputs": "488", 
+        "read_ms_avg": "0", 
+        "read_ms_max": "0", 
+        "read_ratio_avg": "0.0", 
+        "read_ratio_max": "0.0", 
+        "records_read": "119784057", 
+        "records_written": "119784057", 
+        "shuffle_output_bytes": "39214408760", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "1075587", 
+        "start_ms": "1763107592992", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "FROM __stage06_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "8684", 
+        "wait_ms_max": "9352", 
+        "wait_ratio_avg": "0.21340804089255874", 
+        "wait_ratio_max": "0.22982404403814016", 
+        "write_ms_avg": "20", 
+        "write_ms_max": "291", 
+        "write_ratio_avg": "4.91497100167109E-4", 
+        "write_ratio_max": "0.007151282807431436"
+      }, 
+      {
+        "completed_parallel_inputs": "1", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "10", 
+        "compute_ms_max": "10", 
+        "compute_ratio_avg": "2.457485500835545E-4", 
+        "compute_ratio_max": "2.457485500835545E-4", 
+        "end_ms": "1763107601087", 
+        "id": "8", 
+        "input_stages": [], 
+        "name": "S08: Input", 
+        "parallel_inputs": "1", 
+        "read_ms_avg": "5", 
+        "read_ms_max": "5", 
+        "read_ratio_avg": "1.2287427504177725E-4", 
+        "read_ratio_max": "1.2287427504177725E-4", 
+        "records_read": "239", 
+        "records_written": "1", 
+        "shuffle_output_bytes": "11", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "50", 
+        "start_ms": "1763107601050", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$90:carrier_moniker, $91:monitor_eligible", 
+              "FROM monitor-base-us-prod.monitor_base.carrier_config", 
+              "WHERE and($91, equal($90, 'ontrac'))"
+            ]
+          }, 
+          {
+            "kind": "WRITE", 
+            "substeps": [
+              "$90", 
+              "TO __stage08_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "27", 
+        "wait_ms_max": "27", 
+        "wait_ratio_avg": "6.635210852255971E-4", 
+        "wait_ratio_max": "6.635210852255971E-4", 
+        "write_ms_avg": "17", 
+        "write_ms_max": "17", 
+        "write_ratio_avg": "4.1777253514204267E-4", 
+        "write_ratio_max": "4.1777253514204267E-4"
+      }, 
+      {
+        "completed_parallel_inputs": "1", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "6", 
+        "compute_ms_max": "6", 
+        "compute_ratio_avg": "1.474491300501327E-4", 
+        "compute_ratio_max": "1.474491300501327E-4", 
+        "end_ms": "1763107601376", 
+        "id": "9", 
+        "input_stages": [
+          "8"
+        ], 
+        "name": "S09: Output", 
+        "parallel_inputs": "1", 
+        "read_ms_avg": "0", 
+        "read_ms_max": "0", 
+        "read_ratio_avg": "0.0", 
+        "read_ratio_max": "0.0", 
+        "records_read": "1", 
+        "records_written": "1", 
+        "shuffle_output_bytes": "157", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "37", 
+        "start_ms": "1763107601349", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$90", 
+              "FROM __stage08_output"
+            ]
+          }, 
+          {
+            "kind": "COMPUTE", 
+            "substeps": [
+              "$467 := if(less_or_equal(array_length($463), 1000), $463, NULL)", 
+              "$462 := if(greater(array_length($463), 1000), 1, 0)"
+            ]
+          }, 
+          {
+            "kind": "AGGREGATE", 
+            "substeps": [
+              "$460 := MIN($90)", 
+              "$461 := MAX($90)", 
+              "$463 := DISTINCT_ARRAY_AGG($464 LIMIT 1001)", 
+              "$465 := MAX($466)", 
+              "$468 := BLOOM_FILTER_CREATE($90, 1)"
+            ]
+          }, 
+          {
+            "kind": "COMPUTE", 
+            "substeps": [
+              "$464 := if(less_or_equal(length($90), 1024), $90, NULL)", 
+              "$466 := length($90)"
+            ]
+          }, 
+          {
+            "kind": "WRITE", 
+            "substeps": [
+              "$460, $461, $462, $467, $465, $468", 
+              "TO __stage09_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "259", 
+        "wait_ms_max": "259", 
+        "wait_ratio_avg": "0.0063648874471640615", 
+        "wait_ratio_max": "0.0063648874471640615", 
+        "write_ms_avg": "18", 
+        "write_ms_max": "18", 
+        "write_ratio_avg": "4.423473901503981E-4", 
+        "write_ratio_max": "4.423473901503981E-4"
+      }, 
+      {
+        "completed_parallel_inputs": "1", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "12", 
+        "compute_ms_max": "12", 
+        "compute_ratio_avg": "2.948982601002654E-4", 
+        "compute_ratio_max": "2.948982601002654E-4", 
+        "end_ms": "1763107601685", 
+        "id": "10", 
+        "input_stages": [], 
+        "name": "S0A: Input", 
+        "parallel_inputs": "1", 
+        "read_ms_avg": "5", 
+        "read_ms_max": "5", 
+        "read_ratio_avg": "1.2287427504177725E-4", 
+        "read_ratio_max": "1.2287427504177725E-4", 
+        "records_read": "36", 
+        "records_written": "36", 
+        "shuffle_output_bytes": "821", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "89", 
+        "start_ms": "1763107601624", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$10:edd_source", 
+              "FROM narvar-data-lake.reporting.edd_source_categories"
+            ]
+          }, 
+          {
+            "kind": "WRITE", 
+            "substeps": [
+              "$10", 
+              "TO __stage0A_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "232", 
+        "wait_ms_max": "232", 
+        "wait_ratio_avg": "0.005701366361938465", 
+        "wait_ratio_max": "0.005701366361938465", 
+        "write_ms_avg": "24", 
+        "write_ms_max": "24", 
+        "write_ratio_avg": "5.897965202005308E-4", 
+        "write_ratio_max": "5.897965202005308E-4"
+      }, 
+      {
+        "completed_parallel_inputs": "1", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "16", 
+        "compute_ms_max": "16", 
+        "compute_ratio_avg": "3.931976801336872E-4", 
+        "compute_ratio_max": "3.931976801336872E-4", 
+        "end_ms": "1763107601675", 
+        "id": "11", 
+        "input_stages": [], 
+        "name": "S0B: Input", 
+        "parallel_inputs": "1", 
+        "read_ms_avg": "4", 
+        "read_ms_max": "4", 
+        "read_ratio_avg": "9.82994200334218E-5", 
+        "read_ratio_max": "9.82994200334218E-5", 
+        "records_read": "36", 
+        "records_written": "36", 
+        "shuffle_output_bytes": "821", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "106", 
+        "start_ms": "1763107601625", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$1:edd_source", 
+              "FROM narvar-data-lake.reporting.edd_source_categories"
+            ]
+          }, 
+          {
+            "kind": "WRITE", 
+            "substeps": [
+              "$1", 
+              "TO __stage0B_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "220", 
+        "wait_ms_max": "220", 
+        "wait_ratio_avg": "0.0054064681018381995", 
+        "wait_ratio_max": "0.0054064681018381995", 
+        "write_ms_avg": "20", 
+        "write_ms_max": "20", 
+        "write_ratio_avg": "4.91497100167109E-4", 
+        "write_ratio_max": "4.91497100167109E-4"
+      }, 
+      {
+        "completed_parallel_inputs": "20000", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "434", 
+        "compute_ms_max": "1756", 
+        "compute_ratio_avg": "0.010665487073626266", 
+        "compute_ratio_max": "0.04315344539467217", 
+        "end_ms": "1763107642396", 
+        "id": "12", 
+        "input_stages": [
+          "3", 
+          "7"
+        ], 
+        "name": "S0C: Aggregate", 
+        "parallel_inputs": "20000", 
+        "read_ms_avg": "0", 
+        "read_ms_max": "0", 
+        "read_ratio_avg": "0.0", 
+        "read_ratio_max": "0.0", 
+        "records_read": "1265965764", 
+        "records_written": "1127669696", 
+        "shuffle_output_bytes": "82854798380", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "17556510", 
+        "start_ms": "1763107601625", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$380, $381, $382, $383, $399, $384, $389, $386, $390, $388, $400, $401, $385, $387, $397, $391", 
+              "FROM __stage03_output"
+            ]
+          }, 
+          {
+            "kind": "AGGREGATE", 
+            "substeps": [
+              "GROUP BY $410 := $380, $411 := $381, $412 := $382, $413 := $383, $414 := $384, $415 := $385, $416 := $386, $417 := $387, $418 := $388, $419 := $389, $420 := $390, $421 := $391, $422 := $392, $423 := $393, $424 := $394, $425 := $395"
+            ]
+          }, 
+          {
+            "kind": "WRITE", 
+            "substeps": [
+              "$413, $421, $426, $429", 
+              "TO __stage0C_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "18597", 
+        "wait_ms_max": "40692", 
+        "wait_ratio_avg": "0.4570185785903863", 
+        "wait_ratio_max": "1.0", 
+        "write_ms_avg": "13", 
+        "write_ms_max": "261", 
+        "write_ratio_avg": "3.1947311510862085E-4", 
+        "write_ratio_max": "0.006414037157180773"
+      }, 
+      {
+        "completed_parallel_inputs": "1522", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "140", 
+        "compute_ms_max": "552", 
+        "compute_ratio_avg": "0.003440479701169763", 
+        "compute_ratio_max": "0.013565319964612209", 
+        "end_ms": "1763107638616", 
+        "id": "13", 
+        "input_stages": [
+          "11", 
+          "8", 
+          "10"
+        ], 
+        "name": "S0D: Join+", 
+        "parallel_inputs": "1522", 
+        "read_ms_avg": "170", 
+        "read_ms_max": "698", 
+        "read_ratio_avg": "0.004177725351420427", 
+        "read_ratio_max": "0.017153248795832104", 
+        "records_read": "116283701", 
+        "records_written": "3262", 
+        "shuffle_output_bytes": "45679", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "812692", 
+        "start_ms": "1763107602002", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$71:carrier_moniker, $72:order_number, $74:delivery_date, $75:retailer_promise_date, $76:shipment_status, $79:current_edd.edd_begin, $80:current_edd.edd_end, $81:first_edd.edd_source, $82:current_edd.edd_source, $83:first_edd.edd_begin, $84:first_edd.edd_end, $85:events.event_code, $86:events.event_date_raw, $87:events.event_derived_ts, $88:events.event_ts, $70:retailer_moniker", 
+              "FROM monitor-base-us-prod.monitor_base.shipments", 
+              "WHERE and(greater_or_equal($78, 0), less_or_equal($78, 4000), equal($77, 0), equal($78, 639), equal($70, 'fashionnova'), ...)"
+            ]
+          }, 
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$90", 
+              "FROM __stage08_output"
+            ]
+          }, 
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$10", 
+              "FROM __stage0A_output"
+            ]
+          }, 
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$1", 
+              "FROM __stage0B_output"
+            ]
+          }, 
+          {
+            "kind": "FILTER", 
+            "substeps": [
+              "or(equal($130, 'In Transit, No Estimate'), equal($130, 'Overdue'), equal($130, 'Trending Early'), equal($130, 'Trending Late'), ...)"
+            ]
+          }, 
+          {
+            "kind": "COMPUTE", 
+            "substeps": [
+              "$130 := case_no_value(equal($313, 'Undeliverable'), 'Undeliverable', and(is_null(date($311)), not_equal($313, 'Undeliverable')), ...)"
+            ]
+          }, 
+          {
+            "kind": "JOIN", 
+            "substeps": [
+              "$310 := $300, $311 := $301, $312 := $302, $313 := $303, $314 := $305, $315 := $306, $316 := $307, $317 := $308", 
+              "LEFT OUTER HASH JOIN EACH  WITH ALL  ON $304 = $1"
+            ]
+          }, 
+          {
+            "kind": "JOIN", 
+            "substeps": [
+              "$300 := $260, $301 := $261, $302 := $262, $303 := $263, $304 := $267, $305 := $268, $306 := $269, $307 := $150, $308 := $151", 
+              "LEFT OUTER HASH JOIN EACH  WITH ALL  ON $266 = $10"
+            ]
+          }, 
+          {
+            "kind": "COMPUTE", 
+            "substeps": [
+              "$150 := date(coalesce($262, $269, $268))", 
+              "$151 := date(coalesce($265, $264, $262))"
+            ]
+          }, 
+          {
+            "kind": "JOIN", 
+            "substeps": [
+              "$260 := $72, $261 := $74, $262 := $75, $263 := $76, $264 := $79, $265 := $80, $266 := $81, $267 := $82, $268 := $83, $269 := $84, $270 := $85, $271 := $86, $272 := $87, $273 := $88", 
+              "INNER HASH JOIN EACH  WITH ALL  ON $71 = $90"
+            ]
+          }, 
+          {
+            "kind": "AGGREGATE", 
+            "substeps": [
+              "$180 := ANY_AND_CHECK($280)"
+            ]
+          }, 
+          {
+            "kind": "SORT", 
+            "substeps": [
+              "$211 ASC", 
+              "LIMIT 1"
+            ]
+          }, 
+          {
+            "kind": "FILTER", 
+            "substeps": [
+              "between(SAFE_EXPR(CAST($210 AS INT64)), 200, 299)"
+            ]
+          }, 
+          {
+            "kind": "AGGREGATE", 
+            "substeps": [
+              "$170 := ANY_AND_CHECK($290)"
+            ]
+          }, 
+          {
+            "kind": "SORT", 
+            "substeps": [
+              "$223 ASC", 
+              "LIMIT 1"
+            ]
+          }, 
+          {
+            "kind": "COMPUTE", 
+            "substeps": [
+              "$200 := coalesce($222, $221)"
+            ]
+          }, 
+          {
+            "kind": "FILTER", 
+            "substeps": [
+              "between(SAFE_EXPR(CAST($220 AS INT64)), 200, 299)"
+            ]
+          }, 
+          {
+            "kind": "WRITE", 
+            "substeps": [
+              "$310", 
+              "TO __stage0D_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "16746", 
+        "wait_ms_max": "35858", 
+        "wait_ratio_avg": "0.4115305219699204", 
+        "wait_ratio_max": "0.8812051508896097", 
+        "write_ms_avg": "3", 
+        "write_ms_max": "152", 
+        "write_ratio_avg": "7.372456502506635E-5", 
+        "write_ratio_max": "0.0037353779612700286"
+      }, 
+      {
+        "completed_parallel_inputs": "1000", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "1459", 
+        "compute_ms_max": "2713", 
+        "compute_ratio_avg": "0.0358547134571906", 
+        "compute_ratio_max": "0.06667158163766834", 
+        "end_ms": "1763107652649", 
+        "id": "14", 
+        "input_stages": [
+          "13", 
+          "12"
+        ], 
+        "name": "S0E: Join+", 
+        "parallel_inputs": "1000", 
+        "read_ms_avg": "0", 
+        "read_ms_max": "0", 
+        "read_ratio_avg": "0.0", 
+        "read_ratio_max": "0.0", 
+        "records_read": "1069044602", 
+        "records_written": "1000", 
+        "shuffle_output_bytes": "15205", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "1951505", 
+        "start_ms": "1763107642431", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$310", 
+              "FROM __stage0D_output"
+            ]
+          }, 
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$413, $421, $426, $429", 
+              "FROM __stage0C_output"
+            ]
+          }, 
+          {
+            "kind": "AGGREGATE", 
+            "substeps": [
+              "$110 := SHARD_AVG($120)"
+            ]
+          }, 
+          {
+            "kind": "COMPUTE", 
+            "substeps": [
+              "$120 := datetime_diff($440, $441, 3)"
+            ]
+          }, 
+          {
+            "kind": "FILTER", 
+            "substeps": [
+              "like(lower($442), '%manifest%')"
+            ]
+          }, 
+          {
+            "kind": "JOIN", 
+            "substeps": [
+              "$440 := $429, $441 := $421, $442 := $426", 
+              "LEFT OUTER HASH JOIN EACH  WITH EACH  ON $310 = $413"
+            ]
+          }, 
+          {
+            "kind": "WRITE", 
+            "substeps": [
+              "$110", 
+              "TO __stage0E_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "4465", 
+        "wait_ms_max": "9083", 
+        "wait_ratio_avg": "0.10972672761230709", 
+        "wait_ratio_max": "0.22321340804089257", 
+        "write_ms_avg": "1", 
+        "write_ms_max": "23", 
+        "write_ratio_avg": "2.457485500835545E-5", 
+        "write_ratio_max": "5.652216651921754E-4"
+      }, 
+      {
+        "completed_parallel_inputs": "1", 
+        "compute_mode": "BIGQUERY", 
+        "compute_ms_avg": "22", 
+        "compute_ms_max": "22", 
+        "compute_ratio_avg": "5.406468101838199E-4", 
+        "compute_ratio_max": "5.406468101838199E-4", 
+        "end_ms": "1763107652657", 
+        "id": "15", 
+        "input_stages": [
+          "14"
+        ], 
+        "name": "S0F: Output", 
+        "parallel_inputs": "1", 
+        "read_ms_avg": "0", 
+        "read_ms_max": "0", 
+        "read_ratio_avg": "0.0", 
+        "read_ratio_max": "0.0", 
+        "records_read": "1000", 
+        "records_written": "1", 
+        "shuffle_output_bytes": "9", 
+        "shuffle_output_bytes_spilled": "0", 
+        "slot_ms": "1046", 
+        "start_ms": "1763107651652", 
+        "status": "COMPLETE", 
+        "steps": [
+          {
+            "kind": "READ", 
+            "substeps": [
+              "$110", 
+              "FROM __stage0E_output"
+            ]
+          }, 
+          {
+            "kind": "AGGREGATE", 
+            "substeps": [
+              "$100 := ROOT_AVG($110)"
+            ]
+          }, 
+          {
+            "kind": "WRITE", 
+            "substeps": [
+              "$100", 
+              "TO __stage0F_output"
+            ]
+          }
+        ], 
+        "wait_ms_avg": "9245", 
+        "wait_ms_max": "9245", 
+        "wait_ratio_avg": "0.22719453455224614", 
+        "wait_ratio_max": "0.22719453455224614", 
+        "write_ms_avg": "2", 
+        "write_ms_max": "2", 
+        "write_ratio_avg": "4.91497100167109E-5", 
+        "write_ratio_max": "4.91497100167109E-5"
+      }
+    ], 
+    "job_type": "QUERY", 
+    "labels": [], 
+    "materialized_view_statistics": null, 
+    "metadata_cache_statistics": {
+      "table_metadata_cache_usage": [
+        {
+          "explanation": "Table does not have CMETA.", 
+          "staleness_seconds": null, 
+          "table_reference": {
+            "dataset_id": "reporting", 
+            "project_id": "narvar-data-lake", 
+            "table_id": "edd_source_categories"
+          }, 
+          "unused_reason": "OTHER_REASON"
+        }, 
+        {
+          "explanation": null, 
+          "staleness_seconds": null, 
+          "table_reference": {
+            "dataset_id": "monitor_base", 
+            "project_id": "monitor-base-us-prod", 
+            "table_id": "shipments"
+          }, 
+          "unused_reason": null
+        }, 
+        {
+          "explanation": null, 
+          "staleness_seconds": null, 
+          "table_reference": {
+            "dataset_id": "monitor_base", 
+            "project_id": "monitor-base-us-prod", 
+            "table_id": "carrier_config"
+          }, 
+          "unused_reason": null
+        }
+      ]
+    }, 
+    "parent_job_id": null, 
+    "principal_subject": "serviceAccount:monitor-a679b28-bq@monitor-a679b28-us-prod.iam.gserviceaccount.com", 
+    "priority": "INTERACTIVE", 
+    "project_id": "monitor-a679b28-us-prod", 
+    "project_number": "683321534952", 
+    "query": "select Avg(DATE_DIFF(`v_shipments_events`.`ship_date`,`v_shipments_events`.`event_ts`, DAY))\nFROM `monitor.v_shipments`\nLEFT JOIN `monitor.v_shipments_events` `v_shipments_events` \n    ON `monitor.v_shipments`.`order_number` = `v_shipments_events`.`order_number`\nWHERE `monitor.v_shipments`.`carrier_moniker` = 'ontrac'\n    and lower(`v_shipments_events`.`detailed_event_status`) like '%manifest%'\n                        AND (`monitor.v_shipments`.`edd_status` = ? OR `monitor.v_shipments`.`edd_status` = ? OR `monitor.v_shipments`.`edd_status` = ? OR `monitor.v_shipments`.`edd_status` = ? OR `monitor.v_shipments`.`edd_status` = ? OR `monitor.v_shipments`.`edd_status` = ?)\n                        AND datetime_trunc(`monitor.v_shipments`.`ship_date`, day) BETWEEN ? AND ?", 
+    "query_dialect": "GOOGLE_SQL", 
+    "query_info": {
+      "optimization_details": "{\"optimizations\":[{\"parallelism_adjustment\":\"applied\"}]}", 
+      "performance_insights": {
+        "avg_previous_execution_ms": "82246", 
+        "stage_performance_change_insights": [], 
+        "stage_performance_standalone_insights": []
+      }, 
+      "query_hashes": {
+        "normalized_literals": "b2576160c1ac98dbd264ca238f259e2c726506f1cc4f4dec157ebcd926953b61"
+      }, 
+      "resource_warning": null
+    }, 
+    "referenced_tables": [
+      {
+        "dataset_id": "reporting", 
+        "project_id": "narvar-data-lake", 
+        "table_id": "edd_source_categories"
+      }, 
+      {
+        "dataset_id": "monitor_base", 
+        "project_id": "monitor-base-us-prod", 
+        "table_id": "shipments"
+      }, 
+      {
+        "dataset_id": "monitor_base", 
+        "project_id": "monitor-base-us-prod", 
+        "table_id": "carrier_config"
+      }
+    ], 
+    "reservation_group_path": [
+      ""
+    ], 
+    "reservation_id": "bq-narvar-admin:US.default", 
+    "search_statistics": {
+      "index_pruning_stats": [], 
+      "index_unused_reasons": [
+        {
+          "base_table": {
+            "dataset_id": "monitor_base", 
+            "project_id": "monitor-base-us-prod", 
+            "table_id": "carrier_config"
+          }, 
+          "code": "INDEX_CONFIG_NOT_AVAILABLE", 
+          "index_name": null, 
+          "message": "There is no index configuration for the base table `monitor-base-us-prod:monitor_base.carrier_config`."
+        }, 
+        {
+          "base_table": {
+            "dataset_id": "monitor_base", 
+            "project_id": "monitor-base-us-prod", 
+            "table_id": "shipments"
+          }, 
+          "code": "INDEX_CONFIG_NOT_AVAILABLE", 
+          "index_name": null, 
+          "message": "There is no index configuration for the base table `monitor-base-us-prod:monitor_base.shipments`."
+        }, 
+        {
+          "base_table": {
+            "dataset_id": "reporting", 
+            "project_id": "narvar-data-lake", 
+            "table_id": "edd_source_categories"
+          }, 
+          "code": "INDEX_CONFIG_NOT_AVAILABLE", 
+          "index_name": null, 
+          "message": "There is no index configuration for the base table `narvar-data-lake:reporting.edd_source_categories`."
+        }
+      ], 
+      "index_usage_mode": "UNUSED"
+    }, 
+    "session_info": null, 
+    "start_time": "2025-11-14 08:06:17", 
+    "state": "DONE", 
+    "statement_type": "SELECT", 
+    "timeline": [
+      {
+        "active_units": "0", 
+        "completed_units": "0", 
+        "elapsed_ms": "618", 
+        "estimated_runnable_units": null, 
+        "pending_units": "0", 
+        "total_slot_ms": "1224199"
+      }, 
+      {
+        "active_units": "1", 
+        "completed_units": "1", 
+        "elapsed_ms": "1618", 
+        "estimated_runnable_units": "0", 
+        "pending_units": "1522", 
+        "total_slot_ms": "2924199"
+      }, 
+      {
+        "active_units": "1524", 
+        "completed_units": "16", 
+        "elapsed_ms": "2618", 
+        "estimated_runnable_units": "1", 
+        "pending_units": "1508", 
+        "total_slot_ms": "4624199"
+      }, 
+      {
+        "active_units": "1518", 
+        "completed_units": "28", 
+        "elapsed_ms": "3618", 
+        "estimated_runnable_units": "859", 
+        "pending_units": "1496", 
+        "total_slot_ms": "6324199"
+      }, 
+      {
+        "active_units": "1452", 
+        "completed_units": "96", 
+        "elapsed_ms": "4618", 
+        "estimated_runnable_units": "862", 
+        "pending_units": "1428", 
+        "total_slot_ms": "8024199"
+      }, 
+      {
+        "active_units": "1273", 
+        "completed_units": "281", 
+        "elapsed_ms": "5618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "2755", 
+        "total_slot_ms": "9724199"
+      }, 
+      {
+        "active_units": "1134", 
+        "completed_units": "435", 
+        "elapsed_ms": "6618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "2601", 
+        "total_slot_ms": "11415762"
+      }, 
+      {
+        "active_units": "1043", 
+        "completed_units": "577", 
+        "elapsed_ms": "7618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "2947", 
+        "total_slot_ms": "13111198"
+      }, 
+      {
+        "active_units": "989", 
+        "completed_units": "719", 
+        "elapsed_ms": "8618", 
+        "estimated_runnable_units": "967", 
+        "pending_units": "2805", 
+        "total_slot_ms": "14811198"
+      }, 
+      {
+        "active_units": "927", 
+        "completed_units": "880", 
+        "elapsed_ms": "9618", 
+        "estimated_runnable_units": "991", 
+        "pending_units": "2644", 
+        "total_slot_ms": "16511198"
+      }, 
+      {
+        "active_units": "887", 
+        "completed_units": "1022", 
+        "elapsed_ms": "10618", 
+        "estimated_runnable_units": "991", 
+        "pending_units": "2502", 
+        "total_slot_ms": "18211198"
+      }, 
+      {
+        "active_units": "856", 
+        "completed_units": "1134", 
+        "elapsed_ms": "11618", 
+        "estimated_runnable_units": "991", 
+        "pending_units": "2390", 
+        "total_slot_ms": "18512644"
+      }, 
+      {
+        "active_units": "804", 
+        "completed_units": "1251", 
+        "elapsed_ms": "12618", 
+        "estimated_runnable_units": "992", 
+        "pending_units": "2273", 
+        "total_slot_ms": "20212644"
+      }, 
+      {
+        "active_units": "849", 
+        "completed_units": "1360", 
+        "elapsed_ms": "13618", 
+        "estimated_runnable_units": "990", 
+        "pending_units": "2164", 
+        "total_slot_ms": "21912644"
+      }, 
+      {
+        "active_units": "704", 
+        "completed_units": "1918", 
+        "elapsed_ms": "14618", 
+        "estimated_runnable_units": "990", 
+        "pending_units": "1606", 
+        "total_slot_ms": "23612644"
+      }, 
+      {
+        "active_units": "690", 
+        "completed_units": "2531", 
+        "elapsed_ms": "15618", 
+        "estimated_runnable_units": "810", 
+        "pending_units": "993", 
+        "total_slot_ms": "24241832"
+      }, 
+      {
+        "active_units": "585", 
+        "completed_units": "3099", 
+        "elapsed_ms": "16618", 
+        "estimated_runnable_units": "474", 
+        "pending_units": "425", 
+        "total_slot_ms": "24301087"
+      }, 
+      {
+        "active_units": "200", 
+        "completed_units": "3389", 
+        "elapsed_ms": "17618", 
+        "estimated_runnable_units": "474", 
+        "pending_units": "135", 
+        "total_slot_ms": "24344949"
+      }, 
+      {
+        "active_units": "35", 
+        "completed_units": "3509", 
+        "elapsed_ms": "18618", 
+        "estimated_runnable_units": "0", 
+        "pending_units": "15", 
+        "total_slot_ms": "24374935"
+      }, 
+      {
+        "active_units": "25", 
+        "completed_units": "3514", 
+        "elapsed_ms": "19618", 
+        "estimated_runnable_units": "0", 
+        "pending_units": "10", 
+        "total_slot_ms": "24398576"
+      }, 
+      {
+        "active_units": "16", 
+        "completed_units": "3517", 
+        "elapsed_ms": "20618", 
+        "estimated_runnable_units": "0", 
+        "pending_units": "7", 
+        "total_slot_ms": "24411307"
+      }, 
+      {
+        "active_units": "14", 
+        "completed_units": "3518", 
+        "elapsed_ms": "21618", 
+        "estimated_runnable_units": "0", 
+        "pending_units": "6", 
+        "total_slot_ms": "24494285"
+      }, 
+      {
+        "active_units": "7", 
+        "completed_units": "3521", 
+        "elapsed_ms": "22618", 
+        "estimated_runnable_units": "0", 
+        "pending_units": "3", 
+        "total_slot_ms": "24732478"
+      }, 
+      {
+        "active_units": "3", 
+        "completed_units": "3523", 
+        "elapsed_ms": "23618", 
+        "estimated_runnable_units": "0", 
+        "pending_units": "1", 
+        "total_slot_ms": "24964926"
+      }, 
+      {
+        "active_units": "492", 
+        "completed_units": "3538", 
+        "elapsed_ms": "24618", 
+        "estimated_runnable_units": "0", 
+        "pending_units": "19990", 
+        "total_slot_ms": "25212437"
+      }, 
+      {
+        "active_units": "487", 
+        "completed_units": "4341", 
+        "elapsed_ms": "25618", 
+        "estimated_runnable_units": "1", 
+        "pending_units": "20709", 
+        "total_slot_ms": "25460437"
+      }, 
+      {
+        "active_units": "339", 
+        "completed_units": "5350", 
+        "elapsed_ms": "26618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "19700", 
+        "total_slot_ms": "25716312"
+      }, 
+      {
+        "active_units": "355", 
+        "completed_units": "6285", 
+        "elapsed_ms": "27618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "18765", 
+        "total_slot_ms": "26028479"
+      }, 
+      {
+        "active_units": "338", 
+        "completed_units": "7252", 
+        "elapsed_ms": "28618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "17798", 
+        "total_slot_ms": "26348201"
+      }, 
+      {
+        "active_units": "264", 
+        "completed_units": "8149", 
+        "elapsed_ms": "29618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "16901", 
+        "total_slot_ms": "26667442"
+      }, 
+      {
+        "active_units": "255", 
+        "completed_units": "8961", 
+        "elapsed_ms": "30618", 
+        "estimated_runnable_units": "826", 
+        "pending_units": "16089", 
+        "total_slot_ms": "26983058"
+      }, 
+      {
+        "active_units": "65", 
+        "completed_units": "9632", 
+        "elapsed_ms": "31618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "15418", 
+        "total_slot_ms": "27302217"
+      }, 
+      {
+        "active_units": "168", 
+        "completed_units": "10062", 
+        "elapsed_ms": "32618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "14988", 
+        "total_slot_ms": "27605901"
+      }, 
+      {
+        "active_units": "128", 
+        "completed_units": "10621", 
+        "elapsed_ms": "33618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "14429", 
+        "total_slot_ms": "27907687"
+      }, 
+      {
+        "active_units": "141", 
+        "completed_units": "11108", 
+        "elapsed_ms": "34618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "13942", 
+        "total_slot_ms": "28225829"
+      }, 
+      {
+        "active_units": "139", 
+        "completed_units": "11618", 
+        "elapsed_ms": "35618", 
+        "estimated_runnable_units": "995", 
+        "pending_units": "13432", 
+        "total_slot_ms": "28545770"
+      }, 
+      {
+        "active_units": "122", 
+        "completed_units": "12134", 
+        "elapsed_ms": "36618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "12916", 
+        "total_slot_ms": "28866479"
+      }, 
+      {
+        "active_units": "132", 
+        "completed_units": "12565", 
+        "elapsed_ms": "37618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "12485", 
+        "total_slot_ms": "29181330"
+      }, 
+      {
+        "active_units": "111", 
+        "completed_units": "13036", 
+        "elapsed_ms": "38618", 
+        "estimated_runnable_units": "999", 
+        "pending_units": "12014", 
+        "total_slot_ms": "29496804"
+      }, 
+      {
+        "active_units": "51", 
+        "completed_units": "13422", 
+        "elapsed_ms": "39618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "11628", 
+        "total_slot_ms": "29812251"
+      }, 
+      {
+        "active_units": "131", 
+        "completed_units": "13855", 
+        "elapsed_ms": "40618", 
+        "estimated_runnable_units": "978", 
+        "pending_units": "11195", 
+        "total_slot_ms": "30126828"
+      }, 
+      {
+        "active_units": "114", 
+        "completed_units": "14319", 
+        "elapsed_ms": "41618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "10731", 
+        "total_slot_ms": "30440827"
+      }, 
+      {
+        "active_units": "112", 
+        "completed_units": "14705", 
+        "elapsed_ms": "42618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "10345", 
+        "total_slot_ms": "30755415"
+      }, 
+      {
+        "active_units": "107", 
+        "completed_units": "15125", 
+        "elapsed_ms": "43618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "9925", 
+        "total_slot_ms": "31070915"
+      }, 
+      {
+        "active_units": "65", 
+        "completed_units": "15536", 
+        "elapsed_ms": "44618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "9514", 
+        "total_slot_ms": "31376732"
+      }, 
+      {
+        "active_units": "113", 
+        "completed_units": "15722", 
+        "elapsed_ms": "45618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "9328", 
+        "total_slot_ms": "31688785"
+      }, 
+      {
+        "active_units": "106", 
+        "completed_units": "16120", 
+        "elapsed_ms": "46618", 
+        "estimated_runnable_units": "975", 
+        "pending_units": "8930", 
+        "total_slot_ms": "32004182"
+      }, 
+      {
+        "active_units": "90", 
+        "completed_units": "16507", 
+        "elapsed_ms": "47618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "8543", 
+        "total_slot_ms": "32319755"
+      }, 
+      {
+        "active_units": "43", 
+        "completed_units": "16737", 
+        "elapsed_ms": "48618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "8313", 
+        "total_slot_ms": "32630706"
+      }, 
+      {
+        "active_units": "106", 
+        "completed_units": "17131", 
+        "elapsed_ms": "49618", 
+        "estimated_runnable_units": "991", 
+        "pending_units": "7919", 
+        "total_slot_ms": "32946295"
+      }, 
+      {
+        "active_units": "102", 
+        "completed_units": "17538", 
+        "elapsed_ms": "50618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "7512", 
+        "total_slot_ms": "33341422"
+      }, 
+      {
+        "active_units": "109", 
+        "completed_units": "17886", 
+        "elapsed_ms": "51618", 
+        "estimated_runnable_units": "993", 
+        "pending_units": "7164", 
+        "total_slot_ms": "33734232"
+      }, 
+      {
+        "active_units": "95", 
+        "completed_units": "18279", 
+        "elapsed_ms": "52618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "6771", 
+        "total_slot_ms": "34132668"
+      }, 
+      {
+        "active_units": "103", 
+        "completed_units": "18725", 
+        "elapsed_ms": "53618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "6325", 
+        "total_slot_ms": "34693615"
+      }, 
+      {
+        "active_units": "170", 
+        "completed_units": "19247", 
+        "elapsed_ms": "54618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "5803", 
+        "total_slot_ms": "35242737"
+      }, 
+      {
+        "active_units": "166", 
+        "completed_units": "19867", 
+        "elapsed_ms": "55618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "5183", 
+        "total_slot_ms": "35804532"
+      }, 
+      {
+        "active_units": "162", 
+        "completed_units": "20419", 
+        "elapsed_ms": "56618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "4631", 
+        "total_slot_ms": "36363377"
+      }, 
+      {
+        "active_units": "157", 
+        "completed_units": "21018", 
+        "elapsed_ms": "57618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "4032", 
+        "total_slot_ms": "36926544"
+      }, 
+      {
+        "active_units": "103", 
+        "completed_units": "21589", 
+        "elapsed_ms": "58618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "3461", 
+        "total_slot_ms": "37481239"
+      }, 
+      {
+        "active_units": "362", 
+        "completed_units": "22073", 
+        "elapsed_ms": "59618", 
+        "estimated_runnable_units": "998", 
+        "pending_units": "2977", 
+        "total_slot_ms": "37990905"
+      }, 
+      {
+        "active_units": "337", 
+        "completed_units": "23145", 
+        "elapsed_ms": "60618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "1905", 
+        "total_slot_ms": "38524577"
+      }, 
+      {
+        "active_units": "119", 
+        "completed_units": "24167", 
+        "elapsed_ms": "61618", 
+        "estimated_runnable_units": "1000", 
+        "pending_units": "883", 
+        "total_slot_ms": "39080991"
+      }, 
+      {
+        "active_units": "90", 
+        "completed_units": "24361", 
+        "elapsed_ms": "62618", 
+        "estimated_runnable_units": "875", 
+        "pending_units": "689", 
+        "total_slot_ms": "39563238"
+      }, 
+      {
+        "active_units": "102", 
+        "completed_units": "24631", 
+        "elapsed_ms": "63618", 
+        "estimated_runnable_units": "584", 
+        "pending_units": "419", 
+        "total_slot_ms": "39958097"
+      }, 
+      {
+        "active_units": "121", 
+        "completed_units": "24882", 
+        "elapsed_ms": "64618", 
+        "estimated_runnable_units": "497", 
+        "pending_units": "168", 
+        "total_slot_ms": "40310634"
+      }, 
+      {
+        "active_units": "101", 
+        "completed_units": "25057", 
+        "elapsed_ms": "65618", 
+        "estimated_runnable_units": "214", 
+        "pending_units": "994", 
+        "total_slot_ms": "40745439"
+      }, 
+      {
+        "active_units": "130", 
+        "completed_units": "25154", 
+        "elapsed_ms": "66618", 
+        "estimated_runnable_units": "899", 
+        "pending_units": "897", 
+        "total_slot_ms": "41110503"
+      }, 
+      {
+        "active_units": "102", 
+        "completed_units": "25249", 
+        "elapsed_ms": "67618", 
+        "estimated_runnable_units": "828", 
+        "pending_units": "802", 
+        "total_slot_ms": "41410423"
+      }, 
+      {
+        "active_units": "89", 
+        "completed_units": "25347", 
+        "elapsed_ms": "68618", 
+        "estimated_runnable_units": "793", 
+        "pending_units": "704", 
+        "total_slot_ms": "41689009"
+      }, 
+      {
+        "active_units": "83", 
+        "completed_units": "25439", 
+        "elapsed_ms": "69618", 
+        "estimated_runnable_units": "725", 
+        "pending_units": "612", 
+        "total_slot_ms": "42000838"
+      }, 
+      {
+        "active_units": "93", 
+        "completed_units": "25546", 
+        "elapsed_ms": "70618", 
+        "estimated_runnable_units": "591", 
+        "pending_units": "505", 
+        "total_slot_ms": "42295822"
+      }, 
+      {
+        "active_units": "84", 
+        "completed_units": "25678", 
+        "elapsed_ms": "71618", 
+        "estimated_runnable_units": "433", 
+        "pending_units": "373", 
+        "total_slot_ms": "42713259"
+      }, 
+      {
+        "active_units": "85", 
+        "completed_units": "25781", 
+        "elapsed_ms": "72618", 
+        "estimated_runnable_units": "285", 
+        "pending_units": "270", 
+        "total_slot_ms": "42995849"
+      }, 
+      {
+        "active_units": "103", 
+        "completed_units": "25890", 
+        "elapsed_ms": "73618", 
+        "estimated_runnable_units": "249", 
+        "pending_units": "161", 
+        "total_slot_ms": "43352640"
+      }, 
+      {
+        "active_units": "64", 
+        "completed_units": "26003", 
+        "elapsed_ms": "74618", 
+        "estimated_runnable_units": "121", 
+        "pending_units": "48", 
+        "total_slot_ms": "43714009"
+      }, 
+      {
+        "active_units": "0", 
+        "completed_units": "26051", 
+        "elapsed_ms": "75618", 
+        "estimated_runnable_units": "26", 
+        "pending_units": "0", 
+        "total_slot_ms": "44015544"
+      }, 
+      {
+        "active_units": "0", 
+        "completed_units": "26051", 
+        "elapsed_ms": "76618", 
+        "estimated_runnable_units": "0", 
+        "pending_units": "0", 
+        "total_slot_ms": "44294244"
+      }, 
+      {
+        "active_units": "0", 
+        "completed_units": "26051", 
+        "elapsed_ms": "78218", 
+        "estimated_runnable_units": "0", 
+        "pending_units": "0", 
+        "total_slot_ms": "44735491"
+      }
+    ], 
+    "total_bytes_billed": "262032850944", 
+    "total_bytes_processed": "262032590559", 
+    "total_modified_partitions": "0", 
+    "total_services_sku_slot_ms": null, 
+    "total_slot_ms": "44735491", 
+    "transaction_id": null, 
+    "transferred_bytes": "0", 
+    "user_email": "monitor-a679b28-bq@monitor-a679b28-us-prod.iam.gserviceaccount.com", 
+    "vector_search_statistics": null
+  }
+]
