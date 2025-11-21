@@ -109,7 +109,6 @@
 | **Consumption** | $6,418 | 2.5% | Customer queries | ✅ Validated |
 | **TOTAL** | **$261,591** | **100%** | | ✅ **COMPLETE** |
 
-**Previous estimate:** $598K (WRONG - inflated by flawed audit log analysis)  
 **Corrected estimate:** $262K (validated via DoIT billing + traffic classification + code review)  
 **Latest update (Nov 21):** Refined returns analysis (Shopify + Core) = $261,591 total
 

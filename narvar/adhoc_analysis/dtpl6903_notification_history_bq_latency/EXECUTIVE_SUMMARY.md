@@ -4,13 +4,15 @@
 **Status:** 🔴 CRITICAL - Root cause identified, mitigation options ready  
 **Impact:** Customer-facing notification history feature experiencing 8-minute delays
 
+> 📋 **Implementation Guide:** For detailed technical planning, capacity requirements, deployment steps, and risk analysis, see [`MESSAGING_CAPACITY_PLANNING.md`](MESSAGING_CAPACITY_PLANNING.md)
+
 ---
 
 ## Executive Summary (For Internal & External Communication)
 
 **Problem:** The Notification History feature, used by retailers including Lands' End to search notification details by order number, is experiencing significant delays of up to 8-9 minutes. Investigation confirms the queries themselves are well-optimized and execute in 1-2 seconds, but are waiting 8+ minutes for database processing capacity due to shared infrastructure saturation. This issue started November 13th and has escalated, with peak delays occurring during overnight and morning hours (midnight-9am PST). The delays are caused by competing batch data processing and analytics workloads monopolizing shared database resources, leaving insufficient capacity for customer-facing interactive features.
 
-**Solution:** We are implementing a dedicated database capacity solution specifically for the Notification History feature to guarantee immediate resource availability and sub-second response times. This involves configuring the messaging service to use dedicated on-demand database capacity (~$30-60/month estimated cost) or a small reserved capacity allocation, completely isolated from batch processing workloads. Implementation timeline is 3 weeks: 1 week for specification and cost analysis, 1 week for pilot testing, and 1 week for production rollout. As an interim measure, we are also separating batch data processing to different infrastructure to free up 46% of current shared capacity. This will restore the Notification History feature to its expected performance level of <5 seconds end-to-end response time.
+**Solution:** We are implementing a dedicated database capacity solution specifically for the Notification History feature to guarantee immediate resource availability and sub-second response times. This involves configuring the messaging service to use dedicated on-demand database capacity (~$30-60/month estimated cost) or a small reserved capacity allocation, completely isolated from batch processing workloads. Implementation timeline is 15 days: 5 days for specification and cost analysis, 5 days for pilot testing, and 5 days for production validation. As an interim measure, we are also separating batch data processing to different infrastructure to free up 46% of current shared capacity. This will restore the Notification History feature to its expected performance level of <5 seconds end-to-end response time.
 
 ---
 
@@ -165,12 +167,13 @@ Not just Messaging - **all interactive services affected:**
 3. **Investigate Nov 13 changes** - What Airflow/Metabase/n8n changes occurred?
 4. **Set up monitoring** - Alert on P95 queue times >30s
 
-### Next Week (Priority Order):
+### Next 10 Days (Priority Order):
 5. **🔴 TOP PRIORITY: Spec on-demand slot solution for messaging**
+   - ✅ **Planning complete** - See `MESSAGING_CAPACITY_PLANNING.md` for full TRD
    - Calculate 30-day historical usage and cost projection
    - Compare on-demand vs dedicated reservation economics
    - Get approval for approach
-   - Timeline: 3-week implementation plan
+   - Timeline: 3-day implementation (5 days with monitoring)
 
 6. **Deploy Option A** - Move Airflow to separate ETL reservation (if on-demand not ready)
    - Impact: Frees up 46% of reservation capacity
@@ -190,6 +193,9 @@ Not just Messaging - **all interactive services affected:**
 
 **Recommended Architecture:** Configure messaging service account to use **on-demand slots** instead of shared reservation.
 
+> 📋 **For detailed implementation planning, see:** [`MESSAGING_CAPACITY_PLANNING.md`](MESSAGING_CAPACITY_PLANNING.md)  
+> Complete TRD with capacity calculations, pricing comparisons, step-by-step deployment guide, risk analysis, and monitoring strategies.
+
 ### Why On-Demand for Messaging?
 
 **Benefits:**
@@ -208,7 +214,7 @@ Not just Messaging - **all interactive services affected:**
 
 ### Implementation Plan (TOP PRIORITY)
 
-**Phase 1: Assessment & Specification (Week 1)**
+**Phase 1: Assessment & Specification (Days 1-5)**
 1. Calculate exact on-demand cost based on 30-day historical usage
 2. Determine capacity requirements:
    - Peak concurrent queries: ~10-15 per user search
@@ -217,15 +223,15 @@ Not just Messaging - **all interactive services affected:**
 3. Compare on-demand vs small dedicated reservation costs
 4. Document service account configuration changes
 
-**Phase 2: Pilot (Week 2)**
+**Phase 2: Pilot (Days 6-10)**
 1. Configure `messaging@narvar-data-lake.iam.gserviceaccount.com` to use on-demand slots
-2. Monitor performance for 3-5 days:
+2. Monitor performance for 5 days:
    - Queue times (should be <1s)
    - Execution times (should remain ~2s)
    - Cost per day
 3. Validate SLA achievement (P95 <5s total time)
 
-**Phase 3: Production Rollout (Week 3)**
+**Phase 3: Production Rollout (Days 11-15)**
 1. Full migration if pilot successful
 2. Set up cost monitoring/alerting
 3. Document new architecture
@@ -235,7 +241,14 @@ Not just Messaging - **all interactive services affected:**
 - If usage <10 TB/month: **On-demand is cheaper** (~$62/month vs $300/month)
 - If usage >20 TB/month: **Dedicated reservation is cheaper**
 
-**Status:** ⏳ **Needs specification and approval** - This is a TOP PRIORITY work item
+**Status:** ✅ **Planning complete** - See `MESSAGING_CAPACITY_PLANNING.md` for full TRD
+
+**Key Planning Outcomes:**
+- **Minimum capacity needed:** 50-100 slots (but on-demand provides unlimited)
+- **Best pricing option:** On-demand at $27/month (vs $146/month for 50-slot reservation)
+- **Deployment complexity:** Very low (5-minute change, 30-second rollback)
+- **Timeline:** 3-5 days total (2 days prep, 1 day deploy, 2-3 days validation)
+- **Risk level:** Very low (complete isolation, no app changes, instant rollback)
 
 ---
 
@@ -259,9 +272,23 @@ SQL queries: `queries/` folder (9 analysis queries, $1.85 cost)
 
 ## Related Documents
 
+### Analysis & Root Cause:
 - **FINDINGS.md** - Comprehensive root cause analysis with detailed data
 - **CHOKE_POINTS_ANALYSIS.md** - 10-minute period analysis identifying n8n Shopify as primary culprit during delays
 - **README.md** - Investigation overview and file structure
+
+### Implementation Planning:
+- **MESSAGING_CAPACITY_PLANNING.md** ⭐ **Technical Requirements Document (TRD)**
+  - Complete capacity planning and implementation guide
+  - Minimum capacity requirements: 50-100 slots
+  - Pricing options comparison: On-demand ($27/month) vs Flex ($146/month) vs Annual ($200/month)
+  - Detailed 15-day implementation plan with rollback procedures
+  - Risk analysis and mitigation strategies
+  - Technical commands for deployment
+  - Monitoring and success metrics
+  - **Recommendation:** Start with on-demand slots (5-minute deployment, <$30/month)
+
+### Supporting Data:
 - **queries/** - All SQL analysis queries (validated and executed)
 - **results/** - Query output data (CSV and JSON formats)
 

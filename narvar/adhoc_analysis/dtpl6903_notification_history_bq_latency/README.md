@@ -27,29 +27,30 @@ Notification History feature experiencing significant BigQuery latency issues:
 
 **Root cause hypothesis**: Queue wait time (not execution time) is the problem.
 
-## Investigation Plan
+## Investigation Status: ✅ COMPLETE
 
-### Phase 1: Queue Time Analysis (Priority 1)
-**Goal**: Understand when and why queries are getting queued
+### Root Cause Identified:
+- **Primary:** BigQuery reservation `bq-narvar-admin:US.default` saturated at maximum autoscale (1,700 slots)
+- **Secondary:** n8n Shopify ingestion causes 88% of worst notification history delay periods
+- **Impact:** Queue wait times 8-9 minutes vs 2-second execution times (279:1 ratio)
 
-1. `01_messaging_queue_time_analysis.sql` - Analyze wait times over last 7 days
-2. `02_reservation_utilization_during_delays.sql` - Check slot utilization when delays occur
-3. `03_concurrent_workload_analysis.sql` - Identify competing workloads
+### Solution Recommended:
+- **Immediate:** Configure messaging to use on-demand slots (~$27/month, 5-minute deployment)
+- **Alternative:** Move Airflow to separate reservation (frees 46% capacity, $3,000-4,500/month)
+- **Investigation:** n8n Shopify query efficiency (consuming 6,631 slot-minutes/minute overnight)
 
-### Phase 2: Query Profiling
-**Goal**: Characterize the messaging workload
+## Document Guide
 
-4. `04_query_pattern_classification.sql` - Classify query types
-5. `05_retailer_breakdown.sql` - Breakdown by retailer
-6. `06_resource_consumption.sql` - Analyze bytes/slots per query
-7. `07_time_series_analysis.sql` - Trend analysis over 3 weeks
+### 📖 Start Here:
+1. **EXECUTIVE_SUMMARY.md** - Read first for high-level overview and non-technical summary for Jira ticket
+2. **MESSAGING_CAPACITY_PLANNING.md** - Read second for complete implementation plan
 
-### Phase 3: Recommendations
-Based on findings, determine if issue is:
-- **Capacity**: Need more slots in reservation
-- **Priority**: Need higher priority for interactive queries
-- **Architecture**: 10 parallel queries is too aggressive
-- **Optimization**: Queries need indexes/optimization
+### 📊 Deep Dives:
+3. **FINDINGS.md** - Detailed technical analysis and data tables
+4. **CHOKE_POINTS_ANALYSIS.md** - Specific time periods and competing workload analysis
+
+### 🔧 Implementation:
+5. **MESSAGING_CAPACITY_PLANNING.md** - TRD with deployment commands, monitoring, and risk mitigation
 
 ## Service Account Details
 
@@ -71,11 +72,41 @@ Each search = 10 parallel queries across these tables.
 
 ## Files in This Investigation
 
+### Overview & Navigation:
 - `README.md` - This file
 - `f75bba68-ddac-4744-af30-834be6b149d9.png` - Screenshot showing 8-minute delay
-- `queries/` - SQL analysis queries (9 queries total)
-- `results/` - Query results and findings
-- **`FINDINGS.md`** - ⭐ Comprehensive root cause analysis (Airflow 46% + Metabase 31%)
-- **`EXECUTIVE_SUMMARY.md`** - One-page summary for stakeholders
-- **`CHOKE_POINTS_ANALYSIS.md`** - ⭐ NEW: 10-minute period analysis showing n8n Shopify as primary culprit
+
+### Analysis Documents:
+- **`EXECUTIVE_SUMMARY.md`** ⭐ - One-page summary for stakeholders (ready for Jira ticket)
+- **`FINDINGS.md`** - Comprehensive root cause analysis showing reservation saturation
+  - Airflow (46%) + Metabase (31%) = 77% of capacity
+  - Queue wait vs execution time breakdown
+  - Reservation running at max autoscale (1,700 slots)
+- **`CHOKE_POINTS_ANALYSIS.md`** - 10-minute period analysis
+  - n8n Shopify identified as primary culprit (88% of worst delays)
+  - Overnight periods with 6,631 slot-minutes/minute consumption
+  - Time-of-day patterns and recommendations
+
+### Implementation Planning:
+- **`MESSAGING_CAPACITY_PLANNING.md`** ⭐ **Technical Requirements Document (TRD)**
+  - **Purpose:** Complete implementation guide for deploying dedicated BigQuery capacity
+  - **Capacity Requirements:** 50-100 slots minimum (based on peak concurrency analysis)
+  - **Pricing Options:**
+    - On-demand: $27/month (recommended for Phase 1)
+    - Flex slots: $146/month (if usage exceeds 24 TB/month)
+    - Annual commitment: $200/month (if usage exceeds 35 TB/month)
+  - **Implementation Timeline:** 3-5 days
+    - Days 1-2: Specification & approval (baseline measurement query included)
+    - Day 2: Pilot deployment (5-minute change to remove reservation assignment)
+    - Days 2-5: Monitoring & validation
+  - **Architecture:** Service account uses on-demand slots (no reservation)
+  - **Risk Analysis:** 5 major risks identified with mitigation strategies
+  - **Deployment Commands:** Complete bash/SQL scripts for implementation and rollback
+  - **Monitoring:** Daily dashboard query and alert thresholds
+  - **Success Metrics:** P95 queue <1s, cost <$150/month
+  - **Current Reservation Status:** bq-narvar-admin:US.default at 1,700 slots (maxed out)
+
+### Supporting Data:
+- `queries/` - 9 SQL analysis queries (all validated and executed, $1.85 total cost)
+- `results/` - Query outputs (CSV and JSON formats)
 

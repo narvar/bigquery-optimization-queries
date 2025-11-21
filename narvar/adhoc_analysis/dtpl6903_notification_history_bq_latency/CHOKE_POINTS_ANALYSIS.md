@@ -178,7 +178,7 @@ Slot consumption: 2,614 slot-minutes/minute
 
 ---
 
-### Medium-term (Next Week):
+### Medium-term (Next 7-10 Days):
 
 **4. Separate reservation architecture**
 
@@ -209,7 +209,7 @@ Create workload-specific reservations:
 
 ---
 
-### Long-term (Next Month):
+### Long-term (Days 15-30):
 
 **5. Query optimization audit**
 - Focus on n8n queries consuming >100 slot-minutes
@@ -259,12 +259,12 @@ Create workload-specific reservations:
    - Identify inefficient queries
    - Plan reservation separation
 
-2. [ ] **THIS WEEK:** Implement n8n reservation separation
+2. [ ] **DAYS 1-7:** Implement n8n reservation separation
    - Create `bq-narvar-ingestion:US` reservation (50-100 slots)
    - Move `n8n-bigquery-shopify-ingestion@narvar-data-lake.iam.gserviceaccount.com`
    - Monitor impact for 3 days
 
-3. [ ] **NEXT WEEK:** Implement full reservation architecture
+3. [ ] **DAYS 8-15:** Implement full reservation architecture
    - Create separate Interactive, ETL, BI, Ingestion reservations
    - Migrate services in phases
    - Set up monitoring/alerting
