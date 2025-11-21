@@ -1659,6 +1659,8 @@ You're starting Monday with:
 
 **Communication style:** Continue professional, critical tone. Challenge assumptions. Provide feedback.
 
+**Important reminder:** Always include GitHub URLs in Slack updates [[memory:11450179]] - makes it easy for stakeholders to access documents directly.
+
 ---
 
 **From:** Today's Sophia (Nov 21, Evening)

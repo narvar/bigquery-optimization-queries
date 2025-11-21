@@ -1,6 +1,6 @@
 # 📊 Data Engineering Update - November 21, 2025
 
-## 🔴 CRITICAL: DTPL-6903 Notification History Latency - RESOLVED
+## 🔴 CRITICAL: DTPL-6903 Notification History Latency - WIP
 
 **Issue:** Notification History feature experiencing 8-9 minute delays (Lands' End escalation NT-1363)
 
@@ -20,6 +20,12 @@
 **Deliverables:** Complete investigation with TRD, root cause analysis, and implementation guide
 - 📁 `narvar/adhoc_analysis/dtpl6903_notification_history_bq_latency/`
 - 9 SQL queries, $1.85 analysis cost, 95% confidence
+
+**📄 Key Documents:**
+- [Executive Summary](https://github.com/narvar/bigquery-optimization-queries/blob/main/narvar/adhoc_analysis/dtpl6903_notification_history_bq_latency/EXECUTIVE_SUMMARY.md) - Ready for Jira ticket with non-technical summary
+- [Technical Requirements Doc (TRD)](https://github.com/narvar/bigquery-optimization-queries/blob/main/narvar/adhoc_analysis/dtpl6903_notification_history_bq_latency/MESSAGING_CAPACITY_PLANNING.md) - Complete implementation guide
+- [Root Cause Analysis](https://github.com/narvar/bigquery-optimization-queries/blob/main/narvar/adhoc_analysis/dtpl6903_notification_history_bq_latency/FINDINGS.md) - Detailed technical findings
+- [Choke Points Analysis](https://github.com/narvar/bigquery-optimization-queries/blob/main/narvar/adhoc_analysis/dtpl6903_notification_history_bq_latency/CHOKE_POINTS_ANALYSIS.md) - n8n Shopify impact analysis
 
 **Next Steps:** Schedule deployment with messaging team (recommended: next week)
 
