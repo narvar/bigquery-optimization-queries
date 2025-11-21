@@ -1,0 +1,291 @@
+WITH notification_queries AS (
+  SELECT
+    job_id,
+    creation_time,
+    start_time,
+    end_time,
+    TIMESTAMP_TRUNC(creation_time, MINUTE, 'America/Los_Angeles') AS minute_bucket,
+    TIMESTAMP_TRUNC(creation_time, HOUR, 'America/Los_Angeles') AS hour_bucket,
+    DATE(creation_time, 'America/Los_Angeles') AS date_bucket,
+    
+    -- Time components for 10-minute bucketing
+    EXTRACT(HOUR FROM creation_time AT TIME ZONE 'America/Los_Angeles') AS hour_pst,
+    DIV(EXTRACT(MINUTE FROM creation_time AT TIME ZONE 'America/Los_Angeles'), 10) AS ten_min_bucket,
+    
+    -- Timing metrics
+    TIMESTAMP_DIFF(start_time, creation_time, SECOND) AS queue_seconds,
+    TIMESTAMP_DIFF(end_time, start_time, SECOND) AS execution_seconds,
+    
+    -- Resource metrics
+    total_slot_ms / 1000 AS slot_seconds,
+    total_bytes_processed / POW(1024, 3) AS gb_processed,
+    
+    query
+    
+  FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+  WHERE creation_time BETWEEN analysis_start_date AND analysis_end_date
+    AND user_email = target_user
+    AND job_type = 'QUERY'
+    AND state = 'DONE'
+    -- Pattern matching for notification history queries
+    AND (
+      LOWER(query) LIKE '%pubsub_rules_engine_pulsar_debug%'
+      OR LOWER(query) LIKE '%pubsub_rules_engine_pulsar_debug_v2%'
+      OR LOWER(query) LIKE '%pubsub_rules_engine_kafka%'
+    )
+    AND LOWER(query) LIKE '%retailer_moniker%'
+    AND (
+      LOWER(query) LIKE '%order_number%'
+      OR LOWER(query) LIKE '%tracking_number%'
+    )
+),
+
+-- Step 2: Aggregate notification queries by 10-minute buckets
+notification_metrics AS (
+  SELECT
+    date_bucket,
+    hour_pst,
+    ten_min_bucket,
+    TIMESTAMP_TRUNC(minute_bucket, MINUTE) AS ten_min_window_start,
+    
+    COUNT(*) AS notification_queries,
+    
+    -- Queue time metrics for notification queries
+    AVG(queue_seconds) AS avg_queue_sec,
+    APPROX_QUANTILES(queue_seconds, 100)[OFFSET(50)] AS p50_queue_sec,
+    APPROX_QUANTILES(queue_seconds, 100)[OFFSET(90)] AS p90_queue_sec,
+    MAX(queue_seconds) AS max_queue_sec,
+    
+    -- Execution time
+    AVG(execution_seconds) AS avg_exec_sec,
+    
+    -- Resource consumption
+    SUM(gb_processed) AS total_gb,
+    
+    -- Problem detection
+    COUNTIF(queue_seconds > 60) AS queries_delayed_over_1min,
+    COUNTIF(queue_seconds > 300) AS queries_delayed_over_5min
+    
+  FROM notification_queries
+  GROUP BY date_bucket, hour_pst, ten_min_bucket, ten_min_window_start
+),
+
+-- Step 3: Get ALL reservation activity during the same 10-minute windows
+concurrent_workload AS (
+  SELECT
+    TIMESTAMP_TRUNC(creation_time, MINUTE, 'America/Los_Angeles') AS minute_bucket,
+    
+    -- Count queries by state at time of creation
+    COUNT(*) AS total_queries_submitted,
+    
+    -- Estimate concurrent running/pending queries
+    -- (queries that overlap with this minute)
+    COUNT(DISTINCT 
+      CASE 
+        WHEN state IN ('RUNNING', 'PENDING') 
+        THEN job_id 
+      END
+    ) AS concurrent_active_queries,
+    
+    -- Slot consumption
+    SUM(total_slot_ms) / 60000 AS slot_minutes_consumed,
+    
+    -- Breakdown by user/service
+    COUNT(DISTINCT user_email) AS distinct_users,
+    
+    -- Service breakdown
+    COUNTIF(user_email LIKE '%airflow%') AS airflow_queries,
+    COUNTIF(user_email LIKE '%metabase%') AS metabase_queries,
+    COUNTIF(user_email LIKE '%messaging%') AS messaging_queries,
+    COUNTIF(user_email LIKE '%looker%') AS looker_queries,
+    COUNTIF(user_email LIKE '%n8n%') AS n8n_queries,
+    
+    -- Query types
+    COUNTIF(statement_type = 'SELECT') AS select_count,
+    COUNTIF(statement_type IN ('MERGE', 'INSERT', 'UPDATE')) AS write_count
+    
+  FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+  WHERE creation_time BETWEEN analysis_start_date AND analysis_end_date
+    AND reservation_id = target_reservation
+    AND job_type = 'QUERY'
+  GROUP BY minute_bucket
+)
+
+-- Step 4: Join notification metrics with concurrent workload
+SELECT
+  nm.date_bucket,
+  nm.hour_pst,
+  nm.ten_min_bucket,
+  CONCAT(
+    CAST(nm.hour_pst AS STRING), 
+    ':', 
+    LPAD(CAST(nm.ten_min_bucket * 10 AS STRING), 2, '0')
+  ) AS time_window_pst,
+  
+  -- Notification query performance
+  nm.notification_queries,
+  ROUND(nm.avg_queue_sec, 1) AS avg_queue_sec,
+  nm.p50_queue_sec,
+  nm.p90_queue_sec,
+  nm.max_queue_sec,
+  ROUND(nm.avg_exec_sec, 1) AS avg_exec_sec,
+  
+  nm.queries_delayed_over_1min,
+  nm.queries_delayed_over_5min,
+  
+  -- Concurrent workload metrics (aggregated across 10 minutes)
+  CAST(AVG(cw.total_queries_submitted) AS INT64) AS avg_queries_per_min,
+  CAST(MAX(cw.total_queries_submitted) AS INT64) AS max_queries_per_min,
+  CAST(AVG(cw.concurrent_active_queries) AS INT64) AS avg_concurrent_active,
+  ROUND(AVG(cw.slot_minutes_consumed), 0) AS avg_slot_minutes_per_min,
+  ROUND(MAX(cw.slot_minutes_consumed), 0) AS max_slot_minutes_per_min,
+  ROUND(AVG(cw.distinct_users), 0) AS avg_distinct_users,
+  
+  -- Service breakdown during this 10-minute window
+  CAST(SUM(cw.airflow_queries) AS INT64) AS airflow_queries_10min,
+  CAST(SUM(cw.metabase_queries) AS INT64) AS metabase_queries_10min,
+  CAST(SUM(cw.looker_queries) AS INT64) AS looker_queries_10min,
+  CAST(SUM(cw.n8n_queries) AS INT64) AS n8n_queries_10min,
+  
+  -- Identify primary competing service
+  CASE
+    WHEN SUM(cw.airflow_queries) > SUM(cw.metabase_queries) 
+      AND SUM(cw.airflow_queries) > SUM(cw.looker_queries)
+      AND SUM(cw.airflow_queries) > SUM(cw.n8n_queries)
+    THEN 'Airflow/ETL'
+    WHEN SUM(cw.metabase_queries) > SUM(cw.airflow_queries)
+      AND SUM(cw.metabase_queries) > SUM(cw.looker_queries)
+      AND SUM(cw.metabase_queries) > SUM(cw.n8n_queries)
+    THEN 'Metabase'
+    WHEN SUM(cw.n8n_queries) > SUM(cw.airflow_queries)
+      AND SUM(cw.n8n_queries) > SUM(cw.metabase_queries)
+    THEN 'n8n'
+    WHEN SUM(cw.looker_queries) > 0 THEN 'Looker'
+    ELSE 'Mixed'
+  END AS primary_competing_service,
+  
+  -- Total workload mix
+  CAST(AVG(cw.select_count) AS INT64) AS avg_selects_per_min,
+  CAST(AVG(cw.write_count) AS INT64) AS avg_writes_per_min
+
+FROM notification_metrics nm
+LEFT JOIN concurrent_workload cw
+  ON TIMESTAMP_TRUNC(cw.minute_bucket, MINUTE) >= nm.ten_min_window_start
+  AND TIMESTAMP_TRUNC(cw.minute_bucket, MINUTE) < TIMESTAMP_ADD(nm.ten_min_window_start, INTERVAL 10 MINUTE)
+GROUP BY 
+  nm.date_bucket,
+  nm.hour_pst,
+  nm.ten_min_bucket,
+  time_window_pst,
+  nm.notification_queries,
+  nm.avg_queue_sec,
+  nm.p50_queue_sec,
+  nm.p90_queue_sec,
+  nm.max_queue_sec,
+  nm.avg_exec_sec,
+  nm.queries_delayed_over_1min,
+  nm.queries_delayed_over_5min
+HAVING notification_queries > 0
+ORDER BY nm.max_queue_sec DESC, nm.p90_queue_sec DESC
+LIMIT 100; -- at [17:1]
+date_bucket,hour_pst,ten_min_bucket,time_window_pst,notification_queries,avg_queue_sec,p50_queue_sec,p90_queue_sec,max_queue_sec,avg_exec_sec,queries_delayed_over_1min,queries_delayed_over_5min,avg_queries_per_min,max_queries_per_min,avg_concurrent_active,avg_slot_minutes_per_min,max_slot_minutes_per_min,avg_distinct_users,airflow_queries_10min,metabase_queries_10min,looker_queries_10min,n8n_queries_10min,primary_competing_service,avg_selects_per_min,avg_writes_per_min
+2025-11-21,0,1,0:10,1,504.0,504,504,504,2.0,1,1,22,64,0,277.0,1589.0,3.0,12,71,2,88,n8n,18,3
+2025-11-21,0,1,0:10,2,447.5,444,451,451,1.5,2,2,25,97,0,333.0,1589.0,3.0,4,9,2,197,n8n,20,5
+2025-11-20,8,2,8:20,1,445.0,445,445,445,6.0,1,1,51,139,0,73.0,303.0,5.0,4,72,5,102,n8n,45,6
+2025-11-20,8,2,8:20,2,393.0,387,399,399,7.5,2,2,59,139,0,76.0,303.0,5.0,5,63,6,120,n8n,53,6
+2025-11-20,8,3,8:30,1,356.0,356,356,356,37.0,1,1,56,139,0,264.0,1824.0,4.0,6,37,6,121,n8n,51,6
+2025-11-20,8,2,8:20,2,320.5,309,332,332,6.5,2,2,35,75,0,162.0,364.0,5.0,6,145,3,67,Metabase,31,3
+2025-11-19,11,5,11:50,1,317.0,317,317,317,6.0,1,1,65,165,0,642.0,2551.0,5.0,18,284,11,116,Metabase,58,7
+2025-11-20,8,2,8:20,1,307.0,307,307,307,18.0,1,1,39,75,0,272.0,1103.0,5.0,8,163,3,81,Metabase,35,4
+2025-11-21,7,2,7:20,2,138.5,48,229,229,0.5,1,0,66,161,0,432.0,1917.0,5.0,10,25,60,204,n8n,56,11
+2025-11-20,8,1,8:10,3,163.7,189,219,219,1.7,3,0,39,83,0,356.0,1103.0,5.0,7,85,7,130,n8n,33,6
+2025-11-21,7,3,7:30,2,202.0,194,210,210,0.5,2,0,66,161,0,251.0,1917.0,5.0,10,25,60,222,n8n,54,12
+2025-11-20,8,2,8:20,3,120.7,169,192,192,2.0,2,0,48,83,0,311.0,1103.0,5.0,4,174,8,118,Metabase,41,6
+2025-11-18,8,0,8:00,1,180.0,180,180,180,1.0,1,0,70,123,0,781.0,2614.0,6.0,52,192,56,231,n8n,58,12
+2025-11-20,8,1,8:10,1,174.0,174,174,174,2.0,1,0,41,83,0,382.0,1103.0,5.0,4,146,7,114,Metabase,36,6
+2025-11-21,6,0,6:00,2,158.0,147,169,169,3.0,2,0,124,277,0,538.0,2068.0,7.0,55,116,434,246,n8n,111,13
+2025-11-19,11,5,11:50,1,151.0,151,151,151,17.0,1,0,42,143,0,205.0,764.0,5.0,9,131,16,96,Metabase,37,5
+2025-11-21,8,0,8:00,3,136.0,135,149,149,1.0,3,0,82,174,0,461.0,1907.0,7.0,27,58,90,158,n8n,74,7
+2025-11-21,6,1,6:10,1,135.0,135,135,135,0.0,1,0,85,180,0,360.0,1258.0,6.0,26,161,8,203,n8n,74,10
+2025-11-21,6,0,6:00,1,128.0,128,128,128,0.0,1,0,121,277,0,536.0,2068.0,7.0,50,94,438,248,n8n,108,13
+2025-11-21,0,0,0:00,1,105.0,105,105,105,1.0,1,0,29,67,0,1434.0,6631.0,5.0,16,60,18,160,n8n,25,4
+2025-11-21,6,2,6:20,1,102.0,102,102,102,3.0,1,0,57,111,0,442.0,2010.0,5.0,7,71,7,281,n8n,42,15
+2025-11-21,6,1,6:10,2,81.0,66,96,96,1.5,2,0,74,152,0,206.0,456.0,6.0,24,117,34,219,n8n,62,12
+2025-11-20,8,1,8:10,1,94.0,94,94,94,1.0,1,0,42,83,0,298.0,1103.0,5.0,11,82,9,146,n8n,34,7
+2025-11-20,8,0,8:00,3,79.0,76,87,87,1.7,3,0,76,106,0,954.0,2118.0,6.0,41,170,33,207,n8n,67,9
+2025-11-21,6,2,6:20,1,85.0,85,85,85,0.0,1,0,91,180,0,358.0,1258.0,6.0,26,200,10,249,n8n,77,13
+2025-11-21,6,2,6:20,2,67.5,51,84,84,1.0,1,0,57,111,0,507.0,2010.0,5.0,7,56,7,294,n8n,41,16
+2025-11-19,11,1,11:10,1,77.0,77,77,77,1.0,1,0,62,96,0,403.0,2030.0,6.0,12,48,55,91,n8n,57,5
+2025-11-19,11,4,11:40,1,75.0,75,75,75,0.0,1,0,38,58,0,691.0,2453.0,6.0,12,184,27,48,Metabase,35,2
+2025-11-21,6,1,6:10,2,61.0,55,67,67,0.5,1,0,73,152,0,206.0,456.0,5.0,24,117,29,219,n8n,61,12
+2025-11-21,8,1,8:10,1,63.0,63,63,63,2.0,1,0,78,100,0,436.0,1192.0,6.0,16,100,174,152,n8n,71,7
+2025-11-21,7,2,7:20,3,55.7,53,62,62,2.3,1,0,62,161,0,432.0,1917.0,5.0,10,25,60,168,n8n,53,9
+2025-11-20,8,0,8:00,2,54.0,46,62,62,6.0,1,0,81,107,0,917.0,2118.0,6.0,61,170,61,209,n8n,72,9
+2025-11-19,10,2,10:20,1,59.0,59,59,59,1.0,0,0,48,82,0,533.0,2435.0,6.0,16,89,17,104,n8n,41,6
+2025-11-21,6,1,6:10,2,45.5,34,57,57,1.0,0,0,75,152,0,173.0,358.0,6.0,25,85,26,239,n8n,62,12
+2025-11-20,8,3,8:30,1,50.0,50,50,50,1.0,0,0,100,181,0,410.0,1824.0,5.0,6,111,11,268,n8n,93,8
+2025-11-21,7,3,7:30,3,15.0,0,45,45,1.0,0,0,57,104,0,92.0,513.0,4.0,9,1,6,251,n8n,44,13
+2025-11-20,7,2,7:20,2,37.0,30,44,44,0.5,0,0,72,92,0,312.0,1830.0,6.0,27,29,93,234,n8n,62,10
+2025-11-21,8,1,8:10,3,34.0,32,42,42,0.7,0,0,84,127,0,349.0,1192.0,6.0,18,113,27,296,n8n,68,15
+2025-11-20,8,0,8:00,2,34.5,28,41,41,1.0,0,0,73,106,0,1087.0,2118.0,6.0,43,159,27,216,n8n,63,10
+2025-11-20,8,1,8:10,1,40.0,40,40,40,3.0,0,0,43,83,0,269.0,1103.0,6.0,13,79,10,152,n8n,35,8
+2025-11-20,8,3,8:30,4,26.0,21,40,40,3.3,0,0,101,181,0,414.0,1824.0,5.0,9,98,13,281,n8n,94,7
+2025-11-21,6,4,6:40,1,37.0,37,37,37,1.0,0,0,50,105,0,101.0,522.0,4.0,7,22,6,268,n8n,35,14
+2025-11-20,8,3,8:30,5,32.0,30,36,36,1.4,0,0,93,181,0,450.0,1824.0,5.0,15,102,11,317,n8n,86,6
+2025-11-21,8,3,8:30,1,35.0,35,35,35,2.0,0,0,74,145,0,876.0,5376.0,5.0,9,62,6,324,n8n,57,17
+2025-11-21,8,1,8:10,1,33.0,33,33,33,1.0,0,0,78,100,0,341.0,1192.0,6.0,16,101,140,175,n8n,69,9
+2025-11-20,8,3,8:30,6,24.5,21,33,33,5.8,0,0,97,181,0,416.0,1824.0,5.0,12,99,11,303,n8n,91,7
+2025-11-21,8,0,8:00,4,23.5,20,32,32,0.8,0,0,81,109,0,539.0,1907.0,6.0,15,38,170,139,n8n,74,7
+2025-11-21,7,1,7:10,5,22.6,26,32,32,3.6,0,0,58,77,0,268.0,1031.0,4.0,11,68,7,270,n8n,46,12
+2025-11-20,8,1,8:10,3,18.7,21,32,32,1.7,0,0,38,60,0,349.0,1364.0,6.0,16,49,12,147,n8n,32,6
+2025-11-20,8,0,8:00,3,21.7,19,31,31,1.3,0,0,74,106,0,1086.0,2118.0,6.0,40,159,27,232,n8n,63,10
+2025-11-21,6,0,6:00,5,21.8,21,31,31,0.8,0,0,126,277,0,389.0,2068.0,7.0,45,124,435,267,n8n,111,14
+2025-11-21,7,3,7:30,3,21.0,23,28,28,0.3,0,0,62,116,0,96.0,513.0,4.0,9,1,6,260,n8n,48,14
+2025-11-21,8,1,8:10,2,26.5,26,27,27,1.0,0,0,79,127,0,216.0,571.0,6.0,10,36,27,294,n8n,63,16
+2025-11-21,7,3,7:30,2,23.5,20,27,27,2.0,0,0,73,161,0,297.0,1917.0,5.0,8,25,42,252,n8n,59,14
+2025-11-19,10,2,10:20,2,14.0,1,27,27,1.0,0,0,50,82,0,320.0,1182.0,6.0,17,90,15,120,n8n,42,7
+2025-11-21,8,0,8:00,2,13.5,0,27,27,1.0,0,0,81,109,0,490.0,1907.0,6.0,21,43,127,147,n8n,74,7
+2025-11-21,7,4,7:40,3,11.7,11,24,24,0.7,0,0,53,116,0,59.0,274.0,4.0,6,1,6,244,n8n,40,12
+2025-11-21,8,1,8:10,1,23.0,23,23,23,2.0,0,0,79,127,0,309.0,1192.0,6.0,8,85,29,293,n8n,63,16
+2025-11-21,7,1,7:10,2,11.5,0,23,23,0.5,0,0,54,77,0,171.0,660.0,4.0,14,52,7,239,n8n,45,10
+2025-11-19,11,1,11:10,2,14.5,6,23,23,0.5,0,0,70,96,0,366.0,2030.0,5.0,10,75,55,102,n8n,65,5
+2025-11-21,8,1,8:10,4,16.3,17,21,21,1.0,0,0,85,127,0,346.0,1192.0,6.0,17,125,118,206,n8n,75,10
+2025-11-21,8,0,8:00,4,15.5,20,21,21,0.5,0,0,79,107,0,396.0,998.0,6.0,22,66,170,134,n8n,73,6
+2025-11-21,6,0,6:00,2,18.0,15,21,21,0.5,0,0,88,152,0,424.0,2068.0,6.0,27,161,118,251,n8n,74,13
+2025-11-21,5,3,5:30,2,9.5,0,19,19,1.0,0,0,49,59,0,46.0,220.0,4.0,11,86,6,236,n8n,37,12
+2025-11-20,7,5,7:50,1,18.0,18,18,18,1.0,0,0,62,107,0,100.0,637.0,5.0,25,86,48,170,n8n,54,7
+2025-11-21,8,2,8:20,1,16.0,16,16,16,1.0,0,0,72,127,0,239.0,592.0,5.0,11,36,6,279,n8n,57,15
+2025-11-19,11,4,11:40,1,16.0,16,16,16,2.0,0,0,43,81,0,879.0,2453.0,6.0,18,223,27,48,Metabase,41,2
+2025-11-21,6,1,6:10,1,15.0,15,15,15,1.0,0,0,87,180,0,404.0,1258.0,5.0,27,140,8,225,n8n,75,12
+2025-11-19,11,3,11:30,2,7.5,0,15,15,2.5,0,0,62,84,0,155.0,663.0,6.0,12,98,7,107,n8n,56,6
+2025-11-21,6,5,6:50,2,7.0,0,14,14,1.0,0,0,57,104,0,464.0,2730.0,5.0,15,100,51,175,n8n,49,8
+2025-11-21,7,3,7:30,3,8.7,12,14,14,1.3,0,0,73,161,0,296.0,1917.0,5.0,8,25,25,254,n8n,59,14
+2025-11-21,7,4,7:40,4,3.5,0,14,14,3.0,0,0,57,116,0,106.0,513.0,4.0,7,1,6,233,n8n,45,12
+2025-11-21,6,0,6:00,2,6.5,0,13,13,1.0,0,0,87,152,0,423.0,2068.0,6.0,25,157,99,254,n8n,73,14
+2025-11-21,6,3,6:30,2,6.5,0,13,13,1.0,0,0,51,105,0,263.0,819.0,4.0,6,43,6,258,n8n,37,14
+2025-11-21,5,2,5:20,1,13.0,13,13,13,1.0,0,0,45,89,0,304.0,1923.0,5.0,9,4,7,237,n8n,32,12
+2025-11-21,8,1,8:10,1,13.0,13,13,13,0.0,0,0,83,127,0,396.0,1192.0,6.0,18,114,75,242,n8n,70,12
+2025-11-21,8,0,8:00,1,13.0,13,13,13,1.0,0,0,90,174,0,489.0,1907.0,6.0,23,50,113,198,n8n,79,10
+2025-11-19,11,3,11:30,3,4.3,3,10,10,2.7,0,0,71,130,0,823.0,4252.0,6.0,33,240,4,91,Metabase,67,5
+2025-11-21,6,1,6:10,2,8.0,7,9,9,0.5,0,0,87,180,0,285.0,1258.0,5.0,16,12,9,300,n8n,70,16
+2025-11-21,7,2,7:20,1,9.0,9,9,9,3.0,0,0,47,90,0,360.0,1812.0,5.0,16,16,24,219,n8n,36,11
+2025-11-19,7,2,7:20,2,7.5,7,8,8,4.5,0,0,69,110,0,1036.0,3272.0,6.0,13,148,7,110,Metabase,63,6
+2025-11-21,5,2,5:20,1,8.0,8,8,8,0.0,0,0,45,65,0,467.0,1923.0,5.0,14,11,6,277,n8n,31,14
+2025-11-21,7,3,7:30,1,8.0,8,8,8,1.0,0,0,60,116,0,104.0,513.0,4.0,9,1,6,246,n8n,47,13
+2025-11-21,2,3,2:30,1,8.0,8,8,8,1.0,0,0,11,17,0,81.0,477.0,3.0,14,37,7,12,Metabase,11,0
+2025-11-18,12,4,12:40,2,4.5,2,7,7,1.0,0,0,47,114,0,638.0,2839.0,4.0,27,95,31,0,Metabase,46,1
+2025-11-20,8,2,8:20,3,2.3,0,7,7,21.0,0,0,46,83,0,321.0,1103.0,5.0,7,170,5,118,Metabase,40,6
+2025-11-21,8,0,8:00,5,5.2,6,7,7,2.0,0,0,94,174,0,498.0,1907.0,6.0,25,54,124,196,n8n,84,10
+2025-11-21,3,0,3:00,1,6.0,6,6,6,287.0,0,0,70,108,0,744.0,1984.0,5.0,22,39,75,316,n8n,53,17
+2025-11-20,8,0,8:00,2,4.5,3,6,6,3.5,0,0,44,73,0,527.0,1827.0,6.0,18,55,13,143,n8n,38,6
+2025-11-21,5,1,5:10,1,6.0,6,6,6,2.0,0,0,38,54,0,107.0,761.0,5.0,17,38,10,242,n8n,25,13
+2025-11-21,6,0,6:00,1,6.0,6,6,6,1.0,0,0,97,152,0,423.0,2068.0,6.0,39,179,177,256,n8n,83,14
+2025-11-21,6,0,6:00,1,5.0,5,5,5,1.0,0,0,102,201,0,400.0,2068.0,6.0,45,188,277,219,n8n,91,11
+2025-11-19,10,4,10:40,2,2.5,0,5,5,1.0,0,0,59,104,0,280.0,1776.0,5.0,9,168,6,95,Metabase,54,5
+2025-11-20,8,0,8:00,1,5.0,5,5,5,3.0,0,0,52,106,0,659.0,2118.0,6.0,20,77,12,153,n8n,46,6
+2025-11-19,7,1,7:10,4,1.0,0,4,4,2.8,0,0,77,114,0,1128.0,3272.0,5.0,11,151,7,119,Metabase,70,7
+2025-11-20,6,0,6:00,1,3.0,3,3,3,1.0,0,0,47,68,0,443.0,1966.0,5.0,29,57,16,189,n8n,37,10
+2025-11-21,6,3,6:30,1,3.0,3,3,3,0.0,0,0,53,111,0,564.0,2010.0,4.0,6,44,7,304,n8n,37,16
+2025-11-21,6,0,6:00,1,3.0,3,3,3,1.0,0,0,123,277,0,412.0,2068.0,7.0,57,199,396,262,n8n,109,14
+2025-11-21,8,4,8:40,1,2.0,2,2,2,1.0,0,0,58,95,0,84.0,316.0,5.0,14,29,17,233,n8n,45,12
+2025-11-21,6,5,6:50,1,2.0,2,2,2,1.0,0,0,60,104,0,992.0,2730.0,5.0,35,162,51,133,Metabase,53,7

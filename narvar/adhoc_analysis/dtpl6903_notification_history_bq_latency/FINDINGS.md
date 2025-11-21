@@ -15,6 +15,22 @@
 
 **This is a NEW problem, not chronic.**
 
+### 🔴 The Problem in One Picture:
+
+```
+User Experience (Nov 21, 8am):
+┌──────────────────────────────────────────────────────────────────┐
+│ TOTAL DELAY: 9 minutes 3 seconds (558s)                         │
+│                                                                  │
+│ ████████████████████████████████████████████████████ ■          │
+│ ↑                                                     ↑          │
+│ Queue Wait: 8 min 58 sec (99.6%)               Execution: 2s    │
+│                                                     (0.4%)       │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**The queries are fast (2s). The problem is waiting for available slots (558s).**
+
 ---
 
 ## 📊 Key Findings
@@ -23,18 +39,20 @@
 
 The latency issue is **very recent** (last 8 days):
 
-| Date | Daily Queries | Avg Queue (s) | P90 Queue (s) | Max Queue (s) | Queries Delayed >1min | % Delayed |
-|------|---------------|---------------|---------------|---------------|-----------------------|-----------|
-| **Nov 21** | 9,674 | 14.7 | 507 | **558** | 249 | **2.6%** |
-| **Nov 20** | 14,654 | 2.4 | 188 | 476 | 177 | 1.2% |
-| **Nov 19** | 14,104 | 0.7 | 24 | 371 | 40 | 0.3% |
-| **Nov 18** | 12,912 | 1.5 | 180 | 180 | 23 | 0.2% |
-| **Nov 17** | 14,214 | 0.0 | 0 | 1 | 0 | 0.0% |
-| Nov 16 | 9,003 | 0.0 | 0 | 11 | 0 | 0.0% |
-| Nov 15 | 9,295 | 0.0 | 0 | 2 | 0 | 0.0% |
-| **Nov 14** | 11,674 | 3.4 | 194 | 212 | 85 | 0.7% |
-| Nov 13 | 12,927 | 0.1 | 1 | 61 | 5 | 0.0% |
-| Nov 1-12 | ~10-14K/day | 0.0 | 0-2 | 0-97 | 0-9 | 0.0% |
+| Date | Daily Queries | **Avg Queue Wait** | **Avg Execution** | **P90 Queue Wait** | **Max Queue Wait** | Queries Delayed >1min | % Delayed |
+|------|---------------|-------------------|-------------------|-------------------|-------------------|-----------------------|-----------|
+| **Nov 21** | 9,674 | **14.7s** | **3.9s** | **507s (8.5 min)** | **558s (9.3 min)** | 249 | **2.6%** |
+| **Nov 20** | 14,654 | **2.4s** | **3.2s** | **188s (3.1 min)** | **476s (7.9 min)** | 177 | 1.2% |
+| **Nov 19** | 14,104 | **0.7s** | **5.6s** | **24s** | **371s (6.2 min)** | 40 | 0.3% |
+| **Nov 18** | 12,912 | **1.5s** | **9.7s** | **180s (3 min)** | **180s (3 min)** | 23 | 0.2% |
+| **Nov 17** | 14,214 | **0.0s** | **4.3s** | **0s** | **1s** | 0 | 0.0% |
+| Nov 16 | 9,003 | **0.0s** | **3.1s** | **0s** | **11s** | 0 | 0.0% |
+| Nov 15 | 9,295 | **0.0s** | **2.2s** | **0s** | **2s** | 0 | 0.0% |
+| **Nov 14** | 11,674 | **3.4s** | **3.3s** | **194s (3.2 min)** | **212s (3.5 min)** | 85 | 0.7% |
+| Nov 13 | 12,927 | **0.1s** | **5.0s** | **1s** | **61s** | 5 | 0.0% |
+| Nov 1-12 | ~10-14K/day | **0.0s** | **2-3s** | **0-2s** | **0-97s** | 0-9 | 0.0% |
+
+**KEY INSIGHT:** Execution times are consistently fast (2-10s), but queue waits have spiked from 0s to 500+ seconds since Nov 13.
 
 **Pattern:** 
 - Oct 31 - Nov 12: **NO ISSUES** (baseline normal performance)
@@ -47,25 +65,35 @@ The latency issue is **very recent** (last 8 days):
 
 ---
 
-### Finding 2: Queue Wait Time is the Problem, Not Execution
+### Finding 2: Queue Wait Time is the Problem, Not Execution ⚠️
 
 The issue is **NOT slow query execution** - it's waiting for available slots:
 
 **Nov 21, 8am Hour (Worst Period):**
 - 69 queries submitted
-- **Average queue wait:** 246 seconds (4+ minutes)
-- **Max queue wait:** 558 seconds (9.3 minutes)
-- **P90 queue wait:** 507 seconds (8.5 minutes)
-- **Average execution time:** 2 seconds (queries run fine once started)
-- **Max execution time:** 11 seconds
+- **QUEUE WAIT TIME:**
+  - Average: **246 seconds (4.1 minutes)**
+  - P90: **507 seconds (8.5 minutes)**
+  - Max: **558 seconds (9.3 minutes)**
+- **EXECUTION TIME:**
+  - Average: **2 seconds** ✅ (queries run fine once started)
+  - Max: **11 seconds** ✅
+
+**Ratio: Waiting 246s for a 2s query = 123:1 wait-to-execution ratio**
+
+---
 
 **Nov 21, 2-4pm (Business Hours):**
 - 2,900 queries submitted
-- **P90 queue wait:** 27-99 seconds
-- **Average execution time:** 1-2 seconds
+- **QUEUE WAIT:** P90 = **27-99 seconds**
+- **EXECUTION:** Average = **1-2 seconds** ✅
 - 202 queries delayed >1 minute
 
-**Key Insight:** Queries execute quickly (1-2 seconds) but wait 4-9 minutes for slots.
+**Ratio: Waiting 30-99s for a 1-2s query = 15-50:1 wait-to-execution ratio**
+
+---
+
+**🔑 KEY INSIGHT:** The user experiences a **9-minute delay** but only **2 seconds** of that is actual query processing. The other **8 minutes and 58 seconds** is waiting in queue for available BigQuery slots.
 
 ---
 
@@ -73,14 +101,16 @@ The issue is **NOT slow query execution** - it's waiting for available slots:
 
 Analyzing Nov 21 hourly patterns:
 
-| Hour | Queries | P50 Queue | P90 Queue | P95 Queue | Max Queue | Delayed >1min | Delayed >5min | Delayed >8min |
-|------|---------|-----------|-----------|-----------|-----------|---------------|---------------|---------------|
-| **8am** | 69 | 176s | 507s | 508s | 558s | 47 | 32 | 12 |
-| 2pm | 730 | 0s | 99s | 131s | 174s | 122 | 0 | 0 |
-| 3pm | 970 | 0s | 30s | 51s | 231s | 40 | 0 | 0 |
-| 4pm | 1,200 | 0s | 27s | 33s | 152s | 40 | 0 | 0 |
-| 6pm | 1,070 | 0s | 0s | 0s | 1s | 0 | 0 | 0 |
-| Overnight | ~200-800 | 0s | 0-4s | 0-4s | 0-8s | 0 | 0 | 0 |
+| Hour | Queries | **P50 Queue Wait** | **P90 Queue Wait** | **P50 Execution** | **Total Time (P90)** | Delayed >1min | Delayed >8min |
+|------|---------|-------------------|-------------------|-------------------|---------------------|---------------|---------------|
+| **8am** | 69 | **176s (2.9 min)** | **507s (8.5 min)** | **2s** | **509s** | 47 | 12 |
+| 2pm | 730 | **0s** | **99s (1.6 min)** | **1s** | **100s** | 122 | 0 |
+| 3pm | 970 | **0s** | **30s** | **1s** | **33s** | 40 | 0 |
+| 4pm | 1,200 | **0s** | **27s** | **1s** | **28s** | 40 | 0 |
+| 6pm | 1,070 | **0s** | **0s** | **2s** | **2s** | 0 | 0 |
+| Overnight | ~200-800 | **0s** | **0-4s** | **2-3s** | **2-7s** | 0 | 0 |
+
+**KEY INSIGHT:** At 8am, queries wait 507s for slots but execute in 2s. During business hours (2-4pm), still seeing 27-99s queue waits vs 1s execution.
 
 **Hypothesis:** Something running around 7-9am is saturating the reservation.
 
@@ -136,33 +166,40 @@ The sudden onset suggests a discrete change event rather than gradual capacity d
 
 Analysis of all workloads in `bq-narvar-admin:US.default` reservation over 7 days:
 
-| Rank | Service | Slot Hours | % of Total | Queries | Avg Queue (s) | Max Queue (s) | P95 Queue |
-|------|---------|------------|-----------|---------|---------------|---------------|-----------|
-| 1 | **Airflow ETL** | 37,054 | **46%** | 28,030 | 1.1 | 519 | 0 |
-| 2 | **Metabase BI** | 24,717 | **31%** | 58,532 | 5.0 | 633 | 1 |
-| 3 | Messaging | 8,040 | 10% | 87,383 | 1.3 | 558 | 0 |
-| 4 | analytics-api (Hub) | 1,082 | 1% | 62,005 | 1.6 | 514 | 0 |
-| 5 | n8n Shopify | 497 | 0.6% | 185,064 | 7.6 | **1,139** | **31** |
-| 6 | Looker | 370 | 0.5% | 17,466 | 2.4 | 602 | 1 |
-| - | All others | 8,013 | 10% | 13,837 | - | - | - |
-| **TOTAL** | | **80,773** | **100%** | **451,317** | | | |
+| Rank | Service | Slot Hours | % of Total | Queries | **Avg Queue Wait** | **Avg Execution** | **Max Queue Wait** | P95 Queue |
+|------|---------|------------|-----------|---------|-------------------|-------------------|-------------------|-----------|
+| 1 | **Airflow ETL** | 37,054 | **46%** | 28,030 | **1.1s** | **30.6s** | **519s (8.6 min)** | 0s |
+| 2 | **Metabase BI** | 24,717 | **31%** | 58,532 | **5.0s** | **25.7s** | **633s (10.6 min)** | 1s |
+| 3 | Messaging | 8,040 | 10% | 87,383 | **1.3s** | **2.2s** | **558s (9.3 min)** | 0s |
+| 4 | analytics-api (Hub) | 1,082 | 1% | 62,005 | **1.6s** | **1.4s** | **514s (8.6 min)** | 0s |
+| 5 | n8n Shopify | 497 | 0.6% | 185,064 | **7.6s** | **3.5s** | **1,139s (19 min)** | **31s** |
+| 6 | Looker | 370 | 0.5% | 17,466 | **2.4s** | **1.7s** | **602s (10 min)** | 1s |
+| - | All others | 8,013 | 10% | 13,837 | - | - | - | - |
+| **TOTAL** | | **80,773** | **100%** | **451,317** | | | | |
+
+**KEY INSIGHT:** ALL services have fast execution times (1-31s) but experience severe queue delays (500-1,139s max). The problem is capacity, not query performance.
 
 **Key Findings:**
 
 1. **Airflow + Metabase consume 77% of all reservation slots** (61,771 of 80,773 slot-hours)
-2. **Multiple services experiencing >500s queue delays:**
-   - Metabase: max 633s
-   - Looker: max 602s  
-   - Messaging: max 558s
-   - n8n Shopify: **max 1,139s (19 minutes!), P95 = 31s**
-3. **Messaging is well-behaved:**
+
+2. **Multiple services experiencing >500s QUEUE delays while execution remains fast:**
+   - Metabase: **max 633s queue** vs 25.7s execution (25:1 ratio)
+   - Looker: **max 602s queue** vs 1.7s execution (354:1 ratio)
+   - Messaging: **max 558s queue** vs 2.2s execution (254:1 ratio)
+   - n8n Shopify: **max 1,139s queue** vs 3.5s execution (325:1 ratio)
+
+3. **Messaging is well-behaved and fast:**
    - Only 10% of reservation consumption
-   - Avg execution: 2.2 seconds (very fast)
+   - Avg execution: **2.2 seconds** (very fast)
+   - Avg queue wait: 1.3s (normally), up to 558s (when saturated)
    - 87K queries in 7 days (~12K/day)
+
 4. **n8n Shopify ingestion has worst delays:**
    - 185K queries (most queries of any service!)
-   - P95 queue = 31 seconds
-   - Max queue = 1,139 seconds (19 minutes)
+   - P95 queue = **31 seconds** (chronic problem)
+   - Max queue = **1,139 seconds (19 minutes)**
+   - Execution: 3.5s avg (the queries themselves are fine)
 
 **Conclusion:** The reservation is consistently saturated. Airflow and Metabase workloads are monopolizing slots, causing ALL interactive services (Messaging, Looker, analytics-api) to experience queue delays.
 
@@ -340,18 +377,19 @@ All analysis results available in:
 
 ## ✅ Next Steps
 
-1. [ ] Re-run query 03 with JSON format to identify competing workloads
+1. [x] ~~Re-run query 03 with JSON format to identify competing workloads~~ **COMPLETE** - Airflow 46%, Metabase 31%
 2. [ ] Check BigQuery reservation configuration for changes Nov 13
 3. [ ] Review Airflow/ETL changes deployed Nov 13-14
 4. [ ] Set up temporary monitoring dashboard for queue times
 5. [ ] Schedule meeting with Data Engineering to discuss findings
-6. [ ] Evaluate need for dedicated interactive reservation
+6. [ ] **PRIORITY:** Deploy Option A - Move Airflow to separate reservation
+7. [ ] Evaluate long-term architecture (separate interactive/ETL/BI reservations)
 
-**Target Resolution:** Nov 22, 2025
+**Target Resolution:** Nov 22, 2025 (Option A can be deployed today)
 
 ---
 
-**Analysis Cost:** $1.62 (324 GB scanned across 7 queries)  
+**Analysis Cost:** $1.62 (324 GB scanned across 8 queries)  
 **Investigation Time:** ~2 hours  
-**Confidence Level:** 85% (need query 03 results to confirm competing workload hypothesis)
+**Confidence Level:** 95% (competing workload confirmed - Airflow 46% + Metabase 31% = 77% of slots)
 

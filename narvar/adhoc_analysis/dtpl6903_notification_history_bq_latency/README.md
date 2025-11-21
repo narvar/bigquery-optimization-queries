@@ -73,7 +73,9 @@ Each search = 10 parallel queries across these tables.
 
 - `README.md` - This file
 - `f75bba68-ddac-4744-af30-834be6b149d9.png` - Screenshot showing 8-minute delay
-- `queries/` - SQL analysis queries
+- `queries/` - SQL analysis queries (9 queries total)
 - `results/` - Query results and findings
-- `FINDINGS.md` - Final root cause analysis and recommendations
+- **`FINDINGS.md`** - ⭐ Comprehensive root cause analysis (Airflow 46% + Metabase 31%)
+- **`EXECUTIVE_SUMMARY.md`** - One-page summary for stakeholders
+- **`CHOKE_POINTS_ANALYSIS.md`** - ⭐ NEW: 10-minute period analysis showing n8n Shopify as primary culprit
 
