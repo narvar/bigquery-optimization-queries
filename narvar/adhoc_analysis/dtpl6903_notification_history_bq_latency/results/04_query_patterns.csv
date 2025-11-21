@@ -1,0 +1,372 @@
+WITH query_analysis AS (
+  SELECT
+    job_id,
+    creation_time,
+    TIMESTAMP_DIFF(start_time, creation_time, SECOND) AS queue_seconds,
+    TIMESTAMP_DIFF(end_time, start_time, SECOND) AS execution_seconds,
+    total_slot_ms / 1000 AS slot_seconds,
+    total_bytes_processed / POW(1024, 3) AS gb_processed,
+    statement_type,
+    query,
+    referenced_tables,
+    
+    -- Extract table being queried
+    CASE
+      WHEN LOWER(query) LIKE '%pubsub_rules_engine_pulsar_debug_v2%' THEN 'pulsar_debug_v2'
+      WHEN LOWER(query) LIKE '%pubsub_rules_engine_pulsar_debug%' THEN 'pulsar_debug'
+      WHEN LOWER(query) LIKE '%pubsub_rules_engine_kafka%' THEN 'kafka'
+      WHEN LOWER(query) LIKE '%pubsub_notification_service%' THEN 'notification_service'
+      WHEN LOWER(query) LIKE '%pubsub_pulsar_notification_bus%' THEN 'pulsar_notification_bus'
+      WHEN LOWER(query) LIKE '%pubsub_rules_engine%' THEN 'rules_engine_other'
+      ELSE 'other_table'
+    END AS target_table,
+    
+    -- Extract metric/event type being searched
+    CASE
+      WHEN LOWER(query) LIKE '%notification_event_not_triggered%' THEN 'NOT_TRIGGERED'
+      WHEN LOWER(query) LIKE '%notification_sent%' THEN 'SENT'
+      WHEN LOWER(query) LIKE '%notification_dropped%' THEN 'DROPPED'
+      WHEN LOWER(query) LIKE '%notification_failed%' THEN 'FAILED'
+      ELSE 'OTHER_METRIC'
+    END AS event_type,
+    
+    -- Check if filtering by order number (primary use case)
+    REGEXP_CONTAINS(LOWER(query), r'order_number\s*=|upper\(order_number\)') AS filters_order_number,
+    
+    -- Check if filtering by retailer
+    REGEXP_CONTAINS(LOWER(query), r'retailer_moniker\s*=') AS filters_retailer,
+    
+    -- Check date range filtering
+    REGEXP_CONTAINS(LOWER(query), r'event_ts\s+between|timestamp\s+between') AS has_date_filter,
+    
+    -- Identify if part of parallel batch (queries within 1 second)
+    LAG(creation_time) OVER (ORDER BY creation_time) AS prev_query_time,
+    LEAD(creation_time) OVER (ORDER BY creation_time) AS next_query_time
+    
+  FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+  WHERE creation_time BETWEEN analysis_start_date AND analysis_end_date
+    AND user_email = target_user
+    AND job_type = 'QUERY'
+    AND state = 'DONE'
+),
+
+-- Identify parallel query batches (10 queries within 1-2 seconds = 1 user search)
+query_batches AS (
+  SELECT
+    *,
+    CASE
+      WHEN TIMESTAMP_DIFF(creation_time, prev_query_time, SECOND) <= 2 
+        OR TIMESTAMP_DIFF(next_query_time, creation_time, SECOND) <= 2
+      THEN TRUE
+      ELSE FALSE
+    END AS is_parallel_query
+  FROM query_analysis
+)
+
+SELECT
+  -- Pattern classification
+  target_table,
+  event_type,
+  
+  -- Query characteristics
+  filters_order_number,
+  filters_retailer,
+  has_date_filter,
+  is_parallel_query,
+  
+  -- Volume metrics
+  COUNT(*) AS query_count,
+  COUNT(DISTINCT DATE(creation_time)) AS days_active,
+  ROUND(COUNT(*) / 7, 1) AS avg_queries_per_day,
+  
+  -- Performance metrics
+  ROUND(AVG(queue_seconds), 1) AS avg_queue_sec,
+  APPROX_QUANTILES(queue_seconds, 100)[OFFSET(90)] AS p90_queue_sec,
+  MAX(queue_seconds) AS max_queue_sec,
+  
+  ROUND(AVG(execution_seconds), 1) AS avg_exec_sec,
+  MAX(execution_seconds) AS max_exec_sec,
+  
+  -- Resource consumption
+  ROUND(AVG(gb_processed), 2) AS avg_gb_per_query,
+  ROUND(AVG(slot_seconds), 1) AS avg_slot_seconds,
+  ROUND(SUM(gb_processed), 2) AS total_gb_processed,
+  
+  -- Problem detection
+  COUNTIF(queue_seconds > 60) AS queries_waiting_over_1min,
+  COUNTIF(queue_seconds > 300) AS queries_waiting_over_5min,
+  
+  -- Sample query
+  ANY_VALUE(SUBSTR(query, 1, 300)) AS sample_query
+
+FROM query_batches
+GROUP BY 
+  target_table,
+  event_type,
+  filters_order_number,
+  filters_retailer,
+  has_date_filter,
+  is_parallel_query
+ORDER BY query_count DESC; -- at [17:1]
+target_table,event_type,filters_order_number,filters_retailer,has_date_filter,is_parallel_query,query_count,days_active,avg_queries_per_day,avg_queue_sec,p90_queue_sec,max_queue_sec,avg_exec_sec,max_exec_sec,avg_gb_per_query,avg_slot_seconds,total_gb_processed,queries_waiting_over_1min,queries_waiting_over_5min,sample_query
+other_table,OTHER_METRIC,true,true,true,true,52174,8,7453.4,1.5,0,508,0.4,77,4.28,9.3,223139.23,327,70,"SELECT '' as metric_name, order_number, tracking_number, narvar_tracer_id, carrier_moniker, notification_type as notification_event_type, timestamp as event_ts, 'hipaa_email' as notification_channel, '' as request_failure_code, raw_reason as request_failure_reason, type as status_code,dedupe_key, ''"
+other_table,OTHER_METRIC,true,true,false,true,7532,8,1076.0,0.5,0,174,1.9,392,7.01,942.1,52241.6,30,0,"SELECT scheduler_id FROM messaging.scheduler_controller WHERE retailer_moniker = 'prodsanitytestretailer' and order_number = 'auto_a0d6bf88b2d4454eb764553533c13022' and REGEXP_CONTAINS(scheduler_id,'item_group_fulfillment_delayseq_promise_date_type1_standard')  and event_ts >= '2025-11-14T16:43:30.9"
+pulsar_debug,NOT_TRIGGERED,true,true,true,true,6558,8,936.9,1.5,0,504,1.2,306,28.13,119.0,184457.13,41,8,"SELECT  metric_name, order_number, tracking_number, narvar_tracer_id, carrier_moniker, notification_event_type, event_ts, notification_channel, request_failure_code, request_failure_reason, '' as status_code, dedupe_key, estimated_delivery_date, '' as data_available_date_time  FROM messaging.pubsub_"
+notification_service,OTHER_METRIC,true,true,true,true,6546,8,935.1,1.5,0,503,0.3,20,3.3,4.8,21570.05,42,9,"SELECT metric_name, order_number, tracking_number, narvar_tracer_id, carrier_moniker, notification_event_type, event_ts, notification_channel, request_failure_code, request_failure_reason, '' as status_code, dedupe_key, '' as estimated_delivery_date, '' as data_available_date_time FROM messaging.pub"
+other_table,OTHER_METRIC,false,false,false,true,5921,8,845.9,0.1,0,171,0.9,28,5.2,14.7,27902.19,3,0,"-- Metabase:: userID: 153 queryType: native queryHash: dd3bb7207d300f13f401bb424a72209e48bc8717bed0f5fa6624280ed32344c0
+with sms_count as (SELECT
+  count(*) AS `count`
+FROM
+  `messaging.pubsub_sms_service`
+WHERE
+  (
+    `messaging.pubsub_sms_service`.`event_ts` >= timestamp_trunc(
+      timestamp_ad"
+other_table,OTHER_METRIC,true,true,false,false,1261,8,180.1,0.1,0,40,18.5,715,70.81,3064.9,89076.31,0,0,"-- Metabase:: userID: 632 queryType: native queryHash: 746003451af8179843cc73c07b26ffc4932b9594763f058748d51ab8f6b10b05
+WITH replay_events_filtered AS (
+    SELECT 
+        DISTINCT order_number,
+        retailer_moniker,
+        MAX(event_ts) AS latest_event_ts,
+    FROM 
+        messaging.replay_e"
+other_table,OTHER_METRIC,false,true,true,true,1198,8,171.1,1.4,0,182,27.1,655,38.73,3019.3,46397.48,7,0,"SELECT metric_name, order_number, tracking_number, narvar_tracer_id, carrier_moniker, notification_event_type, event_ts, 'sms' as notification_channel, request_failure_code, request_failure_reason, sms_message_status as status_code, dedupe_key, '' as estimated_delivery_date, '' as data_available_dat"
+other_table,OTHER_METRIC,false,true,true,false,1135,8,162.1,0.4,0,162,50.1,926,83.59,10409.3,94878.2,2,0,"-- Metabase:: userID: 632 queryType: native queryHash: 5d3baef467b866f8ece9eda555570dc833bebfa3ce914073ec0ea839625c2a48
+WITH replay_events_filtered AS (
+    SELECT 
+        distinct tracking_number,
+        retailer_moniker,
+        MAX(event_ts) AS latest_event_ts
+    FROM 
+        messaging.replay"
+other_table,OTHER_METRIC,false,false,false,false,1058,8,151.1,2.3,0,558,1.8,39,6.22,19.0,6222.44,7,2,"-- Metabase:: userID: 153 queryType: native queryHash: 7cad380147556321adb2aae44d2fa4e6fdce403a836960f76aa6fc571f7c53aa
+with dedupe_key_duplicates as (select
+dedupe_key, count(*)
+from 
+`messaging.pubsub_notification_postprocessor_service` where 
+    (
+    `messaging.pubsub_notification_postprocessor"
+rules_engine_other,OTHER_METRIC,true,true,false,true,794,8,113.4,0.0,0,0,1.4,22,2.85,56.2,2234.83,0,0,"-- Metabase:: userID: 632 queryType: native queryHash: df192a015870315b553baf7bd9cbb25b5a54d6158cbb60cd0807f81176ba152f
+WITH replay_events_filtered AS (
+    SELECT 
+        DISTINCT order_number,
+        retailer_moniker,
+        MAX(event_ts) AS latest_event_ts,
+    FROM 
+        messaging.replay_e"
+other_table,OTHER_METRIC,false,false,true,true,725,8,103.6,0.0,0,1,0.2,13,1.46,26.3,1046.38,0,0,"-- Metabase:: userID: 427 queryType: native queryHash: f5bfb30b8fee7081481ff492cd88167f5cfcd6b0ee7dad8c68c1a9007c8008b9
+with failed_counts as (SELECT
+  timestamp_trunc(`messaging.automation_job`.`event_ts`, hour) AS `event_ts`,
+  execution_id,
+  `messaging.automation_job`.`failed_count` AS `failed_c"
+rules_engine_other,OTHER_METRIC,false,false,false,true,471,8,67.3,0.2,0,86,0.4,14,3.23,20.1,1485.47,1,0,"-- Metabase:: userID: 153 queryType: native queryHash: b68fb1df6427c9c1027bb93ff92b0b3e2391557b218534d496257192e7e84dd6
+With re_count as (SELECT
+  count(*) AS `count`
+FROM
+  `messaging.pubsub_rules_engine_pulsar`
+WHERE
+  (
+    `messaging.pubsub_rules_engine_pulsar`.`event_ts` >= timestamp_trunc(
+   "
+rules_engine_other,OTHER_METRIC,false,true,true,true,462,8,66.0,0.0,0,0,5.9,29,2.57,186.1,1185.36,0,0,"-- Metabase:: userID: 632 queryType: native queryHash: ed3a35304e776015d92ca26fda785caf85f5cb9ce76ccfa5a77fcfa6982f8566
+WITH replay_events_filtered AS (
+    SELECT 
+        distinct tracking_number,
+        retailer_moniker,
+        MAX(event_ts) AS latest_event_ts
+    FROM 
+        messaging.replay"
+rules_engine_other,OTHER_METRIC,false,true,true,false,376,8,53.7,0.0,0,3,7.3,34,2.76,258.4,1038.76,0,0,"-- Metabase:: userID: 632 queryType: native queryHash: e1ea70e60c579eaaffca961403d59de894069b1cfdbfde380bbf728f1baf34f9
+WITH replay_events_filtered AS (
+    SELECT 
+        distinct tracking_number,
+        retailer_moniker,
+        MAX(event_ts) AS latest_event_ts
+    FROM 
+        messaging.replay"
+other_table,OTHER_METRIC,false,true,false,true,304,8,43.4,0.0,0,0,9.0,190,28.06,1023.9,8108.83,0,0,"-- Metabase:: userID: 401 queryType: native queryHash: 7cfb5c4b0a98f658c2abd6160809bd1179ec46702fbd61a6502b878492177e63
+WITH unpublished AS (
+  SELECT
+  JSON_EXTRACT_SCALAR(JSON_EXTRACT(JSON_VALUE(`messaging.wysiwyg_service`.`payload`), '$.triggerType')) as trigger,
+    retailer_moniker AS retailer,"
+other_table,OTHER_METRIC,false,true,false,false,162,8,23.1,1.6,0,140,16.4,269,18.99,1973.4,3076.1,2,0,"-- Metabase:: userID: 632 queryType: native queryHash: 4a2ebdbe88555c159de59258dd2b8f2829313ef076ff5fe251b9f7da89141d85
+WITH replay_events_filtered AS (
+    SELECT 
+        distinct tracking_number,
+        retailer_moniker,
+        MAX(event_ts) AS latest_event_ts
+    FROM 
+        messaging.replay"
+pulsar_debug,NOT_TRIGGERED,false,true,true,true,92,8,13.1,2.5,0,169,1.3,6,68.72,92.7,6322.36,1,0,"SELECT  metric_name, order_number, tracking_number, narvar_tracer_id, carrier_moniker, notification_event_type, event_ts, notification_channel, request_failure_code, request_failure_reason, '' as status_code, dedupe_key, estimated_delivery_date, '' as data_available_date_time  FROM messaging.pubsub_"
+notification_service,OTHER_METRIC,false,true,true,true,91,8,13.0,0.6,0,34,0.5,2,7.08,8.8,643.94,0,0,"SELECT metric_name, order_number, tracking_number, narvar_tracer_id, carrier_moniker, notification_event_type, event_ts, notification_channel, request_failure_code, request_failure_reason, '' as status_code, dedupe_key, '' as estimated_delivery_date, '' as data_available_date_time FROM messaging.pub"
+other_table,OTHER_METRIC,true,false,false,true,59,6,8.4,0.0,0,0,1.3,21,26.82,30.6,1260.65,0,0,"-- Metabase:: userID: 762 queryType: native queryHash: a8cfa98c0b69532328bc5e7e0dd97fa67350f4102c08cbd8cd8828e6055ff2d7
+SELECT *
+FROM messaging.pubsub_sms_service
+WHERE 1 = 1
+
+AND lower(retailer_moniker) = lower(?)
+AND upper(order_number) = upper(?)
+
+
+
+
+
+
+AND timestamp_trunc(event_ts,day)  between ?"
+notification_service,OTHER_METRIC,false,false,false,false,59,5,8.4,0.0,0,0,1.0,7,3.68,51.2,194.98,0,0,"-- Metabase:: userID: 769 queryType: native queryHash: 168623f5c14f4a41d4eaf8fd8203e2d5ee74efd8766ec9abeb7559fe45779cfa
+SELECT *
+FROM messaging.pubsub_notification_service
+WHERE 1 = 1
+
+AND lower(retailer_moniker) = lower(?)
+
+
+
+
+AND timestamp_trunc(event_ts,day)  between ? and ?
+AND (metric_name <> '"
+pulsar_debug,OTHER_METRIC,true,true,false,true,55,6,7.9,0.0,0,0,1.5,15,82.73,52.7,3722.74,0,0,"-- Metabase:: userID: 769 queryType: native queryHash: d25927afbfd465b775c53471dcfd19d17c6fc385f97a3a70f2945597e6a0a88a
+SELECT *
+FROM `messaging.pubsub_rules_engine_pulsar_debug`
+WHERE 1 = 1
+
+AND retailer_moniker = lower(?)
+AND upper(order_number) = upper(?)
+
+
+
+
+AND timestamp_trunc(event_ts,day)  be"
+notification_service,OTHER_METRIC,true,false,false,true,55,6,7.9,0.0,0,0,0.7,16,70.78,23.1,3185.27,0,0,"-- Metabase:: userID: 632 queryType: native queryHash: e231237928b4bd6e68a036fb1155180af2e4676f3d4c8d3480d44e8af04f41df
+SELECT *
+FROM messaging.pubsub_notification_service
+WHERE 1 = 1
+
+AND lower(retailer_moniker) = lower(?)
+AND upper(order_number) = upper(?)
+
+
+
+AND timestamp_trunc(event_ts,day)  bet"
+notification_service,OTHER_METRIC,false,false,false,true,41,5,5.9,0.0,0,0,0.4,3,11.16,6.2,323.76,0,0,"-- Metabase
+SELECT `messaging.pubsub_notification_service`.`request_failure_code` AS `request_failure_code` FROM `messaging.pubsub_notification_service` WHERE LOWER(`messaging.pubsub_notification_service`.`request_failure_code`) LIKE ? GROUP BY `request_failure_code` ORDER BY `messaging.pubsub_notif"
+other_table,OTHER_METRIC,true,true,true,false,40,7,5.7,124.0,362,476,5.0,64,34.35,61.9,1373.83,17,11,"SELECT castle_metric_event_type as metric_name, order_number, tracking_number, narvar_tracer_id, carrier_moniker, notification_event_type, event_ts, 'webhook' as notification_channel,'' as request_failure_code, castle_message as request_failure_reason, castle_webhook_status_code as status_code, dedu"
+rules_engine_other,OTHER_METRIC,true,true,false,false,39,5,5.6,4.1,0,136,3.8,13,2.19,75.4,85.5,1,0,"-- Metabase:: userID: 632 queryType: native queryHash: 35da3384b2ee0002d4bc353ac94b7db0a740728e0550840ce3291d34160d8614
+WITH replay_events_filtered AS (
+    SELECT 
+        DISTINCT order_number,
+        retailer_moniker,
+        MAX(event_ts) AS latest_event_ts,
+    FROM 
+        messaging.replay_e"
+pulsar_debug,NOT_TRIGGERED,true,true,true,false,31,7,4.4,36.1,0,445,231.3,531,8393.88,86598.5,260210.41,3,3,"SELECT  metric_name, order_number, tracking_number, narvar_tracer_id, carrier_moniker, notification_event_type, event_ts, notification_channel, request_failure_code, request_failure_reason, '' as status_code, dedupe_key, estimated_delivery_date, '' as data_available_date_time  FROM messaging.pubsub_"
+notification_service,OTHER_METRIC,false,false,true,false,27,1,3.9,0.0,0,0,1.0,5,1.38,40.1,27.55,0,0,"-- Metabase:: userID: 769 queryType: native queryHash: b88f77203eb8aaa1160ca3c760b63db710b9123e1f622dfb2b796f3ff7ca11ee
+SELECT narvar_tracer_id, 
+    order_number,
+    request_failure_code
+FROM messaging.pubsub_notification_service
+WHERE 1 = 1
+AND request_failure_code IN ('500', '503')
+AND notificat"
+other_table,OTHER_METRIC,false,false,true,false,20,7,2.9,4.2,0,84,5.1,18,77.98,1391.9,1481.64,1,0,"-- Metabase:: userID: 427 queryType: native queryHash: 7f6032d7090455508099ec232fa7dfe9f9ddb185ef0b3339a9b6e2e4343cff10
+with failed_events as (
+select distinct retailer_moniker, lower(guid) as guid from messaging.action_delegator_gcp where event_ts BETWEEN timestamp_sub(current_timestamp(), INTERVAL"
+pulsar_debug,OTHER_METRIC,false,false,false,true,17,7,2.4,0.0,0,0,235.3,846,1811.05,185820.8,19921.59,0,0,"-- Metabase
+SELECT `messaging.pubsub_rules_engine_pulsar_debug`.`order_number` AS `order_number` FROM `messaging.pubsub_rules_engine_pulsar_debug` WHERE LOWER(`messaging.pubsub_rules_engine_pulsar_debug`.`order_number`) LIKE ? GROUP BY `order_number` ORDER BY `messaging.pubsub_rules_engine_pulsar_de"
+pulsar_debug,OTHER_METRIC,true,true,true,false,17,7,2.4,0.4,0,6,63.2,287,634.95,18993.1,10794.14,0,0,"-- Metabase:: userID: 485 queryType: native queryHash: b1d519430d00dd19ec48b641804e3231b8335faf989681ef38b02a7b133b5f9d
+---Return  notification monitoring
+CREATE TEMP FUNCTION parse_options(input string)
+RETURNS Array<String>
+LANGUAGE js AS """"""
+  function parser(input) {
+      let results = [];
+    "
+rules_engine_other,OTHER_METRIC,false,false,false,false,15,6,2.1,0.0,0,0,1.3,3,8.1,53.4,113.46,0,0,"-- Metabase:: userID: 751 queryType: native queryHash: 21f4d3203a89272b11dccf56e64693c8f1e98eba2bdb1f3d23a2c7eeaf50075e
+SELECT retailer_moniker,carrier_moniker, notification_type, locale, re_count, email_count, (re_count - email_count) as difference, (100 - ((email_count / re_count) * 100)) as missi"
+pulsar_debug,OTHER_METRIC,true,true,true,true,13,6,1.9,0.0,0,0,98.9,424,638.52,18832.4,8300.78,0,0,"-- Metabase:: userID: 485 queryType: native queryHash: 00241d649d035d3b3ce7dd4f39ee46d884da00ed7db21e7d4fed032e19935747
+---Return  notification monitoring
+CREATE TEMP FUNCTION parse_options(input string)
+RETURNS Array<String>
+LANGUAGE js AS """"""
+  function parser(input) {
+      let results = [];
+    "
+rules_engine_other,OTHER_METRIC,false,true,false,true,9,3,1.3,0.0,0,0,0.6,2,10.7,8.7,96.28,0,0,"-- Metabase:: userID: 769 queryType: native queryHash: b824bf463b3b2b45ac313c30698f19d63f896d5963457ddcdfbe9eeaee684be9
+SELECT *
+FROM `messaging.pubsub_rules_engine_pulsar`
+WHERE 1 = 1
+
+AND retailer_moniker = lower(?)
+
+
+
+
+
+AND timestamp_trunc(event_ts,day)  between ? and ?
+ORDER BY event_ts desc
+Lim"
+rules_engine_other,OTHER_METRIC,true,false,true,false,9,7,1.3,0.0,0,0,51.7,141,274.86,21647.6,2473.7,0,0,"-- Metabase:: userID: 427 queryType: native queryHash: e991d3ee04b403daadadde3c98915c767223956aa8a693f101f981f989b89f0f
+-- Retailers on messaging mode
+with messaging_retailers AS (
+WITH
+  retailer_details AS (
+  SELECT
+    DISTINCT retailer_moniker,
+    traffic_source,
+    ROW_NUMBER() OVER (PARTITI"
+pulsar_debug,OTHER_METRIC,false,true,false,true,9,3,1.3,0.0,0,0,2.0,6,9.39,24.8,84.53,0,0,"-- Metabase:: userID: 769 queryType: native queryHash: 5b9cc742ef8a4944d3b35e002dcb3853517f8205ae9a8436a81261f7dd4f3128
+SELECT *
+FROM `messaging.pubsub_rules_engine_pulsar_debug`
+WHERE 1 = 1
+
+AND retailer_moniker = lower(?)
+
+
+
+
+
+AND timestamp_trunc(event_ts,day)  between ? AND ?
+ORDER BY event_ts de"
+notification_service,OTHER_METRIC,false,false,true,true,7,1,1.0,0.0,0,0,0.0,0,0.02,0.1,0.08,0,0,"-- Metabase:: userID: 769 queryType: native queryHash: a87c42441c90f6537964e79853dc656d1f675a5847a18524b9d63c8c7f1cee71
+SELECT count(*)
+FROM messaging.pubsub_notification_service
+WHERE 1 = 1
+AND request_failure_code IN ('500')
+AND notification_channel='castle'
+AND event_ts BETWEEN 
+        TIMESTAMP"
+pulsar_debug,NOT_TRIGGERED,false,false,false,true,6,1,0.9,0.0,0,0,0.0,0,,,,0,0,"-- Metabase:: userID: 627 queryType: native queryHash: 009de3fcf5a155f87b9c33ea864abd0e55b19a3a83689c782fc413010f235faa
+with re_stats as (SELECT
+  CASE
+    WHEN `messaging.pubsub_rules_engine_pulsar_debug`.`request_failure_reason` IS NULL OR `messaging.pubsub_rules_engine_pulsar_debug`.`request_fail"
+notification_service,OTHER_METRIC,true,false,false,false,5,2,0.7,0.0,0,0,0.4,2,1.51,3.8,7.56,0,0,"-- Metabase:: userID: 769 queryType: native queryHash: 415c8a62f75185cb7fa185dcd7d85ed492ad40af576818548bd8ed453e68a5a7
+SELECT *
+FROM messaging.pubsub_notification_service
+WHERE 1 = 1
+
+AND lower(retailer_moniker) = lower(?)
+AND upper(order_number) = upper(?)
+
+
+
+AND timestamp_trunc(event_ts,day)  bet"
+notification_service,OTHER_METRIC,true,true,true,false,4,2,0.6,164.8,304,304,0.5,2,2.54,5.6,10.14,3,1,"SELECT metric_name, order_number, tracking_number, narvar_tracer_id, carrier_moniker, notification_event_type, event_ts, notification_channel, request_failure_code, request_failure_reason, '' as status_code, dedupe_key, '' as estimated_delivery_date, '' as data_available_date_time FROM messaging.pub"
+pulsar_debug,OTHER_METRIC,false,false,false,false,3,3,0.4,0.0,0,0,395.7,697,2803.65,172650.7,5607.31,0,0,"-- Metabase:: userID: 427 queryType: MBQL queryHash: 20c0c13cd53be9cf66572dfcf65ae18ff1974547f144fe6875732fe0cd88017d
+SELECT `messaging.pubsub_rules_engine_pulsar_debug`.`tag` AS `tag`, `messaging.pubsub_rules_engine_pulsar_debug`.`narvar_tracer_id` AS `narvar_tracer_id`, `messaging.pubsub_rules_eng"
+pulsar_debug,OTHER_METRIC,true,true,false,false,2,2,0.3,0.0,0,0,5.0,9,131.77,332.4,263.55,0,0,"-- Metabase:: userID: 632 queryType: native queryHash: 3606da5701d0628af7d2499e3e5e75a409f36e22a8316e15cde738f12cf85327
+SELECT *
+FROM `messaging.pubsub_rules_engine_pulsar_debug`
+WHERE 1 = 1
+AND upper(tracking_number) like concat('%',upper(?),'%')
+AND retailer_moniker = lower(?)
+AND upper(order_numb"
+rules_engine_other,OTHER_METRIC,true,false,true,true,1,1,0.1,0.0,0,0,41.0,41,284.49,18619.6,284.49,0,0,"-- Metabase:: userID: 427 queryType: native queryHash: 01acb30e214c12b25776f058a9fc8415fd6bcbc68e9b900efd50d714494bb3d1
+-- Retailers on messaging mode
+with messaging_retailers AS (
+WITH
+  retailer_details AS (
+  SELECT
+    DISTINCT retailer_moniker,
+    traffic_source,
+    ROW_NUMBER() OVER (PARTITI"
+notification_service,OTHER_METRIC,false,true,true,false,1,1,0.1,137.0,137,137,0.0,0,8.31,11.2,8.31,1,0,"SELECT metric_name, order_number, tracking_number, narvar_tracer_id, carrier_moniker, notification_event_type, event_ts, notification_channel, request_failure_code, request_failure_reason, '' as status_code, dedupe_key, '' as estimated_delivery_date, '' as data_available_date_time FROM messaging.pub"

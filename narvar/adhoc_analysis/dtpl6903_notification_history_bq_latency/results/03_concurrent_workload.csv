@@ -1,0 +1,91 @@
+WITH reservation_workload AS (
+  SELECT
+    user_email,
+    project_id,
+    
+    -- Volume metrics
+    COUNT(*) AS total_queries,
+    
+    -- Timing metrics
+    AVG(TIMESTAMP_DIFF(start_time, creation_time, SECOND)) AS avg_queue_seconds,
+    MAX(TIMESTAMP_DIFF(start_time, creation_time, SECOND)) AS max_queue_seconds,
+    APPROX_QUANTILES(TIMESTAMP_DIFF(start_time, creation_time, SECOND), 100)[OFFSET(95)] AS p95_queue_seconds,
+    
+    AVG(TIMESTAMP_DIFF(end_time, start_time, SECOND)) AS avg_execution_seconds,
+    MAX(TIMESTAMP_DIFF(end_time, start_time, SECOND)) AS max_execution_seconds,
+    
+    -- Resource consumption
+    SUM(total_slot_ms) / 3600000 AS total_slot_hours,
+    SUM(total_bytes_processed) / POW(1024, 4) AS total_tb_processed,
+    SUM(total_bytes_billed) / POW(1024, 4) AS total_tb_billed,
+    
+    -- Query type breakdown
+    COUNTIF(statement_type = 'SELECT') AS select_count,
+    COUNTIF(statement_type = 'MERGE') AS merge_count,
+    COUNTIF(statement_type = 'INSERT') AS insert_count,
+    COUNTIF(statement_type IN ('CREATE_TABLE', 'CREATE_TABLE_AS_SELECT')) AS create_count,
+    
+    -- Priority mix
+    COUNTIF(priority = 'INTERACTIVE') AS interactive_priority,
+    COUNTIF(priority = 'BATCH') AS batch_priority,
+    
+    -- Identify consumer category
+    CASE
+      WHEN user_email LIKE '%airflow%' THEN 'Airflow/ETL'
+      WHEN user_email LIKE '%messaging%' THEN 'Messaging'
+      WHEN user_email LIKE '%looker%' THEN 'Looker/BI'
+      WHEN user_email LIKE '%monitor%' THEN 'Monitor'
+      WHEN user_email LIKE '%dbt%' THEN 'dbt'
+      WHEN user_email LIKE '%@narvar.com' THEN 'Human User'
+      ELSE 'Other Service'
+    END AS consumer_category,
+    
+    -- Sample queries
+    ARRAY_AGG(SUBSTR(query, 1, 100) ORDER BY total_slot_ms DESC LIMIT 3) AS top_query_samples
+    
+  FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+  WHERE creation_time BETWEEN analysis_start_date AND analysis_end_date
+    AND reservation_id = target_reservation
+    AND job_type = 'QUERY'
+    AND state = 'DONE'
+  GROUP BY user_email, project_id
+)
+
+SELECT
+  consumer_category,
+  user_email,
+  project_id,
+  
+  -- Volume
+  total_queries,
+  ROUND(total_queries / 7, 1) AS avg_queries_per_day,
+  
+  -- Queue time (KEY METRIC)
+  ROUND(avg_queue_seconds, 1) AS avg_queue_sec,
+  p95_queue_seconds AS p95_queue_sec,
+  max_queue_seconds AS max_queue_sec,
+  
+  -- Execution time
+  ROUND(avg_execution_seconds, 1) AS avg_exec_sec,
+  max_execution_seconds AS max_exec_sec,
+  
+  -- Resource usage (for ranking biggest consumers)
+  ROUND(total_slot_hours, 2) AS slot_hours,
+  ROUND(total_tb_processed, 2) AS tb_processed,
+  
+  -- Workload profile
+  select_count,
+  merge_count,
+  insert_count,
+  create_count,
+  
+  -- Priority mix
+  interactive_priority,
+  batch_priority,
+  
+  -- Sample queries
+  top_query_samples[SAFE_OFFSET(0)] AS sample_query_1
+
+FROM reservation_workload
+ORDER BY total_slot_hours DESC
+LIMIT 50; -- at [15:1]

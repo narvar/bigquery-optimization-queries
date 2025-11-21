@@ -1,0 +1,39 @@
+[[
+  {
+    "distinct_users": "45", 
+    "reservation_id": "bq-narvar-admin:US.default", 
+    "sample_users": [
+      "airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com", 
+      "churnzero-bq-access@narvar-data-lake.iam.gserviceaccount.com", 
+      "bigquery-adminbot@system.gserviceaccount.com", 
+      "arpit.agrawal@narvar.com", 
+      "palash.jaiswal@narvar.com", 
+      "julia.le@narvar.com", 
+      "meesala.chanukya@narvar.com", 
+      "looker-prod@narvar-data-lake.iam.gserviceaccount.com", 
+      "harshul.sankhla@narvar.com", 
+      "vijaykumar.vanga@narvar.com"
+    ], 
+    "total_queries": "451317", 
+    "total_slot_hours": "80773.0559925"
+  }, 
+  {
+    "distinct_users": "24", 
+    "reservation_id": null, 
+    "sample_users": [
+      "looker-prod@narvar-data-lake.iam.gserviceaccount.com", 
+      "vijaykumar.vanga@narvar.com", 
+      "vinayak.burji@narvar.com", 
+      "airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com", 
+      "john.cathey@narvar.com", 
+      "saurabh.shrivastava@narvar.com", 
+      "252778107735-compute@developer.gserviceaccount.com", 
+      "cezar.mihaila@narvar.com", 
+      "eric.rops@narvar.com", 
+      "bala.krishnan@narvar.com"
+    ], 
+    "total_queries": "54778", 
+    "total_slot_hours": "13146.502331666667"
+  }
+]
+]

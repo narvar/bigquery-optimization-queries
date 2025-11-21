@@ -1,0 +1,85 @@
+WITH messaging_delays AS (
+  SELECT
+    TIMESTAMP_TRUNC(creation_time, MINUTE) AS minute_bucket,
+    COUNT(*) AS messaging_queries,
+    AVG(TIMESTAMP_DIFF(start_time, creation_time, SECOND)) AS avg_queue_seconds,
+    MAX(TIMESTAMP_DIFF(start_time, creation_time, SECOND)) AS max_queue_seconds
+  FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+  WHERE creation_time BETWEEN analysis_start_date AND analysis_end_date
+    AND user_email = target_user
+    AND job_type = 'QUERY'
+    AND state = 'DONE'
+  GROUP BY minute_bucket
+  HAVING max_queue_seconds > 60  -- Focus on minutes with >60s waits
+),
+
+-- Step 2: Get ALL jobs in the reservation during those periods
+reservation_activity AS (
+  SELECT
+    TIMESTAMP_TRUNC(j.creation_time, MINUTE) AS minute_bucket,
+    j.user_email,
+    j.project_id,
+    
+    -- Count jobs by state
+    COUNTIF(j.state = 'RUNNING') AS running_jobs,
+    COUNTIF(j.state = 'PENDING') AS pending_jobs,
+    COUNTIF(j.state = 'DONE') AS completed_jobs,
+    
+    -- Slot consumption (estimate concurrent slots)
+    SUM(j.total_slot_ms) / 60000 AS slot_minutes_consumed,
+    
+    -- Bytes processed
+    SUM(j.total_bytes_processed) / POW(1024, 3) AS gb_processed,
+    
+    -- Job types
+    COUNTIF(j.statement_type = 'SELECT') AS select_queries,
+    COUNTIF(j.statement_type = 'MERGE') AS merge_queries,
+    COUNTIF(j.statement_type = 'INSERT') AS insert_queries,
+    COUNTIF(j.statement_type IN ('CREATE_TABLE', 'CREATE_TABLE_AS_SELECT')) AS create_queries
+    
+  FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT AS j
+  INNER JOIN messaging_delays AS md
+    ON TIMESTAMP_TRUNC(j.creation_time, MINUTE) = md.minute_bucket
+  WHERE j.creation_time BETWEEN analysis_start_date AND analysis_end_date
+    AND j.reservation_id = target_reservation
+    AND j.job_type = 'QUERY'
+  GROUP BY minute_bucket, j.user_email, j.project_id
+)
+
+SELECT
+  md.minute_bucket,
+  md.messaging_queries,
+  md.avg_queue_seconds AS messaging_avg_queue_sec,
+  md.max_queue_seconds AS messaging_max_queue_sec,
+  
+  -- Reservation utilization summary
+  COUNT(DISTINCT ra.user_email) AS distinct_users_active,
+  SUM(ra.running_jobs) AS total_running_jobs,
+  SUM(ra.pending_jobs) AS total_pending_jobs,
+  SUM(ra.slot_minutes_consumed) AS total_slot_minutes,
+  SUM(ra.gb_processed) AS total_gb_processed,
+  
+  -- Workload breakdown
+  SUM(ra.select_queries) AS total_select_queries,
+  SUM(ra.merge_queries) AS total_merge_queries,
+  SUM(ra.insert_queries) AS total_insert_queries,
+  
+  -- Top 3 slot consumers during this period
+  ARRAY_AGG(
+    STRUCT(ra.user_email, ra.slot_minutes_consumed) 
+    ORDER BY ra.slot_minutes_consumed DESC 
+    LIMIT 3
+  ) AS top_slot_consumers
+
+FROM messaging_delays AS md
+LEFT JOIN reservation_activity AS ra
+  ON md.minute_bucket = ra.minute_bucket
+GROUP BY 
+  md.minute_bucket,
+  md.messaging_queries,
+  md.avg_queue_seconds,
+  md.max_queue_seconds
+ORDER BY md.max_queue_seconds DESC
+LIMIT 100; -- at [19:1]
+Error printing table: Cannot print record field "top_slot_consumers" in CSV
+format.

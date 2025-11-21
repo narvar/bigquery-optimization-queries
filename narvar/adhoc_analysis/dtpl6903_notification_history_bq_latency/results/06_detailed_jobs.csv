@@ -1,0 +1,67 @@
+SELECT
+  job_id,
+  user_email,
+  project_id,
+  reservation_id,
+  priority,
+  
+  -- Timing breakdown
+  creation_time,
+  start_time,
+  end_time,
+  TIMESTAMP_DIFF(start_time, creation_time, SECOND) AS queue_time_seconds,
+  TIMESTAMP_DIFF(end_time, start_time, SECOND) AS execution_time_seconds,
+  
+  -- Resource metrics
+  total_slot_ms,
+  ROUND(total_slot_ms / 1000, 2) AS slot_seconds,
+  total_bytes_processed,
+  ROUND(total_bytes_processed / POW(1024, 3), 2) AS gb_processed,
+  total_bytes_billed,
+  
+  -- Query details
+  statement_type,
+  
+  -- Extract retailer from query
+  REGEXP_EXTRACT(
+    LOWER(query), 
+    r"retailer_moniker\s*=\s*['\"]([a-z0-9\-_]+)['\"]"
+  ) AS retailer_moniker,
+  
+  -- Extract order number
+  REGEXP_EXTRACT(
+    query,
+    r"upper\(order_number\)\s*=\s*['\"]([0-9]+)['\"]"
+  ) AS order_number,
+  
+  -- Extract table being queried
+  CASE
+    WHEN LOWER(query) LIKE '%pubsub_rules_engine_pulsar_debug_v2%' THEN 'pulsar_debug_v2'
+    WHEN LOWER(query) LIKE '%pubsub_rules_engine_pulsar_debug%' THEN 'pulsar_debug'
+    WHEN LOWER(query) LIKE '%pubsub_rules_engine_kafka%' THEN 'kafka'
+    ELSE 'other'
+  END AS target_table,
+  
+  referenced_tables,
+  
+  -- Full query text (first 1000 chars)
+  SUBSTR(query, 1, 1000) AS query_text,
+  
+  -- Job state and errors
+  state,
+  error_result.reason AS error_reason,
+  error_result.message AS error_message,
+  
+  -- Timeline references
+  timeline
+
+FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+WHERE creation_time BETWEEN analysis_start_date AND analysis_end_date
+  AND user_email = target_user
+  AND job_type = 'QUERY'
+  AND state = 'DONE'
+  AND TIMESTAMP_DIFF(start_time, creation_time, SECOND) > 60  -- Only delayed queries
+ORDER BY TIMESTAMP_DIFF(start_time, creation_time, SECOND) DESC
+LIMIT 100; -- at [14:1]
+Error printing table: Cannot print record field "referenced_tables" in CSV
+format.
