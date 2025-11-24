@@ -94,11 +94,11 @@ Format should be one of: projects/myproject, folders/123, organizations/456
 ### Option A: Create Separate Project for Messaging (RECOMMENDED)
 
 **Approach:**
-1. Create new GCP project: `messaging-bq-dedicated`
+1. Create new GCP project: `messaging-hub-bq-dedicated`
 2. Assign project to messaging-dedicated reservation (use existing reservation!)
 3. Grant existing service account (`messaging@narvar-data-lake`) jobUser permission on new project
 4. Update notify-automation-service:
-   - Change project_id: `narvar-data-lake` → `messaging-bq-dedicated`
+   - Change project_id: `narvar-data-lake` → `messaging-hub-bq-dedicated`
    - Update table references to fully-qualified names: `narvar-data-lake.messaging.table`
 5. **Reuse existing service account** (simpler!)
 
@@ -150,7 +150,7 @@ Format should be one of: projects/myproject, folders/123, organizations/456
 4. Decision meeting: Which option to pursue?
 
 ### Short-term (This Week - if Option A approved):
-1. **Day 1 (Data Eng):** Create messaging-bq-dedicated project, assign to reservation, grant permissions
+1. **Day 1 (Data Eng):** Create messaging-hub-bq-dedicated project, assign to reservation, grant permissions
 2. **Day 2 (Messaging Team):** Update project_id and table references, deploy to staging, test
 3. **Day 3 (Messaging Team):** Deploy to production with monitoring
 4. **Days 4-5:** Validation and close DTPL-6903

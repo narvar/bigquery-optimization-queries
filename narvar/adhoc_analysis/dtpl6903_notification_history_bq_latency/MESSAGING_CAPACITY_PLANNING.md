@@ -411,12 +411,12 @@ Need 8x usage growth (34 TB/month) to justify annual commitment
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ NEW Project: messaging-bq-dedicated                     │
+│ NEW Project: messaging-hub-bq-dedicated                     │
 │                                                         │
 │ Service Account:                                        │
-│ messaging-bq@messaging-bq-dedicated.iam.gserviceaccount.com
+│ messaging-bq@messaging-hub-bq-dedicated.iam.gserviceaccount.com
 │                                                         │
-│ Billing: messaging-bq-dedicated (separate budget)      │
+│ Billing: messaging-hub-bq-dedicated (separate budget)      │
 │ Reservation: messaging-dedicated (50-100 slots)        │
 └─────────────────────────────────────────────────────────┘
 ```

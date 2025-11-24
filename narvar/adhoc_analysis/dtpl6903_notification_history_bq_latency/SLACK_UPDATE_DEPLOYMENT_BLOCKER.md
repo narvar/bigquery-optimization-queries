@@ -25,7 +25,7 @@
 **Two viable options:**
 
 **Option A: Create separate project for messaging** ⭐ RECOMMENDED
-- New project: `messaging-bq-dedicated` 
+- New project: `messaging-hub-bq-dedicated` 
 - Uses existing `messaging-dedicated` reservation (50 + autoscale 50)
 - Cost: ~$219/month (predictable, capped)
 - Requires: Cross-project table access (simple) + app config change (credential swap only)
@@ -43,7 +43,7 @@
 **Recommendation:** Option A (Separate Project with Existing Service Account)
 
 **What messaging team needs to do:**
-1. **Update BigQuery client:** Change `project_id` from `narvar-data-lake` to `messaging-bq-dedicated`
+1. **Update BigQuery client:** Change `project_id` from `narvar-data-lake` to `messaging-hub-bq-dedicated`
 2. **Update table references:** Use fully-qualified names: `narvar-data-lake.messaging.table_name` (not `messaging.table_name`)
 3. Deploy to staging and test (2-4 hours)
 4. Deploy to production with rolling restart (zero downtime)
@@ -59,7 +59,7 @@
 
 **Next steps:**
 1. Done: Document options and trade-offs
-2. If Option A: Create messaging-bq-dedicated project and migrate
+2. If Option A: Create messaging-hub-bq-dedicated project and migrate
 
 **Weekend data:** No latency issues Sat-Mon (problem currently dormant, not urgent)
 

@@ -1,6 +1,6 @@
 # Option A: Separate Project for Messaging - Implementation Guide
 
-**Project Name:** `messaging-bq-dedicated`  
+**Project Name:** `messaging-hub-bq-dedicated`  
 **Goal:** Isolate messaging BigQuery traffic with dedicated reservation for cost control  
 **Timeline:** 3-5 days  
 **Cost:** ~$219/month (50-slot baseline + autoscale 50) with predictable cost ceiling
@@ -35,7 +35,7 @@
 
 ```bash
 # Create new project
-gcloud projects create messaging-bq-dedicated \
+gcloud projects create messaging-hub-bq-dedicated \
   --name="Messaging BigQuery Dedicated" \
   --organization=770066481180 \
   --labels=purpose=bigquery-isolation,team=messaging
@@ -43,15 +43,15 @@ gcloud projects create messaging-bq-dedicated \
 # Set billing account (use same as narvar-data-lake)
 BILLING_ACCOUNT=$(gcloud billing projects describe narvar-data-lake --format="value(billingAccountName)")
 
-gcloud billing projects link messaging-bq-dedicated \
+gcloud billing projects link messaging-hub-bq-dedicated \
   --billing-account=$BILLING_ACCOUNT
 
 # Enable BigQuery API
-gcloud services enable bigquery.googleapis.com --project=messaging-bq-dedicated
+gcloud services enable bigquery.googleapis.com --project=messaging-hub-bq-dedicated
 ```
 
 **Expected result:**
-- Project ID: `messaging-bq-dedicated`
+- Project ID: `messaging-hub-bq-dedicated`
 - Billing: Same account as narvar-data-lake
 - BigQuery API: Enabled
 
@@ -68,7 +68,7 @@ curl -X POST \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "assignee": "projects/messaging-bq-dedicated",
+    "assignee": "projects/messaging-hub-bq-dedicated",
     "jobType": "QUERY"
   }' \
   "https://bigqueryreservation.googleapis.com/v1/projects/bq-narvar-admin/locations/US/reservations/messaging-dedicated/assignments"
@@ -83,14 +83,14 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 ```json
 {
   "name": "projects/bq-narvar-admin/locations/US/reservations/messaging-dedicated/assignments/...",
-  "assignee": "projects/messaging-bq-dedicated",
+  "assignee": "projects/messaging-hub-bq-dedicated",
   "jobType": "QUERY",
   "state": "ACTIVE"
 }
 ```
 
 **Result:**
-- messaging-bq-dedicated project → messaging-dedicated reservation (50 + autoscale 50)
+- messaging-hub-bq-dedicated project → messaging-dedicated reservation (50 + autoscale 50)
 - **Cost:** $146 baseline + ~$73 autoscale = ~$219/month (predictable, capped)
 - **Capacity:** 100 slots max (sufficient for messaging's 48 avg, 228 peak)
 - **vs On-Demand:** Higher cost but provides capacity guarantee and cost ceiling
@@ -109,7 +109,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 ```bash
 # Grant existing service account permission to run jobs in new project
-gcloud projects add-iam-policy-binding messaging-bq-dedicated \
+gcloud projects add-iam-policy-binding messaging-hub-bq-dedicated \
   --member="serviceAccount:messaging@narvar-data-lake.iam.gserviceaccount.com" \
   --role="roles/bigquery.jobUser"
 
@@ -118,8 +118,8 @@ gcloud projects add-iam-policy-binding messaging-bq-dedicated \
 ```
 
 **Result:**
-- Service account can run BigQuery jobs in messaging-bq-dedicated project
-- Jobs billed to messaging-bq-dedicated
+- Service account can run BigQuery jobs in messaging-hub-bq-dedicated project
+- Jobs billed to messaging-hub-bq-dedicated
 - Uses messaging-dedicated reservation
 - **No new credentials needed!**
 
@@ -135,14 +135,14 @@ gcloud projects add-iam-policy-binding messaging-bq-dedicated \
 
 ```bash
 # Grant existing service account permission to run BigQuery jobs in new project
-gcloud projects add-iam-policy-binding messaging-bq-dedicated \
+gcloud projects add-iam-policy-binding messaging-hub-bq-dedicated \
   --member="serviceAccount:messaging@narvar-data-lake.iam.gserviceaccount.com" \
   --role="roles/bigquery.jobUser"
 ```
 
 **What this grants:**
-- ✅ Ability to run BigQuery jobs in `messaging-bq-dedicated` project
-- ✅ Jobs will be billed to `messaging-bq-dedicated` project
+- ✅ Ability to run BigQuery jobs in `messaging-hub-bq-dedicated` project
+- ✅ Jobs will be billed to `messaging-hub-bq-dedicated` project
 - ✅ Jobs will use messaging-dedicated reservation
 
 **What's already granted:**
@@ -167,7 +167,7 @@ TABLES=(
 # Grant access to each table
 for table in "${TABLES[@]}"; do
   bq add-iam-policy-binding \
-    --member="serviceAccount:messaging-bq@messaging-bq-dedicated.iam.gserviceaccount.com" \
+    --member="serviceAccount:messaging-bq@messaging-hub-bq-dedicated.iam.gserviceaccount.com" \
     --role="roles/bigquery.dataViewer" \
     narvar-data-lake:messaging.$table
 done
@@ -183,7 +183,7 @@ done
 
 ```bash
 # Verify permissions were granted
-gcloud projects get-iam-policy messaging-bq-dedicated \
+gcloud projects get-iam-policy messaging-hub-bq-dedicated \
   --flatten="bindings[].members" \
   --filter="bindings.members:messaging@narvar-data-lake" \
   --format="table(bindings.role)"
@@ -193,7 +193,7 @@ gcloud projects get-iam-policy messaging-bq-dedicated \
 # This simulates what the application will do
 bq query \
   --use_legacy_sql=false \
-  --project_id=messaging-bq-dedicated \
+  --project_id=messaging-hub-bq-dedicated \
   --impersonate_service_account=messaging@narvar-data-lake.iam.gserviceaccount.com \
   "
 SELECT 
@@ -222,7 +222,7 @@ LIMIT 10;
 "
 
 # Verify which reservation was used
-bq query --use_legacy_sql=false --project_id=messaging-bq-dedicated "
+bq query --use_legacy_sql=false --project_id=messaging-hub-bq-dedicated "
 SELECT 
   reservation_id,
   user_email,
@@ -230,7 +230,7 @@ SELECT
   TIMESTAMP_DIFF(end_time, start_time, SECOND) AS exec_sec
 FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
 WHERE creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 5 MINUTE)
-  AND project_id = 'messaging-bq-dedicated'
+  AND project_id = 'messaging-hub-bq-dedicated'
 ORDER BY creation_time DESC
 LIMIT 5;
 "
@@ -244,7 +244,7 @@ LIMIT 5;
 - ✅ Cross-project access working
 
 **This test confirms:**
-- Service account can run jobs in messaging-bq-dedicated
+- Service account can run jobs in messaging-hub-bq-dedicated
 - Can read narvar-data-lake.messaging tables
 - Uses messaging-dedicated reservation (cost controlled)
 - Performance is good (<1s queue)
@@ -257,21 +257,21 @@ LIMIT 5;
 
 ```bash
 # Add data engineering team members as owners
-gcloud projects add-iam-policy-binding messaging-bq-dedicated \
+gcloud projects add-iam-policy-binding messaging-hub-bq-dedicated \
   --member="user:cezar.mihaila@narvar.com" \
   --role="roles/owner"
 
-gcloud projects add-iam-policy-binding messaging-bq-dedicated \
+gcloud projects add-iam-policy-binding messaging-hub-bq-dedicated \
   --member="user:eric.rops@narvar.com" \
   --role="roles/owner"
 
 # Or add a Google Group (if you have one)
-gcloud projects add-iam-policy-binding messaging-bq-dedicated \
+gcloud projects add-iam-policy-binding messaging-hub-bq-dedicated \
   --member="group:data-engineering@narvar.com" \
   --role="roles/owner"
 
 # Grant BigQuery admin specifically
-gcloud projects add-iam-policy-binding messaging-bq-dedicated \
+gcloud projects add-iam-policy-binding messaging-hub-bq-dedicated \
   --member="user:cezar.mihaila@narvar.com" \
   --role="roles/bigquery.admin"
 ```
@@ -301,14 +301,14 @@ gcloud projects add-iam-policy-binding messaging-bq-dedicated \
 // BigQuery client initialization
 BigQueryOptions.Builder optionsBuilder = BigQueryOptions.newBuilder()
 -   .setProjectId("narvar-data-lake")
-+   .setProjectId("messaging-bq-dedicated")
++   .setProjectId("messaging-hub-bq-dedicated")
     .setCredentials(credentials);  // UNCHANGED - same service account
 ```
 
 **OR environment variable:**
 ```diff
 - BIGQUERY_PROJECT_ID=narvar-data-lake
-+ BIGQUERY_PROJECT_ID=messaging-bq-dedicated
++ BIGQUERY_PROJECT_ID=messaging-hub-bq-dedicated
 ```
 
 **What stays the same:**
@@ -317,7 +317,7 @@ BigQueryOptions.Builder optionsBuilder = BigQueryOptions.newBuilder()
 - ✅ Query logic (NO CHANGE)
 
 **What changes:**
-- ⚠️ **project_id parameter:** `narvar-data-lake` → `messaging-bq-dedicated`
+- ⚠️ **project_id parameter:** `narvar-data-lake` → `messaging-hub-bq-dedicated`
 - ⚠️ **Table references:** Must use fully-qualified names (project.dataset.table)
 
 **IMPORTANT: Table Name Format**
@@ -385,7 +385,7 @@ FROM `narvar-data-lake.messaging.pubsub_rules_engine_pulsar_debug`
 ### Dedicated Reservation Cost for Messaging
 
 **Configuration:**
-- New project: `messaging-bq-dedicated`
+- New project: `messaging-hub-bq-dedicated`
 - Assigned to: `messaging-dedicated` reservation (already created)
 - Baseline: 50 slots ($146/month)
 - Autoscale: +50 slots (~$73/month when active during 9pm peak)
@@ -419,7 +419,7 @@ FROM `narvar-data-lake.messaging.pubsub_rules_engine_pulsar_debug`
 1. **Single grant command:**
 ```bash
 bq add-iam-policy-binding \
-  --member="serviceAccount:messaging-bq@messaging-bq-dedicated.iam.gserviceaccount.com" \
+  --member="serviceAccount:messaging-bq@messaging-hub-bq-dedicated.iam.gserviceaccount.com" \
   --role="roles/bigquery.dataViewer" \
   narvar-data-lake:messaging
 ```
@@ -448,24 +448,24 @@ bq add-iam-policy-binding \
 
 ```bash
 # Grant data-eng@narvar.com group owner access
-gcloud projects add-iam-policy-binding messaging-bq-dedicated \
+gcloud projects add-iam-policy-binding messaging-hub-bq-dedicated \
   --member="group:data-eng@narvar.com" \
   --role="roles/owner"
 
 # Grant individual leads as well (for redundancy)
-gcloud projects add-iam-policy-binding messaging-bq-dedicated \
+gcloud projects add-iam-policy-binding messaging-hub-bq-dedicated \
   --member="user:saurabh.shrivastava@narvar.com" \
   --role="roles/owner"
 
-gcloud projects add-iam-policy-binding messaging-bq-dedicated \
+gcloud projects add-iam-policy-binding messaging-hub-bq-dedicated \
   --member="user:julia.le@narvar.com" \
   --role="roles/owner"
 
-gcloud projects add-iam-policy-binding messaging-bq-dedicated \
+gcloud projects add-iam-policy-binding messaging-hub-bq-dedicated \
   --member="user:cezar.mihaila@narvar.com" \
   --role="roles/owner"
 
-gcloud projects add-iam-policy-binding messaging-bq-dedicated \
+gcloud projects add-iam-policy-binding messaging-hub-bq-dedicated \
   --member="user:eric.rops@narvar.com" \
   --role="roles/owner"
 ```
@@ -490,7 +490,7 @@ gcloud projects get-iam-policy narvar-data-lake \
 
 # Copy the same users/groups to new project
 # (Replace USER_EMAIL with actual emails from above)
-gcloud projects add-iam-policy-binding messaging-bq-dedicated \
+gcloud projects add-iam-policy-binding messaging-hub-bq-dedicated \
   --member="user:USER_EMAIL" \
   --role="roles/owner"
 ```
@@ -516,7 +516,7 @@ gcloud projects add-iam-policy-binding messaging-bq-dedicated \
 ### Day 1: Infrastructure Setup
 
 **Morning (1-2 hours):**
-- [ ] Create messaging-bq-dedicated project
+- [ ] Create messaging-hub-bq-dedicated project
 - [ ] Link billing account
 - [ ] Enable BigQuery API
 - [ ] Assign project to messaging-dedicated reservation (API call)
@@ -534,7 +534,7 @@ gcloud projects add-iam-policy-binding messaging-bq-dedicated \
 ### Day 2: Staging Deployment
 
 **Morning (2 hours):**
-- [ ] Update staging config: project_id = messaging-bq-dedicated
+- [ ] Update staging config: project_id = messaging-hub-bq-dedicated
 - [ ] Deploy to staging pods (rolling restart)
 - [ ] Test notification history searches (10+ tests, 100+ queries)
 - [ ] Verify all 10 tables accessible (cross-project access working)
@@ -554,7 +554,7 @@ gcloud projects add-iam-policy-binding messaging-bq-dedicated \
 
 **Morning (1 hour):**
 - [ ] Notify stakeholders (30-min warning)
-- [ ] Update production config: project_id = messaging-bq-dedicated
+- [ ] Update production config: project_id = messaging-hub-bq-dedicated
 - [ ] Rolling deployment (gradual pod update - zero downtime)
 - [ ] Monitor first pod for 15 minutes
 - [ ] Verify first pod queries using messaging-dedicated reservation
@@ -584,26 +584,26 @@ gcloud projects add-iam-policy-binding messaging-bq-dedicated \
 
 ### How BigQuery Cross-Project Queries Work
 
-**Query from messaging-bq-dedicated project:**
+**Query from messaging-hub-bq-dedicated project:**
 ```sql
 SELECT * FROM `narvar-data-lake.messaging.pubsub_rules_engine_pulsar_debug`
 WHERE event_ts >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY);
 ```
 
 **What happens:**
-1. Query runs in `messaging-bq-dedicated` project (service account has jobUser permission)
+1. Query runs in `messaging-hub-bq-dedicated` project (service account has jobUser permission)
 2. BigQuery checks if service account has permission on `narvar-data-lake.messaging` dataset (it does - existing permissions)
 3. If authorized, fetches data from source project
 4. Returns results
-5. **Billing:** Charges `messaging-bq-dedicated` project  
-6. **Reservation:** Uses messaging-bq-dedicated's assignment (messaging-dedicated reservation)
+5. **Billing:** Charges `messaging-hub-bq-dedicated` project  
+6. **Reservation:** Uses messaging-hub-bq-dedicated's assignment (messaging-dedicated reservation)
 7. **Slots:** 50 baseline + autoscale to 100
 
 **No data leaves narvar-data-lake** - BigQuery handles routing internally
 
 **Latency:** Identical to same-project queries (milliseconds overhead, negligible)
 
-**Cost:** ~$219/month (reservation charges to messaging-bq-dedicated project billing)
+**Cost:** ~$219/month (reservation charges to messaging-hub-bq-dedicated project billing)
 
 ---
 
@@ -646,7 +646,7 @@ bq ls narvar-data-lake:messaging
 **Change required:**
 ```diff
 - OLD: messaging@narvar-data-lake.iam.gserviceaccount.com credentials
-+ NEW: messaging-bq@messaging-bq-dedicated.iam.gserviceaccount.com credentials
++ NEW: messaging-bq@messaging-hub-bq-dedicated.iam.gserviceaccount.com credentials
 ```
 
 **Code changes:** NONE
@@ -712,14 +712,14 @@ kubectl rollout restart deployment/notify-automation-service
 // When creating BigQuery client
 BigQueryOptions.Builder optionsBuilder = BigQueryOptions.newBuilder()
 -   .setProjectId("narvar-data-lake")  // OLD: queries billed to narvar-data-lake
-+   .setProjectId("messaging-bq-dedicated")  // NEW: queries billed to messaging-bq-dedicated
++   .setProjectId("messaging-hub-bq-dedicated")  // NEW: queries billed to messaging-hub-bq-dedicated
     .setCredentials(credentials);
 ```
 
 **OR if using environment variable:**
 ```diff
 - BIGQUERY_PROJECT_ID=narvar-data-lake
-+ BIGQUERY_PROJECT_ID=messaging-bq-dedicated
++ BIGQUERY_PROJECT_ID=messaging-hub-bq-dedicated
 ```
 
 **Service account stays the same:**
@@ -743,7 +743,7 @@ BigQueryOptions.Builder optionsBuilder = BigQueryOptions.newBuilder()
 ```bash
 # Update config map or environment variable
 kubectl set env deployment/notify-automation-service \
-  BIGQUERY_PROJECT_ID=messaging-bq-dedicated \
+  BIGQUERY_PROJECT_ID=messaging-hub-bq-dedicated \
   -n messaging
 
 # Rolling restart automatically happens
@@ -772,8 +772,8 @@ kubectl rollout restart deployment/notify-automation-service -n messaging
 ```
 
 **Why required:**
-- When project_id = messaging-bq-dedicated, BigQuery looks for tables in that project
-- Table reference `messaging.table` becomes `messaging-bq-dedicated.messaging.table` (doesn't exist!)
+- When project_id = messaging-hub-bq-dedicated, BigQuery looks for tables in that project
+- Table reference `messaging.table` becomes `messaging-hub-bq-dedicated.messaging.table` (doesn't exist!)
 - Must explicitly specify `narvar-data-lake.messaging.table` for cross-project
 
 **Check all 10 tables** referenced in NoFlakeQueryService.java are updated.
@@ -788,7 +788,7 @@ kubectl rollout restart deployment/notify-automation-service -n messaging
 # In staging environment, after deploying project_id change:
 
 # Test the exact query pattern from DTPL-6903
-# This should execute via messaging-bq-dedicated project, 
+# This should execute via messaging-hub-bq-dedicated project, 
 # access narvar-data-lake.messaging tables,
 # and use messaging-dedicated reservation
 
@@ -835,7 +835,7 @@ LIMIT 10;
 
 **Recommended approach:** Rolling deployment (zero downtime)
 
-1. Update production config (project_id = messaging-bq-dedicated)
+1. Update production config (project_id = messaging-hub-bq-dedicated)
 2. Rolling restart pods (gradual, 1 pod at a time)
 3. Monitor first pod for 15 minutes
 4. Continue rollout to remaining pods
@@ -894,7 +894,7 @@ kubectl rollout restart deployment/notify-automation-service -n messaging
 - ✅ User-facing features (transparent to end users)
 
 **What MUST change:**
-- ⚠️ **BigQuery client project_id:** `narvar-data-lake` → `messaging-bq-dedicated`
+- ⚠️ **BigQuery client project_id:** `narvar-data-lake` → `messaging-hub-bq-dedicated`
 - ⚠️ **Table references:** Must use fully-qualified format:
   - ❌ **Wrong:** `FROM messaging.pubsub_rules_engine_pulsar_debug`
   - ✅ **Correct:** `FROM narvar-data-lake.messaging.pubsub_rules_engine_pulsar_debug`
@@ -966,7 +966,7 @@ kubectl rollout restart deployment/notify-automation-service -n messaging
 3. [ ] Identify who needs admin access to new project
 
 ### Tomorrow (Nov 25):
-4. [ ] Create messaging-bq-dedicated project
+4. [ ] Create messaging-hub-bq-dedicated project
 5. [ ] Assign project to messaging-dedicated reservation (API)
 6. [ ] Grant messaging@narvar-data-lake jobUser permission on new project
 7. [ ] Grant admin access: Saurabh, Julia, Cezar, Eric + data-eng@narvar.com
