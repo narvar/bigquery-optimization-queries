@@ -95,52 +95,32 @@ Format should be one of: projects/myproject, folders/123, organizations/456
 
 **Approach:**
 1. Create new GCP project: `messaging-bq-dedicated`
-2. Create new service account: `messaging-bq@messaging-bq-dedicated.iam.gserviceaccount.com`
-3. Grant permissions to access messaging.* tables in narvar-data-lake
-4. Update notify-automation-service to use new service account
-5. New project uses on-demand by default (not assigned to any reservation)
+2. Assign project to messaging-dedicated reservation (use existing reservation!)
+3. Grant existing service account (`messaging@narvar-data-lake`) jobUser permission on new project
+4. Update notify-automation-service:
+   - Change project_id: `narvar-data-lake` → `messaging-bq-dedicated`
+   - Update table references to fully-qualified names: `narvar-data-lake.messaging.table`
+5. **Reuse existing service account** (simpler!)
 
-**Cost:** $27/month (on-demand for messaging traffic only)
+**Cost:** ~$219/month (50-slot baseline + autoscale 50 via messaging-dedicated reservation)
 
 **Pros:**
-- ✅ Achieves original goal (on-demand at $27/month)
-- ✅ Complete isolation
-- ✅ No impact on other services
+- ✅ Complete isolation from other services
+- ✅ Cost control and predictability ($219/month ceiling)
+- ✅ Handles 9pm peak (autoscale to 100 slots)
+- ✅ Uses existing messaging-dedicated reservation (already created)
+- ✅ No impact on narvar-data-lake services
+- ✅ **Simpler:** Reuse existing service account (no credential swap!)
 
 **Cons:**
-- ❌ Requires application changes (new service account)
-- ❌ Cross-project data access setup
-- ❌ More complex (new project, IAM, testing)
-- ❌ Timeline: 3-5 days (not today)
+- ⚠️ Requires application changes (project_id + table name format)
+- ⚠️ Cross-project data access setup (simple: just grant jobUser on new project)
+- ⚠️ Messaging team involvement (code review for table names, test, deploy)
+- ⚠️ Timeline: 3-4 days (not immediate)
 
 ---
 
-### Option B: Remove narvar-data-lake from Org Assignment
-
-**Approach:**
-1. Delete org-level assignment (organizations/770066481180)
-2. Create project-specific assignments for ALL other projects
-3. Leave narvar-data-lake unassigned (goes to on-demand)
-4. All narvar-data-lake traffic (including messaging) uses on-demand
-
-**Cost:** 
-- narvar-data-lake on-demand: ~$500-800/month (88,650 slot-hours @ $6.25/TB)
-- Need to calculate TB processed for accurate estimate
-
-**Pros:**
-- ✅ No application changes
-- ✅ Simple for narvar-data-lake (just use on-demand)
-- ✅ Entire project gets unlimited capacity
-
-**Cons:**
-- ❌ Affects ENTIRE organization
-- ❌ High cost ($500-800/month vs $27 for just messaging)
-- ❌ Requires coordination across all teams
-- ❌ Timeline: 1-2 weeks minimum
-
----
-
-### Option C: Accept Status Quo
+### Option B: Accept Status Quo
 
 **Approach:**
 - Keep messaging on shared reservation
@@ -170,16 +150,12 @@ Format should be one of: projects/myproject, folders/123, organizations/456
 4. Decision meeting: Which option to pursue?
 
 ### Short-term (This Week - if Option A approved):
-1. Create messaging-bq-dedicated project
-2. Set up cross-project data access
-3. Test with new service account in staging
-4. Deploy to production with app update
+1. **Day 1 (Data Eng):** Create messaging-bq-dedicated project, assign to reservation, grant permissions
+2. **Day 2 (Messaging Team):** Update project_id and table references, deploy to staging, test
+3. **Day 3 (Messaging Team):** Deploy to production with monitoring
+4. **Days 4-5:** Validation and close DTPL-6903
 
-### Medium-term (Next Month - if Option B approved):
-1. Audit all projects in narvar.com organization
-2. Plan org-level assignment migration
-3. Coordinate with all teams
-4. Phased rollout
+**Key simplification:** Reuse existing messaging@narvar-data-lake service account (no credential swap!)
 
 ---
 

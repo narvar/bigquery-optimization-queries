@@ -22,36 +22,49 @@
 
 ---
 
-**Three options to resolve:**
+**Two viable options:**
 
-**Option A: Create separate project for messaging** (my recommendation)
-- New project: `messaging-bq-dedicated`
-- Uses on-demand ($27/month for messaging only)
-- Requires: Cross-project table access + app config change
+**Option A: Create separate project for messaging** ⭐ RECOMMENDED
+- New project: `messaging-bq-dedicated` 
+- Uses existing `messaging-dedicated` reservation (50 + autoscale 50)
+- Cost: ~$219/month (predictable, capped)
+- Requires: Cross-project table access (simple) + app config change (credential swap only)
 - Timeline: 3-5 days
-- **Pros:** Achieves original goal, isolated, cheap
-- **Cons:** Application changes required
+- **Pros:** Isolation, cost control, handles 9pm peak
+- **Cons:** Requires messaging team to update service account credentials
 
-**Option B: Remove org-level assignment (entire narvar-data-lake → on-demand)**
-- Cost: ~$500-800/month for entire project
-- Requires: Org-wide coordination
-- Timeline: 1-2 weeks
-- **Pros:** No app changes
-- **Cons:** Expensive, affects whole org
-
-**Option C: Accept status quo**
+**Option B: Accept status quo**
 - Monitor and escalate when saturation returns
 - **Pros:** No changes
-- **Cons:** Doesn't solve problem
+- **Cons:** Delays will return (problem currently dormant but will recur)
+
+---
+
+**Recommendation:** Option A (Separate Project with Existing Service Account)
+
+**What messaging team needs to do:**
+1. **Update BigQuery client:** Change `project_id` from `narvar-data-lake` to `messaging-bq-dedicated`
+2. **Update table references:** Use fully-qualified names: `narvar-data-lake.messaging.table_name` (not `messaging.table_name`)
+3. Deploy to staging and test (2-4 hours)
+4. Deploy to production with rolling restart (zero downtime)
+
+**Good news:**
+- ✅ **No credential changes** - reuse existing messaging@narvar-data-lake service account
+- ✅ **No secrets updates** - same K8s secrets
+- ✅ **Just config + code review** - project_id parameter + table name format
+
+**Timeline:** 3-4 days (Day 1: Data Eng setup, Days 2-3: Messaging team deploy/test)
 
 ---
 
 **Next steps:**
-1. Today: Document options and trade-offs
-2. This week: Decision meeting on which approach to pursue
-3. If Option A: Create messaging-bq-dedicated project and migrate
+1. Done: Document options and trade-offs
+2. If Option A: Create messaging-bq-dedicated project and migrate
 
 **Weekend data:** No latency issues Sat-Mon (problem currently dormant, not urgent)
+
+**Full Plan** See full plan: https://github.com/narvar/bigquery-optimization-queries/blob/main/narvar/adhoc_analysis/dtpl6903_notification_history_bq_latency/narvar/adhoc_analysis/dtpl6903_notification_history_bq_latency/SEPARATE_PROJECT_SOLUTION.md
+
 
 **Questions?** See full analysis: https://github.com/narvar/bigquery-optimization-queries/blob/main/narvar/adhoc_analysis/dtpl6903_notification_history_bq_latency/DEPLOYMENT_BLOCKER_DISCOVERY.md
 
