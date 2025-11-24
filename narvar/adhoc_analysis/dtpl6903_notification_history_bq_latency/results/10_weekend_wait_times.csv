@@ -1,0 +1,91 @@
+WITH daily_metrics AS (
+  SELECT
+    DATE(creation_time, 'America/Los_Angeles') AS date_pst,
+    EXTRACT(DAYOFWEEK FROM creation_time) AS day_of_week,
+    CASE EXTRACT(DAYOFWEEK FROM creation_time)
+      WHEN 1 THEN 'Sunday'
+      WHEN 2 THEN 'Monday'
+      WHEN 3 THEN 'Tuesday'
+      WHEN 4 THEN 'Wednesday'
+      WHEN 5 THEN 'Thursday'
+      WHEN 6 THEN 'Friday'
+      WHEN 7 THEN 'Saturday'
+    END AS day_name,
+    
+    COUNT(*) AS total_queries,
+    
+    -- Queue time analysis
+    AVG(TIMESTAMP_DIFF(start_time, creation_time, SECOND)) AS avg_queue_sec,
+    APPROX_QUANTILES(TIMESTAMP_DIFF(start_time, creation_time, SECOND), 100)[OFFSET(50)] AS p50_queue_sec,
+    APPROX_QUANTILES(TIMESTAMP_DIFF(start_time, creation_time, SECOND), 100)[OFFSET(90)] AS p90_queue_sec,
+    APPROX_QUANTILES(TIMESTAMP_DIFF(start_time, creation_time, SECOND), 100)[OFFSET(95)] AS p95_queue_sec,
+    MAX(TIMESTAMP_DIFF(start_time, creation_time, SECOND)) AS max_queue_sec,
+    
+    -- Execution time
+    AVG(TIMESTAMP_DIFF(end_time, start_time, SECOND)) AS avg_exec_sec,
+    MAX(TIMESTAMP_DIFF(end_time, start_time, SECOND)) AS max_exec_sec,
+    
+    -- Problem detection
+    COUNTIF(TIMESTAMP_DIFF(start_time, creation_time, SECOND) > 60) AS delayed_over_1min,
+    COUNTIF(TIMESTAMP_DIFF(start_time, creation_time, SECOND) > 300) AS delayed_over_5min,
+    COUNTIF(TIMESTAMP_DIFF(start_time, creation_time, SECOND) > 480) AS delayed_over_8min,
+    
+    -- Percentage delayed
+    ROUND(100.0 * COUNTIF(TIMESTAMP_DIFF(start_time, creation_time, SECOND) > 60) / COUNT(*), 2) AS pct_delayed,
+    
+    -- Resource metrics
+    SUM(total_slot_ms) / 1000 AS total_slot_sec,
+    SUM(total_bytes_processed) / POW(1024, 3) AS total_gb
+    
+  FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+  WHERE creation_time BETWEEN analysis_start_date AND analysis_end_date
+    AND user_email = target_user
+    AND job_type = 'QUERY'
+    AND state = 'DONE'
+  GROUP BY date_pst, day_of_week, day_name
+)
+
+SELECT
+  date_pst,
+  day_name,
+  total_queries,
+  
+  -- Queue time metrics
+  ROUND(avg_queue_sec, 1) AS avg_queue_sec,
+  p50_queue_sec,
+  p90_queue_sec,
+  p95_queue_sec,
+  max_queue_sec,
+  
+  -- Execution time
+  ROUND(avg_exec_sec, 1) AS avg_exec_sec,
+  max_exec_sec,
+  
+  -- Problem severity
+  delayed_over_1min,
+  delayed_over_5min,
+  delayed_over_8min,
+  pct_delayed,
+  
+  -- Resource consumption
+  ROUND(total_slot_sec, 0) AS total_slot_sec,
+  ROUND(total_gb, 1) AS total_gb,
+  
+  -- Status
+  CASE
+    WHEN max_queue_sec > 300 THEN '🔴 CRITICAL'
+    WHEN max_queue_sec > 60 THEN '🟡 WARNING'
+    WHEN max_queue_sec > 30 THEN '🟢 WATCH'
+    ELSE '✅ HEALTHY'
+  END AS status
+
+FROM daily_metrics
+ORDER BY date_pst DESC; -- at [11:1]
+date_pst,day_name,total_queries,avg_queue_sec,p50_queue_sec,p90_queue_sec,p95_queue_sec,max_queue_sec,avg_exec_sec,max_exec_sec,delayed_over_1min,delayed_over_5min,delayed_over_8min,pct_delayed,total_slot_sec,total_gb,status
+2025-11-24,Monday,4612,0.0,0,0,0,0,1.2,249,0,0,0,0.0,644004.0,35056.5,✅ HEALTHY
+2025-11-23,Monday,2367,0.0,0,0,0,0,1.7,490,0,0,0,0.0,1116944.0,52110.2,✅ HEALTHY
+2025-11-23,Sunday,7579,0.0,0,0,0,1,0.7,107,0,0,0,0.0,1257190.0,52453.3,✅ HEALTHY
+2025-11-22,Saturday,8633,0.0,0,0,0,1,0.8,92,0,0,0,0.0,1546914.0,60364.4,✅ HEALTHY
+2025-11-22,Sunday,1987,0.0,0,0,0,1,2.4,493,0,0,0,0.0,1302714.0,49096.8,✅ HEALTHY
+2025-11-21,Friday,13029,4.5,0,0,18,558,1.0,287,249,32,12,1.91,1684475.0,96809.0,🔴 CRITICAL
+2025-11-21,Saturday,2385,0.0,0,0,0,1,1.9,324,0,0,0,0.0,1537743.0,55304.3,✅ HEALTHY
