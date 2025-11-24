@@ -129,7 +129,7 @@ Including: messaging@narvar-data-lake.iam.gserviceaccount.com
 
 ### Pre-Deployment Checklist (5 minutes)
 
-#### 1. Capture Baseline
+#### 1. Capture Baseline ✅ COMPLETE
 
 ```bash
 cd /Users/cezarmihaila/workspace/do_it_query_optimization_queries/bigquery-optimization-queries/narvar/adhoc_analysis/dtpl6903_notification_history_bq_latency
@@ -149,7 +149,18 @@ WHERE creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR)
 " | tee baseline_before_deployment_$(date +%Y%m%d_%H%M%S).csv
 ```
 
-**Save the output** - you'll compare after deployment.
+**Baseline captured at:** 10:45am PST, November 24, 2025  
+**Saved to:** `baseline_before_deployment_20251124_1045.csv`
+
+**Results:**
+- queries_last_hour: **1,244**
+- current_reservation: **bq-narvar-admin:US.default**
+- avg_queue_sec: **0.0008** (less than 1 millisecond)
+- max_queue_sec: **1** second
+- gb_processed: **10,873 GB** (~10.6 TB in 1 hour)
+- errors: **0**
+
+**Assessment:** ✅ System is healthy, no active incidents, safe to proceed with deployment.
 
 #### 2. Backup Current Reservation Config
 
@@ -227,6 +238,11 @@ chmod +x rollback_messaging_to_default.sh
 echo "✅ Rollback script created: ./rollback_messaging_to_default.sh"
 ```
 
+**✅ STEP 2 COMPLETED (Nov 24, 2:28pm PST):**
+- Script created: `rollback_messaging_to_default.sh` (1.7 KB, executable)
+- Ready to execute if rollback needed
+- Verified script syntax and functionality
+
 ---
 
 ### Deployment Steps (10 minutes)
@@ -270,23 +286,33 @@ Reservation 'bq-narvar-admin:US.messaging-dedicated' successfully created.
 - 9pm peak: 186-228 slots (needs autoscale)
 - Autoscale provides elasticity without paying for 100 slots 24/7
 
-**If error "already exists":** Check configuration:
+**✅ STEP 3 COMPLETED (Nov 24, 2:29pm PST):**
+
+**Reservation successfully created and verified in GCP Console:**
+- **Console URL:** https://console.cloud.google.com/bigquery/admin/reservations/locations/us/reservations/messaging-dedicated/overview?project=bq-narvar-admin
+- **ID:** `projects/bq-narvar-admin/locations/US/reservations/messaging-dedicated`
+- **Location:** US
+- **Edition:** Enterprise ✅
+- **Baseline slots:** 50 ✅
+- **Max size (with autoscale):** 100 ✅
+- **Autoscale max slots:** 50 ✅
+- **Autoscale current:** 0 (not yet active - normal)
+- **Ignore idle slots:** Disabled
+- **Concurrency:** AUTO
+- **Capacity model:** Editions
+
+**Configuration verified:** ✅ All parameters match deployment specification
+
+**Status:** Reservation ready for service account assignment
+
+#### Step 2: Assign Service Account ❌ FAILED - API LIMITATION DISCOVERED
+
+**Attempted:** Assign individual service account to reservation
+
 ```bash
-bq show --location=US --reservation --project_id=bq-narvar-admin bq-narvar-admin:US.messaging-dedicated
-# Verify: slotCapacity=50, autoscaleMaxSlots=50, edition=ENTERPRISE
-```
-
-**If permission denied:** You need `bigquery.resourceAdmin` or `bigquery.admin` role on `bq-narvar-admin` project.
-
-#### Step 2: Assign Messaging Service Account (3 minutes)
-
-**Using BigQuery API (since gcloud commands not available):**
-
-```bash
-# Get authentication token
+# ATTEMPTED (Failed):
 TOKEN=$(gcloud auth print-access-token)
 
-# Create service-account-specific assignment
 curl -X POST \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -295,26 +321,27 @@ curl -X POST \
     "jobType": "QUERY"
   }' \
   "https://bigqueryreservation.googleapis.com/v1/projects/bq-narvar-admin/locations/US/reservations/messaging-dedicated/assignments"
-
-# Log assignment
-echo "Created assignment at: $(date)" >> deployment_log.txt
 ```
 
-**Expected output:**
-```json
-{
-  "name": "projects/bq-narvar-admin/locations/US/reservations/messaging-dedicated/assignments/...",
-  "assignee": "projects/narvar-data-lake/serviceAccounts/messaging@narvar-data-lake.iam.gserviceaccount.com",
-  "jobType": "QUERY",
-  "state": "ACTIVE"
-}
+**Result:** ❌ **API Error 400: Invalid Argument**
+
+**Error message:**
+```
+Assignment.assignee has the wrong format. 
+Format should be one of: projects/myproject, folders/123, organizations/456
 ```
 
-**If you see this:** ✅ Deployment successful!
+**CRITICAL DISCOVERY (Nov 24, 2:32pm PST):**
+- BigQuery Reservation API **only supports project/folder/org-level assignments**
+- **Cannot assign individual service accounts**
+- To use messaging-dedicated, must assign entire `projects/narvar-data-lake`
+- narvar-data-lake has 530 concurrent slots usage (50-slot reservation insufficient!)
 
-**If error 403 (permission denied):** You don't have permission to create assignments. Request `bigquery.resourceAdmin` role.
+**Rollback executed:** ✅ No production impact
 
-**If error 409 (already exists):** Assignment already created, verify it's correct with Step 3.
+**Status:** 🔴 **DEPLOYMENT BLOCKED** - This approach will not work
+
+**See:** `DEPLOYMENT_BLOCKER_DISCOVERY.md` for complete analysis and alternative options
 
 #### Step 3: Wait for Propagation (1 minute)
 

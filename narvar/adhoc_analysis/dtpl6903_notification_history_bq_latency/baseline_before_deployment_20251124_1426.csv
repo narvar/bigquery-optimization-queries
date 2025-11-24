@@ -1,0 +1,2 @@
+queries_last_hour,current_reservation,avg_queue_sec,max_queue_sec,gb_processed,errors
+1244,bq-narvar-admin:US.default,8.0E-4,1,10873.17,0

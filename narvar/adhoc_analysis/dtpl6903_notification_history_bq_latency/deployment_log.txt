@@ -1,0 +1,5 @@
+Created at: Mon Nov 24 14:29:04 EST 2025
+  - Baseline: 50 slots ($146/month)
+  - Autoscale: +50 slots max
+  - Total capacity: 100 slots
+Assignment created at: Mon Nov 24 14:32:25 EST 2025
