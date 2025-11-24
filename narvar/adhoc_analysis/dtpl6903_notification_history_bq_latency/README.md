@@ -27,30 +27,80 @@ Notification History feature experiencing significant BigQuery latency issues:
 
 **Root cause hypothesis**: Queue wait time (not execution time) is the problem.
 
-## Investigation Status: ✅ COMPLETE
+---
+
+## Final Deployment Plan (Nov 24, 2025)
+
+### Configuration:
+- **Reservation:** `messaging-dedicated` (new, dedicated to messaging service)
+- **Baseline capacity:** 50 slots ($146/month)
+- **Autoscale maximum:** +50 slots ($73/month avg when active)
+- **Total capacity:** 100 slots
+- **Edition:** ENTERPRISE (required for autoscaling)
+- **Total cost:** ~$219/month
+
+### Why This Configuration:
+1. **Average usage:** 48 concurrent slots (fits in 50 baseline)
+2. **9pm daily spike:** 186-386 concurrent slots (needs autoscale)
+3. **Cost optimization:** Autoscale saves $73/month vs fixed 100-slot reservation
+4. **Handles 95%+ of traffic:** Only extreme peaks (386 slots) might briefly queue
+
+### Deployment Method:
+- **Step 1:** Create reservation with `bq mk --autoscale_max_slots=50`
+- **Step 2:** Assign service account via BigQuery Reservation API (curl)
+- **Step 3:** Monitor intensively (5-min checks for first hour)
+- **Rollback:** 2-minute recovery if issues
+
+### Why Not On-Demand ($27/month):
+- **Discovery:** Entire narvar.com organization assigned to `bq-narvar-admin:US.default`
+- Cannot remove individual service accounts from org-level assignment
+- Must create service-account-specific assignment (requires target reservation)
+- **Future:** Coordinate org-wide refactoring to enable on-demand (saves $192/month)
+
+## Investigation Status: ✅ COMPLETE | Deployment: 🟡 READY
 
 ### Root Cause Identified:
 - **Primary:** BigQuery reservation `bq-narvar-admin:US.default` saturated at maximum autoscale (1,700 slots)
+- **Organizational constraint:** Entire narvar.com organization assigned to shared reservation (org-level assignment)
 - **Secondary:** n8n Shopify ingestion causes 88% of worst notification history delay periods
 - **Impact:** Queue wait times 8-9 minutes vs 2-second execution times (279:1 ratio)
 
-### Solution Recommended:
-- **Immediate:** Configure messaging to use on-demand slots (~$27/month, 5-minute deployment)
-- **Alternative:** Move Airflow to separate reservation (frees 46% capacity, $3,000-4,500/month)
-- **Investigation:** n8n Shopify query efficiency (consuming 6,631 slot-minutes/minute overnight)
+### Solution Ready to Deploy:
+- **Approach:** Create dedicated reservation with 50-slot baseline + autoscale to 100 slots
+- **Cost:** ~$219/month ($146 baseline + ~$73 autoscale when active)
+- **Why autoscale:** Daily 9pm spike of 186-386 slots (4-8x average of 48 slots)
+- **Timeline:** 15 minutes deployment + 24 hours monitoring
+- **Alternative (future):** Org-level assignment refactoring → on-demand ($27/month, saves $192/month, requires 1-2 weeks coordination)
 
-## Document Guide
+### Peak Capacity Discovery (Nov 24):
+- **Average concurrent:** 48 slots
+- **Daytime (8am-6pm):** 46-57 slots
+- **9pm DAILY spike:** 186-386 slots (requires autoscale)
+- **Overnight:** 59-142 slots
 
-### 📖 Start Here:
-1. **EXECUTIVE_SUMMARY.md** - Read first for high-level overview and non-technical summary for Jira ticket
-2. **MESSAGING_CAPACITY_PLANNING.md** - Read second for complete implementation plan
+## 📖 Document Guide
 
-### 📊 Deep Dives:
-3. **FINDINGS.md** - Detailed technical analysis and data tables
-4. **CHOKE_POINTS_ANALYSIS.md** - Specific time periods and competing workload analysis
+### 🚀 For Deployment (Read These):
+1. **PRE_DEPLOYMENT_CHECKLIST.md** ⭐ Start here - Complete checklist before deployment
+2. **QUICK_DEPLOY.sh** - Automated deployment script (or use manual steps from checklist)
+3. **DEPLOYMENT_RUNBOOK_FINAL.md** - Complete technical reference with troubleshooting
 
-### 🔧 Implementation:
-5. **MESSAGING_CAPACITY_PLANNING.md** - TRD with deployment commands, monitoring, and risk mitigation
+### 📊 Analysis & Justification (Background):
+4. **EXECUTIVE_SUMMARY.md** - High-level overview for stakeholders (ready for Jira ticket)
+5. **CAPACITY_ANALYSIS_SUMMARY.md** - Traffic attribution and peak capacity analysis
+6. **FINDINGS.md** - Root cause analysis with queue vs execution time breakdown
+7. **CHOKE_POINTS_ANALYSIS.md** - 10-minute period analysis (n8n Shopify impact)
+
+### 📁 Supporting Data:
+- `queries/` - 11 SQL analysis queries (validated and executed)
+- `results/` - Query outputs including hourly_peak_slots.csv (peak analysis)
+- `calculate_capacity.py` - Capacity calculation script
+
+### 📚 Archive (Superseded Docs):
+- `archive/` - Previous deployment plans and intermediate analysis
+  - Original on-demand plan (not viable due to org-level assignment)
+  - Credential checks and CLI guides (incorporated into final docs)
+  - Org-level assignment discovery docs (incorporated)
 
 ## Service Account Details
 
@@ -87,36 +137,43 @@ Each search = 10 parallel queries across these tables.
   - Overnight periods with 6,631 slot-minutes/minute consumption
   - Time-of-day patterns and recommendations
 
-### Implementation Planning:
+### 🚀 Deployment Documents (CURRENT - Nov 24):
 
-**⚠️ UPDATE (Nov 24):** Discovery of org-level assignment changed deployment approach.
-
-- **`DEPLOYMENT_RUNBOOK_FINAL.md`** ⭐ **CURRENT - Use This for Deployment**
-  - **Purpose:** Step-by-step deployment guide based on org-level assignment discovery
-  - **Solution:** Create dedicated 50-slot flex reservation (org-level blocks on-demand)
-  - **Cost:** $146/month (vs originally planned $27/month on-demand)
+- **`DEPLOYMENT_RUNBOOK_FINAL.md`** ⭐ **Complete Deployment Guide**
+  - **Configuration:** 50-slot baseline + autoscale to 100 slots (ENTERPRISE edition)
+  - **Cost:** ~$219/month ($146 baseline + ~$73 autoscale)
+  - **Why autoscale:** Daily 9pm spike of 186-386 slots requires elastic capacity
   - **Timeline:** 15 minutes deployment + 24 hours monitoring
-  - **Deployment Method:** CLI using BigQuery Reservation API (curl commands)
-  - **Complete Scripts:** Pre-deployment, deployment, rollback, monitoring (5-min/hourly/daily)
-  - **Success Metrics:** P95 queue <2s, 100% on dedicated reservation
-  - **Capacity Right-Sizing:** Guide to optimize 30-100 slots based on usage
+  - **Method:** BigQuery Reservation API (curl commands - gcloud not available)
+  - **Includes:** Pre-deployment backup, deployment steps, monitoring scripts, rollback procedures
   
-- **`ORG_LEVEL_ASSIGNMENT_SOLUTION.md`** - Discovery Documentation
-  - **Key Finding:** Entire narvar.com organization assigned to default reservation
-  - **Why on-demand not achievable:** Cannot remove individual service accounts from org assignment
-  - **Solution:** Service-account-specific assignment overrides org-level
-  - **Future optimization:** Org-wide refactoring to enable on-demand (saves $119/month)
+- **`PRE_DEPLOYMENT_CHECKLIST.md`** ⭐ **Step-by-Step Checklist**
+  - 5 pre-flight checks with commands
+  - Copy-paste deployment commands
+  - Monitoring schedule (5-min/hourly/daily)
+  - Success criteria and rollback decision tree
+  
+- **`QUICK_DEPLOY.sh`** ⭐ **Automated Deployment Script**
+  - Interactive deployment with confirmations
+  - Creates reservation with autoscale
+  - Assigns service account via API
+  - Runs verification automatically
+  - Ready to execute: `./QUICK_DEPLOY.sh`
+  
+- **`CAPACITY_ANALYSIS_SUMMARY.md`** ⭐ **Capacity Justification**
+  - Traffic attribution: 87,383 queries, 8,040 slot-hours (10% of reservation)
+  - Peak analysis: Daily 9pm spike of 186-386 slots
+  - Cost comparison: autoscale vs fixed capacity
+  - Why 50 + autoscale 50 is optimal
 
-- **`CREDENTIAL_CHECK.md`** - Permission Verification Results
-  - Verified: Can access Console, view reservations, run queries
-  - Issue: gcloud alpha commands not available (use API instead)
-  - Resolution: Use curl with BigQuery Reservation API
-
-### Background/Reference Documents:
-- **`MESSAGING_CAPACITY_PLANNING.md`** - Original TRD (updated with org-level discovery note)
-- **`CLI_DEPLOYMENT_GUIDE.md`** - API command reference
-- **`DEPLOYMENT_RUNBOOK.md`** - Original runbook (superseded by FINAL version)
-- **`ON_DEMAND_DEPLOYMENT_PLAN.md`** - Original on-demand plan (not achievable given org assignment)
+### 📁 Archived Documents:
+- **`archive/`** - Superseded deployment plans
+  - `DEPLOYMENT_RUNBOOK.md` - Original (superseded by FINAL)
+  - `ON_DEMAND_DEPLOYMENT_PLAN.md` - On-demand approach (not viable due to org-level assignment)
+  - `CLI_DEPLOYMENT_GUIDE.md` - API reference (incorporated into FINAL)
+  - `ORG_LEVEL_ASSIGNMENT_SOLUTION.md` - Org discovery (incorporated into FINAL)
+  - `CREDENTIAL_CHECK.md` - Permission verification (resolved)
+  - `TEAM_NOTIFICATION.md` - Communication templates (one-time use)
 
 ### Supporting Data:
 - `queries/` - 9 SQL analysis queries (all validated and executed, $1.85 total cost)
