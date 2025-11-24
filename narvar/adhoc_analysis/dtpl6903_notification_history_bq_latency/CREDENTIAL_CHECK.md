@@ -325,7 +325,25 @@ Based on successful commands from Friday:
 
 ---
 
-**Status:** ⏸️ BLOCKED - Awaiting permission verification via GCP Console test
+**Status:** ✅ RESOLVED - Console permissions verified, org-level assignment discovered
 
-Should I guide you through the Console test now?
+---
+
+## ✅ Resolution: Org-Level Assignment Discovered
+
+**Console test completed:** You can access Assignments tab and see assignments.
+
+**Critical discovery:**
+- Only **1 assignment** exists: `organizations/770066481180`
+- Entire narvar.com organization → bq-narvar-admin:US.default
+- messaging@narvar-data-lake inherits from this org-level assignment
+
+**Implication:**
+- Cannot simply "remove" messaging (it's not directly assigned)
+- Must create service-account-specific assignment that **overrides** org-level
+- Solution: Create dedicated 50-slot flex reservation ($146/month)
+
+**See:** `DEPLOYMENT_RUNBOOK_FINAL.md` for complete deployment guide
+
+**Future:** Coordinate org-level assignment refactoring to achieve on-demand ($27/month) - saves $119/month but requires org-wide coordination.
 

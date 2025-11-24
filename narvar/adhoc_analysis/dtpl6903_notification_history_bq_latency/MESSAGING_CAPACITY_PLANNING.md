@@ -25,15 +25,20 @@
 
 **Objective:** Provide dedicated, isolated BigQuery capacity for messaging service to guarantee <5 second P95 response times.
 
-**Recommended Solution:** **On-Demand Slots** (Phase 1) → **50-slot Flex Reservation** (Phase 2 if needed)
+**⚠️ UPDATE (Nov 24):** Discovery of org-level reservation assignment changes approach.
+
+**Recommended Solution:** **50-slot Flex Reservation** (only viable option given org-level assignment)
 
 **Minimum Capacity Required:** 50-100 slots (based on peak concurrency analysis)
 
-**Estimated Cost:** 
-- On-demand: $27-$62/month (recommended starting point)
-- Flex reservation: $300-$600/month (if on-demand proves expensive)
+**Actual Cost:** 
+- ~~On-demand: $27/month~~ (NOT achievable - org-level assignment blocks this)
+- **50-slot Flex: $146/month** (minimum cost given organizational constraints)
+- Future optimization: Org-level refactoring → on-demand ($27/month, saves $119/month)
 
-**Implementation Timeline:** 3 days (spec → pilot → production)
+**Implementation Timeline:** 15 minutes deployment (create reservation + assign service account)
+
+**See:** `DEPLOYMENT_RUNBOOK_FINAL.md` for complete step-by-step guide based on org-level discovery.
 
 ---
 

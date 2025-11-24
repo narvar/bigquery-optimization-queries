@@ -88,23 +88,35 @@ Each search = 10 parallel queries across these tables.
   - Time-of-day patterns and recommendations
 
 ### Implementation Planning:
-- **`MESSAGING_CAPACITY_PLANNING.md`** ⭐ **Technical Requirements Document (TRD)**
-  - **Purpose:** Complete implementation guide for deploying dedicated BigQuery capacity
-  - **Capacity Requirements:** 50-100 slots minimum (based on peak concurrency analysis)
-  - **Pricing Options:**
-    - On-demand: $27/month (recommended for Phase 1)
-    - Flex slots: $146/month (if usage exceeds 24 TB/month)
-    - Annual commitment: $200/month (if usage exceeds 35 TB/month)
-  - **Implementation Timeline:** 3-5 days
-    - Days 1-2: Specification & approval (baseline measurement query included)
-    - Day 2: Pilot deployment (5-minute change to remove reservation assignment)
-    - Days 2-5: Monitoring & validation
-  - **Architecture:** Service account uses on-demand slots (no reservation)
-  - **Risk Analysis:** 5 major risks identified with mitigation strategies
-  - **Deployment Commands:** Complete bash/SQL scripts for implementation and rollback
-  - **Monitoring:** Daily dashboard query and alert thresholds
-  - **Success Metrics:** P95 queue <1s, cost <$150/month
-  - **Current Reservation Status:** bq-narvar-admin:US.default at 1,700 slots (maxed out)
+
+**⚠️ UPDATE (Nov 24):** Discovery of org-level assignment changed deployment approach.
+
+- **`DEPLOYMENT_RUNBOOK_FINAL.md`** ⭐ **CURRENT - Use This for Deployment**
+  - **Purpose:** Step-by-step deployment guide based on org-level assignment discovery
+  - **Solution:** Create dedicated 50-slot flex reservation (org-level blocks on-demand)
+  - **Cost:** $146/month (vs originally planned $27/month on-demand)
+  - **Timeline:** 15 minutes deployment + 24 hours monitoring
+  - **Deployment Method:** CLI using BigQuery Reservation API (curl commands)
+  - **Complete Scripts:** Pre-deployment, deployment, rollback, monitoring (5-min/hourly/daily)
+  - **Success Metrics:** P95 queue <2s, 100% on dedicated reservation
+  - **Capacity Right-Sizing:** Guide to optimize 30-100 slots based on usage
+  
+- **`ORG_LEVEL_ASSIGNMENT_SOLUTION.md`** - Discovery Documentation
+  - **Key Finding:** Entire narvar.com organization assigned to default reservation
+  - **Why on-demand not achievable:** Cannot remove individual service accounts from org assignment
+  - **Solution:** Service-account-specific assignment overrides org-level
+  - **Future optimization:** Org-wide refactoring to enable on-demand (saves $119/month)
+
+- **`CREDENTIAL_CHECK.md`** - Permission Verification Results
+  - Verified: Can access Console, view reservations, run queries
+  - Issue: gcloud alpha commands not available (use API instead)
+  - Resolution: Use curl with BigQuery Reservation API
+
+### Background/Reference Documents:
+- **`MESSAGING_CAPACITY_PLANNING.md`** - Original TRD (updated with org-level discovery note)
+- **`CLI_DEPLOYMENT_GUIDE.md`** - API command reference
+- **`DEPLOYMENT_RUNBOOK.md`** - Original runbook (superseded by FINAL version)
+- **`ON_DEMAND_DEPLOYMENT_PLAN.md`** - Original on-demand plan (not achievable given org assignment)
 
 ### Supporting Data:
 - `queries/` - 9 SQL analysis queries (all validated and executed, $1.85 total cost)

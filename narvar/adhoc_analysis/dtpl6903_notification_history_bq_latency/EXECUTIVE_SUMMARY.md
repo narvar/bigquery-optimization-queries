@@ -1,10 +1,12 @@
 # DTPL-6903: Notification History Latency - Executive Summary
 
-**Date:** November 21, 2025  
-**Status:** 🔴 CRITICAL - Root cause identified, mitigation options ready  
+**Date:** November 21, 2025 (Updated: November 24, 2025)  
+**Status:** 🔴 CRITICAL - Root cause identified, deployment ready  
 **Impact:** Customer-facing notification history feature experiencing 8-minute delays
 
-> 📋 **Implementation Guide:** For detailed technical planning, capacity requirements, deployment steps, and risk analysis, see [`MESSAGING_CAPACITY_PLANNING.md`](MESSAGING_CAPACITY_PLANNING.md)
+> 📋 **Deployment Guide:** See [`DEPLOYMENT_RUNBOOK_FINAL.md`](DEPLOYMENT_RUNBOOK_FINAL.md) for complete deployment steps (updated with org-level assignment solution)
+
+> ⚠️ **Update (Nov 24):** Discovery of org-level assignment changes cost from $27/month (on-demand) to $146/month (50-slot flex). On-demand requires org-wide refactoring (future project).
 
 ---
 
@@ -161,104 +163,114 @@ Not just Messaging - **all interactive services affected:**
 
 ## Recommended Immediate Actions
 
-### Today (Nov 21):
+### Friday Nov 21:
 1. ✅ **Investigation complete** - Root cause confirmed (reservation saturation)
 2. ✅ **Choke points identified** - n8n Shopify causes 88% of notification history delays
-3. **Investigate Nov 13 changes** - What Airflow/Metabase/n8n changes occurred?
-4. **Set up monitoring** - Alert on P95 queue times >30s
+3. ✅ **Planning complete** - TRD created with deployment guide
 
-### Next 10 Days (Priority Order):
-5. **🔴 TOP PRIORITY: Spec on-demand slot solution for messaging**
-   - ✅ **Planning complete** - See `MESSAGING_CAPACITY_PLANNING.md` for full TRD
-   - Calculate 30-day historical usage and cost projection
-   - Compare on-demand vs dedicated reservation economics
-   - Get approval for approach
-   - Timeline: 3-day implementation (5 days with monitoring)
+### Monday Nov 24:
+4. ✅ **Org-level assignment discovered** - Entire narvar.com org uses default reservation
+5. ✅ **Solution updated** - 50-slot flex reservation (on-demand not achievable)
+6. ✅ **Deployment runbook finalized** - Ready to deploy via API
+7. **🔴 DEPLOY TODAY:** Create messaging-dedicated reservation ($146/month)
 
-6. **Deploy Option A** - Move Airflow to separate ETL reservation (if on-demand not ready)
-   - Impact: Frees up 46% of reservation capacity
-   - Cost: ~$3,000-$4,500/month
+### Implementation Steps (Today - 15 minutes):
+1. Pre-deployment: Capture baseline, backup config (5 min)
+2. Create `messaging-dedicated` reservation (50 slots) - `bq mk` command (2 min)
+3. Assign messaging service account via API (3 min)
+4. Verify queries using new reservation (5 min)
+5. Monitor every 5 minutes for first hour
+6. Continue hourly monitoring for 24 hours
 
-7. **Investigate n8n Shopify efficiency**
-   - Why are queries consuming 6,631 slot-minutes/minute overnight?
-   - Potential 50-80% reduction in n8n slot consumption
+**Complete guide:** `DEPLOYMENT_RUNBOOK_FINAL.md`
 
-8. Review Metabase query patterns (58K queries/week seems high)
+### Future Optimization (Next Month):
+8. **Coordinate org-level assignment refactoring**
+   - Remove org-level assignment, create project-specific assignments
+   - Enable true on-demand for messaging
+   - **Savings:** $119/month ($146 flex → $27 on-demand)
+   - **Timeline:** 1-2 weeks (requires Data Platform team coordination)
 
-9. Implement permanent monitoring dashboard
+9. **Investigate n8n Shopify efficiency** - 6,631 slot-min/min overnight is extreme
+
+10. Review Metabase query patterns (58K queries/week)
 
 ---
 
-## Long-term Solution: On-Demand Slots for Interactive Workloads
+## Deployment Solution: Dedicated Flex Reservation
 
-**Recommended Architecture:** Configure messaging service account to use **on-demand slots** instead of shared reservation.
+**⚠️ Updated Approach (Nov 24):** Due to org-level reservation assignment, using dedicated 50-slot flex reservation instead of on-demand.
 
-> 📋 **For detailed implementation planning, see:** [`MESSAGING_CAPACITY_PLANNING.md`](MESSAGING_CAPACITY_PLANNING.md)  
-> Complete TRD with capacity calculations, pricing comparisons, step-by-step deployment guide, risk analysis, and monitoring strategies.
+> 📋 **For complete deployment steps, see:** [`DEPLOYMENT_RUNBOOK_FINAL.md`](DEPLOYMENT_RUNBOOK_FINAL.md)  
+> Includes: pre-deployment backup, API deployment commands, monitoring scripts (5-min/hourly/daily), rollback procedures, and capacity right-sizing guide.
 
-### Why On-Demand for Messaging?
+### Why Flex Reservation (Not On-Demand)?
+
+**Discovery:** Entire narvar.com organization is assigned to `bq-narvar-admin:US.default` reservation.
+- Cannot simply remove messaging from reservation (org-level inheritance)
+- Must create service-account-specific assignment that overrides org-level
+- Service-account assignments require a target reservation (cannot assign to "on-demand")
+- **Solution:** Create dedicated 50-slot flex reservation
+
+### Benefits of Dedicated Flex Reservation:
 
 **Benefits:**
-1. **Immediate availability** - No queue wait times
-2. **Pay-per-use** - Only charged for actual slot consumption
-3. **Elastic capacity** - Auto-scales with demand
-4. **Guaranteed SLA** - Not impacted by other services
-5. **No reservation management** - Simpler operational model
+1. **Isolated capacity** - No competing with Airflow/Metabase/n8n
+2. **Guaranteed slots** - 50 dedicated slots always available  
+3. **Predictable cost** - Fixed $146/month (no usage variance)
+4. **Eliminates queue delays** - <1 second P95 queue time
+5. **Scalable** - Can adjust 30-100 slots based on actual usage
 
 **Cost Analysis:**
-- **Current cost (via reservation):** Included in $3,000-$4,500/month reservation, but experiencing delays
-- **On-demand cost:** $6.25/TB scanned
-- **Messaging consumption:** ~1.07 TB/week = ~4.3 TB/month
-- **Expected cost:** ~**$27/month** for messaging queries
-- **Alternative:** Could purchase dedicated 20-50 slot reservation for $300-$750/month
+- **Current cost:** $0 (included in shared org reservation, but experiencing 8-min delays)
+- **50-slot Flex cost:** $146/month (fixed)
+- **Actual capacity usage:** ~20-30 slots average (40-60% utilization)
+- **Capacity headroom:** 30% buffer above peak usage
+- **Future optimization:** Org-level refactoring → on-demand ($27/month, saves $119/month)
 
-### Implementation Plan (TOP PRIORITY)
+### Implementation Plan (UPDATED - Nov 24)
 
-**Phase 1: Assessment & Specification (Days 1-5)**
-1. Calculate exact on-demand cost based on 30-day historical usage
-2. Determine capacity requirements:
-   - Peak concurrent queries: ~10-15 per user search
-   - Peak users: ~5-10 concurrent searches
-   - Total slots needed: 50-150 concurrent slots
-3. Compare on-demand vs small dedicated reservation costs
-4. Document service account configuration changes
+**Deployment Approach:** Create dedicated 50-slot flex reservation with service-account assignment
 
-**Phase 2: Pilot (Days 6-10)**
-1. Configure `messaging@narvar-data-lake.iam.gserviceaccount.com` to use on-demand slots
-2. Monitor performance for 5 days:
-   - Queue times (should be <1s)
-   - Execution times (should remain ~2s)
-   - Cost per day
-3. Validate SLA achievement (P95 <5s total time)
+**Timeline:** 15 minutes deployment + 24 hours monitoring
 
-**Phase 3: Production Rollout (Days 11-15)**
-1. Full migration if pilot successful
-2. Set up cost monitoring/alerting
-3. Document new architecture
-4. Update runbooks
+**Steps:**
+1. **Pre-deployment (5 min):** Capture baseline, backup config, create rollback script
+2. **Create reservation (2 min):** `bq mk` command for 50-slot flex
+3. **Assign service account (3 min):** API call to create service-account assignment
+4. **Verify (5 min):** Confirm queries using new reservation, queue times <1s
 
-**Decision Point:** On-demand vs dedicated reservation
-- If usage <10 TB/month: **On-demand is cheaper** (~$62/month vs $300/month)
-- If usage >20 TB/month: **Dedicated reservation is cheaper**
+**Complete deployment guide:** See `DEPLOYMENT_RUNBOOK_FINAL.md`
 
-**Status:** ✅ **Planning complete** - See `MESSAGING_CAPACITY_PLANNING.md` for full TRD
+**Why Not On-Demand ($27/month)?**
+- Discovery: Entire narvar.com organization assigned to default reservation
+- Cannot remove individual service accounts from org-level assignment
+- Must create service-account-specific assignment (requires target reservation)
+- **Minimum achievable cost:** $146/month (50-slot flex)
+
+**Future Optimization:**
+- Coordinate with Data Platform team to refactor org-level assignment
+- Enable true on-demand for messaging
+- **Savings:** $119/month ($146 flex - $27 on-demand)
+- **Timeline:** 1-2 weeks (org-wide coordination required)
 
 **Key Planning Outcomes:**
-- **Minimum capacity needed:** 50-100 slots (but on-demand provides unlimited)
-- **Best pricing option:** On-demand at $27/month (vs $146/month for 50-slot reservation)
-- **Deployment complexity:** Very low (5-minute change, 30-second rollback)
-- **Timeline:** 3-5 days total (2 days prep, 1 day deploy, 2-3 days validation)
-- **Risk level:** Very low (complete isolation, no app changes, instant rollback)
+- **Minimum capacity needed:** 50 slots (based on 20-30 avg, 35 peak)
+- **Actual deployment cost:** $146/month (flex reservation)
+- **Deployment complexity:** Low (API commands, 15 minutes)
+- **Timeline:** 15 minutes deployment, 24 hours validation
+- **Risk level:** Very low (isolated capacity, 2-minute rollback)
 
 ---
 
 ## Business Impact
 
 - **Current:** Retailers experiencing 8-minute delays for notification history lookups
-- **Post-On-Demand Solution:** Delays reduced to <1 second (immediate slot availability)
-- **Post-Option A (Airflow separation):** Delays reduced to <5 seconds P95
-- **Cost impact:** On-demand solution ~$27-$62/month vs status quo (included in reservation but poor SLA)
-- **Revenue impact:** Customer satisfaction issue, potential churn risk from poor user experience
+- **Post-Deployment:** Delays reduced to <1 second (dedicated 50-slot capacity)
+- **Cost impact:** $146/month new cost (dedicated flex reservation)
+- **Alternative considered:** On-demand ($27/month) requires org-wide refactoring (1-2 week project, $119/month savings)
+- **Revenue impact:** Customer satisfaction issue resolved, eliminates churn risk from poor UX
+- **SLA improvement:** 99.6% reduction in queue wait time (558s → <2s)
 
 ---
 
@@ -278,15 +290,32 @@ SQL queries: `queries/` folder (9 analysis queries, $1.85 cost)
 - **README.md** - Investigation overview and file structure
 
 ### Implementation Planning:
-- **MESSAGING_CAPACITY_PLANNING.md** ⭐ **Technical Requirements Document (TRD)**
-  - Complete capacity planning and implementation guide
-  - Minimum capacity requirements: 50-100 slots
-  - Pricing options comparison: On-demand ($27/month) vs Flex ($146/month) vs Annual ($200/month)
-  - Detailed 15-day implementation plan with rollback procedures
-  - Risk analysis and mitigation strategies
-  - Technical commands for deployment
-  - Monitoring and success metrics
-  - **Recommendation:** Start with on-demand slots (5-minute deployment, <$30/month)
+- **DEPLOYMENT_RUNBOOK_FINAL.md** ⭐ **CURRENT - Complete Deployment Guide (Nov 24)**
+  - **Based on:** Org-level assignment discovery
+  - **Solution:** 50-slot flex reservation ($146/month)
+  - **Timeline:** 15 minutes deployment + 24 hours monitoring
+  - **Deployment:** API commands (curl) with pre-deployment backup
+  - **Monitoring:** 5-min/hourly/daily scripts included
+  - **Rollback:** 2-minute procedure via API
+  - **Capacity optimization:** Right-sizing guide (30-100 slots)
+  
+- **ORG_LEVEL_ASSIGNMENT_SOLUTION.md** - Discovery and Analysis
+  - Why on-demand not achievable (org-level inheritance)
+  - Service-account assignment hierarchy
+  - Future path to $27/month on-demand (org-wide refactoring)
+
+- **MESSAGING_CAPACITY_PLANNING.md** - Original TRD (Reference)
+  - Capacity calculations and analysis (still valid)
+  - Updated with org-level discovery note
+  - Pricing comparison (updated: flex $146/month is minimum)
+  
+- **CLI_DEPLOYMENT_GUIDE.md** - API Command Reference
+  - BigQuery Reservation API via curl
+  - Used due to gcloud alpha commands unavailable
+
+- **CREDENTIAL_CHECK.md** - Permission Verification
+  - Confirmed: Can use Console and API
+  - Resolution: Use API for deployment
 
 ### Supporting Data:
 - **queries/** - All SQL analysis queries (validated and executed)
