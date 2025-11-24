@@ -3,7 +3,27 @@
 **Deployment Date:** November 24, 2025  
 **Deployer:** Cezar Mihaila  
 **Service Account:** `messaging@narvar-data-lake.iam.gserviceaccount.com`  
+**Reservation:** 50 baseline + autoscale to 100 slots  
+**Estimated Cost:** ~$219/month ($146 baseline + ~$73 autoscale)  
 **Estimated Time:** 15 minutes
+
+---
+
+## ⚠️ Peak Capacity Analysis Summary
+
+**Why autoscale is needed:**
+
+From 7-day actual usage analysis:
+- **Average:** 48 concurrent slots
+- **Daytime:** 46-57 slots (fits in 50 baseline)
+- **9pm DAILY spike:** 186-386 slots (**4-8x average!**)
+- **Overnight:** 59-142 slots
+
+**Fixed 50 slots:** ❌ Would cause queue delays every night at 9pm  
+**Fixed 100 slots:** ✅ Handles peak but wastes $73/month  
+**50 + autoscale 50:** ✅ Cost-optimized, elastic capacity
+
+**See:** `results/hourly_peak_slots.csv` for complete data
 
 ---
 
@@ -198,10 +218,11 @@ WHERE creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 10 MINUTE)
 
 ## 🚀 DEPLOYMENT COMMANDS (Copy-Paste Ready)
 
-### Step 1: Create Dedicated Reservation (2 minutes)
+### Step 1: Create Dedicated Reservation with Autoscaling (2 minutes)
 
 ```bash
-# Create 50-slot flex reservation
+# Create 50-slot baseline + autoscale to 100 slots total
+# ENTERPRISE edition required for autoscaling
 echo "🚀 Creating messaging-dedicated reservation..."
 
 bq mk \
@@ -210,17 +231,31 @@ bq mk \
   --reservation \
   --slots=50 \
   --ignore_idle_slots=false \
-  --edition=STANDARD \
+  --edition=ENTERPRISE \
+  --autoscale_max_slots=50 \
   messaging-dedicated
 
 # Log it
 echo "Created at: $(date)" >> deployment_log.txt
+echo "  - Baseline: 50 slots (\$146/month)" >> deployment_log.txt  
+echo "  - Autoscale: +50 slots (handles 9pm peak)" >> deployment_log.txt
 ```
 
 **Expected output:**
 ```
 Reservation 'bq-narvar-admin:US.messaging-dedicated' successfully created.
 ```
+
+**Configuration:**
+- **Baseline:** 50 slots (always active, $146/month)
+- **Autoscale:** +50 slots (activates during 9pm peak, ~$73/month avg)
+- **Total capacity:** 100 slots
+- **Total cost:** ~$219/month ($146 baseline + $73 autoscale)
+
+**Why autoscale?**
+- Peak analysis showed daily 9pm spike of 186-386 slots
+- Autoscale provides capacity when needed without paying for 100 slots 24/7
+- Saves ~$73/month vs 100-slot fixed reservation
 
 **If "already exists":** Skip to Step 2 (reservation was created previously)
 

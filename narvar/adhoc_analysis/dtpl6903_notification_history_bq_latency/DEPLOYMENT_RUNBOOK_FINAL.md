@@ -11,17 +11,24 @@
 
 **Discovery:** Entire narvar.com organization is assigned to `bq-narvar-admin:US.default` reservation. We cannot simply "remove" messaging from the reservation.
 
-**Solution:** Create dedicated 50-slot flex reservation (`messaging-dedicated`) with service-account-specific assignment that overrides the org-level assignment.
+**Solution:** Create dedicated reservation with **50-slot baseline + autoscale to 100 slots** (hybrid approach) with service-account-specific assignment that overrides the org-level assignment.
 
 **Impact:**
 - ✅ Queue times drop from 558s → <1s
 - ✅ Isolated from Airflow/Metabase/n8n contention
-- ✅ Dedicated 50 slots (sufficient for 170-slot average usage)
-- ✅ Cost: $146/month (vs $27/month on-demand, but on-demand not achievable due to org assignment)
+- ✅ Baseline: 50 slots (handles 48-slot average)
+- ✅ Autoscale: +50 slots (handles 9pm peak of 186-228 slots)
+- ✅ Cost: $146/month baseline + ~$73/month autoscale (50% usage) = **~$219/month total**
 - ✅ Zero downtime
 - ✅ 2-minute rollback if issues
 
-**Future optimization:** Coordinate org-level assignment refactoring to enable true on-demand ($27/month) - saves $119/month but requires 1-2 weeks and org-wide coordination.
+**Why hybrid approach:**
+- **Peak analysis (Nov 24):** Discovered daily 9pm spike of 186-386 slots (4-8x average!)
+- 50 fixed slots would queue during 9pm hours
+- 100 fixed slots ($292/month) wastes capacity 20 hours/day
+- **Autoscale optimizes cost:** Pay for peak capacity only when needed
+
+**Future optimization:** Coordinate org-level assignment refactoring to enable true on-demand ($27/month) - saves $192/month but requires 1-2 weeks and org-wide coordination.
 
 ---
 
@@ -88,6 +95,33 @@ Including: messaging@narvar-data-lake.iam.gserviceaccount.com
 - **Autoscale status:** 700 of 700 slots (MAXED OUT)
 
 **Conclusion:** Problem is intermittent but will return when reservation saturates again.
+
+---
+
+## 🔍 Peak Capacity Analysis (Nov 24)
+
+**Detailed hourly slot consumption analysis revealed significant nightly spike:**
+
+| Time Period | Avg Concurrent Slots | Peak Example | Frequency |
+|-------------|---------------------|--------------|-----------|
+| **9pm PST** | **186-386 slots** | Nov 17: 386 slots | **Daily spike** |
+| Daytime (8am-6pm) | 50-92 slots | Nov 18, 11am: 57 slots | Business hours |
+| Overnight (2-4am) | 80-142 slots | Nov 19, 2am: 142 slots | Moderate |
+| Average (24 hours) | **48 slots** | Overall: 8,040 slot-hrs / 168 hrs | Baseline |
+
+**Critical finding:** Daily 9pm spike consumes 186-228 slots (4x average), with extreme peak of 386 slots.
+
+**Why this matters for capacity planning:**
+- Fixed 50 slots: ❌ Would queue during 9pm (insufficient)
+- Fixed 100 slots: ✅ Handles typical 9pm, but wastes 50 slots for 20 hours/day ($146/month wasted)
+- **50 + autoscale 50:** ✅ Optimal - pays for peak only when needed
+
+**What's happening at 9pm?**
+- Likely: Batch notification processing or end-of-day reporting
+- Pattern: Low query count (62-141 queries/hour) but HIGH slot consumption
+- Suggests: Large analytical queries or batch operations
+
+**Recommended approach:** 50-slot baseline + autoscale to 100 slots maximum.
 
 ---
 
@@ -197,21 +231,26 @@ echo "✅ Rollback script created: ./rollback_messaging_to_default.sh"
 
 ### Deployment Steps (10 minutes)
 
-#### Step 1: Create Dedicated Reservation (2 minutes)
+#### Step 1: Create Dedicated Reservation with Autoscaling (2 minutes)
 
 ```bash
-# Create 50-slot flex reservation for messaging
+# Create 50-slot baseline reservation with autoscale to 100 slots (total)
+# Uses ENTERPRISE edition for autoscaling capability
 bq mk \
   --location=US \
   --project_id=bq-narvar-admin \
   --reservation \
   --slots=50 \
   --ignore_idle_slots=false \
-  --edition=STANDARD \
+  --edition=ENTERPRISE \
+  --autoscale_max_slots=50 \
   messaging-dedicated
 
 # Log creation
 echo "Created reservation at: $(date)" >> deployment_log.txt
+echo "  - Baseline: 50 slots (\$146/month)" >> deployment_log.txt
+echo "  - Autoscale: +50 slots max (charged when active)" >> deployment_log.txt
+echo "  - Total capacity: 100 slots" >> deployment_log.txt
 ```
 
 **Expected output:**
@@ -219,7 +258,23 @@ echo "Created reservation at: $(date)" >> deployment_log.txt
 Reservation 'bq-narvar-admin:US.messaging-dedicated' successfully created.
 ```
 
-**If error "already exists":** Reservation was created previously, skip to Step 2.
+**Configuration:**
+- **Baseline:** 50 slots (always running) = $146/month
+- **Autoscale max:** +50 additional slots (activated during peak)
+- **Total capacity:** 100 slots
+- **Edition:** ENTERPRISE (required for autoscaling)
+- **Autoscale cost:** ~$73/month (if 50% utilization) = **~$219/month total**
+
+**Why autoscale?**
+- Average usage: 48 slots (fits in 50 baseline)
+- 9pm peak: 186-228 slots (needs autoscale)
+- Autoscale provides elasticity without paying for 100 slots 24/7
+
+**If error "already exists":** Check configuration:
+```bash
+bq show --location=US --reservation --project_id=bq-narvar-admin bq-narvar-admin:US.messaging-dedicated
+# Verify: slotCapacity=50, autoscaleMaxSlots=50, edition=ENTERPRISE
+```
 
 **If permission denied:** You need `bigquery.resourceAdmin` or `bigquery.admin` role on `bq-narvar-admin` project.
 

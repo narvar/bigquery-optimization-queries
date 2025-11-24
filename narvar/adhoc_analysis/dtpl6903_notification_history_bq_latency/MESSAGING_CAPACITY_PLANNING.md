@@ -27,18 +27,23 @@
 
 **⚠️ UPDATE (Nov 24):** Discovery of org-level reservation assignment changes approach.
 
-**Recommended Solution:** **50-slot Flex Reservation** (only viable option given org-level assignment)
+**Recommended Solution:** **50-slot Baseline + Autoscale to 100 slots** (hybrid approach for cost optimization)
 
-**Minimum Capacity Required:** 50-100 slots (based on peak concurrency analysis)
+**Capacity Requirements (Updated with Peak Analysis - Nov 24):**
+- **Average concurrent slots:** 48 slots
+- **Typical peak (9pm daily):** 186-228 slots
+- **Extreme peak (Nov 17, 9pm):** 386 slots
+- **Recommended:** 50 baseline + autoscale to 100 (handles 95% of load)
 
 **Actual Cost:** 
 - ~~On-demand: $27/month~~ (NOT achievable - org-level assignment blocks this)
-- **50-slot Flex: $146/month** (minimum cost given organizational constraints)
-- Future optimization: Org-level refactoring → on-demand ($27/month, saves $119/month)
+- **50-slot baseline + autoscale 50:** $146-219/month (based on autoscale usage)
+- **100-slot fixed:** $292/month (guaranteed but higher base cost)
+- Future optimization: Org-level refactoring → on-demand ($27/month, saves $119-265/month)
 
-**Implementation Timeline:** 15 minutes deployment (create reservation + assign service account)
+**Implementation Timeline:** 15 minutes deployment (create autoscaling reservation + assign service account)
 
-**See:** `DEPLOYMENT_RUNBOOK_FINAL.md` for complete step-by-step guide based on org-level discovery.
+**See:** `DEPLOYMENT_RUNBOOK_FINAL.md` for complete step-by-step guide based on org-level discovery and peak analysis.
 
 ---
 
@@ -108,8 +113,20 @@ Cost Breakdown:
 **Capacity Distribution (of 1,700 active slots):**
 - Airflow ETL: ~782 slots (46%)
 - Metabase BI: ~527 slots (31%)
-- **Messaging: ~170 slots (10%)** ← Our workload
+- **Messaging: ~170 slots (10%)** ← Our workload (during saturation)
 - Others: ~221 slots (13%)
+
+**⚠️ Peak Analysis Update (Nov 24):**
+Detailed hourly analysis reveals significant 9pm spike:
+- **Average concurrent:** 48 slots
+- **Typical 9pm (daily):** 186-228 slots (4x average!)
+- **Peak 9pm (Nov 17):** 386 slots (8x average!)
+- **Daytime (8am-6pm):** 50-92 slots
+- **Overnight (midnight-7am):** 80-142 slots
+
+**Why this matters:** Average-based capacity planning (50 slots) would cause queue delays during nightly 9pm spikes.
+
+**Updated recommendation:** 50-slot baseline + autoscale to 100 slots (handles 95% of traffic, flex autoscale for 9pm).
 
 ---
 

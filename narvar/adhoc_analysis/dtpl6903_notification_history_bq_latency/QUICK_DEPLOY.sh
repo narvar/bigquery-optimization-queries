@@ -9,8 +9,8 @@ echo "🚀 MESSAGING DEDICATED CAPACITY DEPLOYMENT"
 echo "=========================================="
 echo ""
 echo "Service Account: messaging@narvar-data-lake.iam.gserviceaccount.com"
-echo "Target: 50-slot dedicated flex reservation"
-echo "Cost: \$146/month"
+echo "Target: 50-slot baseline + autoscale to 100 slots"
+echo "Cost: \$146/month baseline + ~\$73/month autoscale = ~\$219/month"
 echo ""
 
 # Confirm before proceeding
@@ -21,7 +21,10 @@ if [ "$CONFIRM" != "yes" ]; then
 fi
 
 echo ""
-echo "Step 1/4: Creating messaging-dedicated reservation (50 slots)..."
+echo "Step 1/4: Creating messaging-dedicated reservation..."
+echo "  - Baseline: 50 slots (\$146/month)"
+echo "  - Autoscale: +50 slots max (total 100)"
+echo "  - Edition: ENTERPRISE (for autoscale capability)"
 echo "================================================================"
 
 bq mk \
@@ -30,12 +33,15 @@ bq mk \
   --reservation \
   --slots=50 \
   --ignore_idle_slots=false \
-  --edition=STANDARD \
+  --edition=ENTERPRISE \
+  --autoscale_max_slots=50 \
   messaging-dedicated
 
 if [ $? -eq 0 ]; then
     echo "✅ Reservation created successfully"
     echo "Created at: $(date)" >> deployment_log.txt
+    echo "  - Baseline: 50 slots" >> deployment_log.txt
+    echo "  - Autoscale: +50 slots (total 100)" >> deployment_log.txt
 else
     echo "⚠️  Note: If 'already exists', that's OK - proceeding to assignment"
 fi
