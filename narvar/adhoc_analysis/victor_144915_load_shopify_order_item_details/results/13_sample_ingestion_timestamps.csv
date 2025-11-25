@@ -1,0 +1,102 @@
+Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (0s) Current status: RUNNING                                                                                      Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (1s) Current status: RUNNING                                                                                      Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (2s) Current status: RUNNING                                                                                      Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (3s) Current status: RUNNING                                                                                      Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (4s) Current status: RUNNING                                                                                      Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (5s) Current status: RUNNING                                                                                      Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (6s) Current status: RUNNING                                                                                      Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (7s) Current status: RUNNING                                                                                      Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (8s) Current status: RUNNING                                                                                      Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (9s) Current status: RUNNING                                                                                      Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (11s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (12s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (13s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (14s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (15s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (16s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (17s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (18s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (19s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (20s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (21s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (22s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (23s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (24s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (25s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (26s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (27s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (28s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (29s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (30s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (31s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (32s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (33s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (34s) Current status: RUNNING                                                                                       Waiting on bqjob_r3970e4e4efa6d46c_0000019abcf901ea_1 ... (34s) Current status: DONE   
+retailer_moniker,store_name,order_date,order_number,order_item_sku,ingestion_timestamp,days_order_to_ingestion,filter_status,hours_before_execution
+skims,skimsbody.myshopify.com,2025-10-16 12:25:28,SB26600541,TH-THG-10123W-ESP-S,2025-11-25 19:48:22,40,PASSES 48hr filter,-139
+skims,skimsbody.myshopify.com,2025-10-16 12:25:28,SB26600541,AP-TSH-0638-MBL-M,2025-11-25 19:48:22,40,PASSES 48hr filter,-139
+skims,skimsbody.myshopify.com,2025-10-16 12:25:28,SB26600541,AP-PNT-0715-HLT-M,2025-11-25 19:48:22,40,PASSES 48hr filter,-139
+skims,skimsbody.myshopify.com,2025-10-16 12:25:28,SB26600541,AP-TSH-0647-HLT-M,2025-11-25 19:48:22,40,PASSES 48hr filter,-139
+skims,skimsbody.myshopify.com,2025-10-16 12:25:28,SB26600541,ST-SET-7638W-ESP-L,2025-11-25 19:48:22,40,PASSES 48hr filter,-139
+skims,skimsbody.myshopify.com,2025-10-16 12:25:28,SB26600541,BD-BRF-3370-COA-M,2025-11-25 19:48:22,40,PASSES 48hr filter,-139
+skims,skimsbody.myshopify.com,2025-10-16 11:49:34,SB26600315,SL-SLS-8621W-PHO-S,2025-11-25 19:02:41,40,PASSES 48hr filter,-139
+skims,skimsbody.myshopify.com,2025-10-16 11:49:34,SB26600315,BO-LEG-8352W-PHO-S,2025-11-25 19:02:41,40,PASSES 48hr filter,-139
+skims,skimsbody.myshopify.com,2025-10-17 12:24:23,SB26615361,PN-THG-8650W-CLY-L,2025-11-25 18:58:39,39,PASSES 48hr filter,-138
+stevemadden,stevemadden.myshopify.com,2025-10-16 04:06:49,SMUS#10373437,NITRO-C-W,2025-11-25 18:44:51,40,PASSES 48hr filter,-138
+stevemadden,stevemadden.myshopify.com,2025-10-17 19:17:02,SMUS#10377964,CALICO,2025-11-25 18:40:19,39,PASSES 48hr filter,-138
+skims,skimsbody.myshopify.com,2025-10-15 01:49:38,SB26582876,DS-DRS-8165W-OBD-XS,2025-11-25 17:56:11,41,PASSES 48hr filter,-137
+skims,skimsbody.myshopify.com,2025-10-15 01:49:38,SB26582876,DS-DRS-8165W-OBD-S,2025-11-25 17:56:11,41,PASSES 48hr filter,-137
+skims,skimsbody.myshopify.com,2025-10-15 06:34:04,SB26585155,PN-BRF-7115W-ONX-2X,2025-11-25 17:38:12,41,PASSES 48hr filter,-137
+skims,skimsbody.myshopify.com,2025-10-15 07:45:46,SB26585391,BO-SHO-3363-CLY-L,2025-11-25 17:18:57,41,PASSES 48hr filter,-137
+skims,skimsbody.myshopify.com,2025-10-15 07:45:46,SB26585391,FL-FUL-6416W-CLY-36DD,2025-11-25 17:18:57,41,PASSES 48hr filter,-137
+stevemadden,stevemadden.myshopify.com,2025-10-15 14:22:18,SMUS#10370991,BICONN,2025-11-25 16:39:47,41,PASSES 48hr filter,-136
+stevemadden,stevemadden.myshopify.com,2025-10-15 14:22:18,SMUS#10370991,BICONIC,2025-11-25 16:39:47,41,PASSES 48hr filter,-136
+stevemadden,stevemadden.myshopify.com,2025-10-15 00:40:48,SMUS#10368623,ERBA,2025-11-25 16:35:03,41,PASSES 48hr filter,-136
+stevemadden,stevemadden.myshopify.com,2025-10-17 21:11:40,SMUS#10378351,ANDROMEDA,2025-11-25 16:16:09,39,PASSES 48hr filter,-136
+skims,skimsbody.myshopify.com,2025-10-17 12:28:53,SB26615386,PN-TNG-9385-ESP-XS,2025-11-25 16:01:21,39,PASSES 48hr filter,-136
+skims,skimsbody.myshopify.com,2025-10-17 12:28:53,SB26615386,PN-THG-9338-ONX-XS,2025-11-25 16:01:21,39,PASSES 48hr filter,-136
+skims,skimsbody.myshopify.com,2025-10-17 12:28:53,SB26615386,BA-DEM-9221-CLY-32A,2025-11-25 16:01:21,39,PASSES 48hr filter,-136
+skims,skimsbody.myshopify.com,2025-10-17 12:28:53,SB26615386,PN-BRF-9300-ECL-XS,2025-11-25 16:01:21,39,PASSES 48hr filter,-136
+skims,skimsbody.myshopify.com,2025-10-17 12:28:53,SB26615386,PN-THG-9371-ESP-XS,2025-11-25 16:01:21,39,PASSES 48hr filter,-136
+skims,skimsbody.myshopify.com,2025-10-17 12:28:53,SB26615386,PN-TNG-9385-ONX-XS,2025-11-25 16:01:21,39,PASSES 48hr filter,-136
+skims,skimsbody.myshopify.com,2025-10-17 12:28:53,SB26615386,LS-LST-10291W-OBD-XS,2025-11-25 16:01:21,39,PASSES 48hr filter,-136
+stevemadden,stevemadden.myshopify.com,2025-10-15 19:28:51,SMUS#10371881,HOLLY,2025-11-25 15:58:18,41,PASSES 48hr filter,-135
+stevemadden,stevemadden.myshopify.com,2025-10-15 19:28:51,SMUS#10371881,LINGO,2025-11-25 15:58:18,41,PASSES 48hr filter,-135
+stevemadden,stevemadden.myshopify.com,2025-10-15 19:28:51,SMUS#10371881,BERKLEIGH,2025-11-25 15:58:18,41,PASSES 48hr filter,-135
+stevemadden,stevemadden.myshopify.com,2025-10-15 02:03:34,SMUS#10369193,HADES,2025-11-25 15:50:10,41,PASSES 48hr filter,-135
+stevemadden,stevemadden.myshopify.com,2025-10-17 20:09:34,SMUS#10378129,RIGGS-W,2025-11-25 15:38:39,39,PASSES 48hr filter,-135
+stevemadden,stevemadden.myshopify.com,2025-10-15 16:55:53,SMUS#10371433,RUBEN,2025-11-25 15:38:35,41,PASSES 48hr filter,-135
+skims,skimsbody.myshopify.com,2025-10-15 20:02:17,SB26591967,PN-THG-9338-ZIR-S,2025-11-25 15:21:41,41,PASSES 48hr filter,-135
+stevemadden,stevemadden.myshopify.com,2025-10-15 21:51:47,SMUS#10372291,ALEXI-S,2025-11-25 14:48:37,41,PASSES 48hr filter,-134
+skims,skimsbody.myshopify.com,2025-10-16 20:12:49,SB26606836,PL-PLG-10025W-COZ-36DD,2025-11-25 13:41:44,40,PASSES 48hr filter,-133
+skims,skimsbody.myshopify.com,2025-10-16 20:12:49,SB26606836,PT-PNT-9576W-PRH-M,2025-11-25 13:41:44,40,PASSES 48hr filter,-133
+skims,skimsbody.myshopify.com,2025-10-16 20:12:49,SB26606836,LS-LST-9575W-PRH-L,2025-11-25 13:41:44,40,PASSES 48hr filter,-133
+skims,skimsbody.myshopify.com,2025-10-16 18:18:35,SB26604909,PN-BIK-9333-SND-L,2025-11-25 13:11:11,40,PASSES 48hr filter,-133
+skims,skimsbody.myshopify.com,2025-10-16 18:18:35,SB26604909,PN-BIK-9333-ONX-L,2025-11-25 13:11:11,40,PASSES 48hr filter,-133
+skims,skimsbody.myshopify.com,2025-10-15 12:41:51,SB26586479,BO-SHO-5939W-CLY-M,2025-11-25 12:41:36,41,PASSES 48hr filter,-132
+skims,skimsbody.myshopify.com,2025-10-17 17:06:30,SB26618314,BD-THG-2913-CLY-S,2025-11-25 12:39:40,39,PASSES 48hr filter,-132
+stevemadden,stevemadden.myshopify.com,2025-10-15 13:39:46,SMUS#10370892,RIGGS,2025-11-25 11:46:29,41,PASSES 48hr filter,-131
+skims,skimsbody.myshopify.com,2025-10-15 06:12:06,SB26585060,SL-THG-8044W-ONX-S,2025-11-25 09:35:58,41,PASSES 48hr filter,-129
+skims,skimsbody.myshopify.com,2025-10-15 21:26:30,SB26593228,BR-SCP-9190-ONX-L,2025-11-25 09:32:05,41,PASSES 48hr filter,-129
+skims,skimsbody.myshopify.com,2025-10-15 21:26:30,SB26593228,BR-SPT-7842W-PHO-L,2025-11-25 09:32:05,41,PASSES 48hr filter,-129
+skims,skimsbody.myshopify.com,2025-10-15 21:26:30,SB26593228,DM-DEM-10428W-PMR-36D,2025-11-25 09:32:05,41,PASSES 48hr filter,-129
+skims,skimsbody.myshopify.com,2025-10-15 21:26:30,SB26593228,BR-SCP-9182-ONX-L,2025-11-25 09:32:05,41,PASSES 48hr filter,-129
+skims,skimsbody.myshopify.com,2025-10-15 21:26:30,SB26593228,TP-TNK-9451W-ONX-L,2025-11-25 09:32:05,41,PASSES 48hr filter,-129
+skims,skimsbody.myshopify.com,2025-10-15 21:26:30,SB26593228,BR-SCP-9182-SND-L,2025-11-25 09:32:05,41,PASSES 48hr filter,-129
+skims,skimsbody.myshopify.com,2025-10-15 21:26:30,SB26593228,ST-SET-9793W-ONX-M,2025-11-25 09:32:05,41,PASSES 48hr filter,-129
+stevemadden,stevemadden.myshopify.com,2025-10-16 18:54:52,SMUS#10374857,TWAIN,2025-11-25 09:00:42,40,PASSES 48hr filter,-129
+skims,skimsbody.myshopify.com,2025-10-15 01:47:38,SB26582852,SL-TNK-10052W-OBD-XS,2025-11-25 09:00:14,41,PASSES 48hr filter,-129
+skims,skimsbody.myshopify.com,2025-10-15 01:47:38,SB26582852,BD-THG-3369-ONX-S,2025-11-25 09:00:14,41,PASSES 48hr filter,-129
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,ZU-ZUP-10048W-ESP-XS,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,SH-TIG-8370W-SIE-S,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,UN-BIK-11114W-HSM-S,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,AP-TSH-0647-CHA-XS,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,SH-SHO-10354W-OBD-M,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,DM-DEM-9549W-ONX-32DD,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,OP-DRS-11156W-EGT-S,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,PN-BOY-9315-ESP-S,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,BO-BTR-5294M-LRL-M,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,DS-DRS-10272W-ONX-S,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,TP-CAM-9553W-ESP-S,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,BD-ONS-9547W-SIE-M,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,BO-BBR-5356M-DNE-M,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:31:02,SB26590584,SH-TIG-7892W-ONX-M,2025-11-25 08:50:24,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:57:22,SB26590992,TH-THG-6381W-COZ-L,2025-11-25 08:19:17,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:57:22,SB26590992,TH-THG-8495W-STT-L,2025-11-25 08:19:17,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:57:22,SB26590992,PN-THG-9371-ESP-L,2025-11-25 08:19:17,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:57:22,SB26590992,TH-THG-8495W-ZTN-L,2025-11-25 08:19:17,41,PASSES 48hr filter,-128
+skims,skimsbody.myshopify.com,2025-10-15 18:57:22,SB26590992,TH-THG-6381W-OCL-L,2025-11-25 08:19:17,41,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:53:44,#P00378742,14777050366110,2025-11-25 08:00:06,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:53:44,#P00378742,W241190ORPXL,2025-11-25 08:00:06,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:53:44,#P00378742,S251145BLTXL,2025-11-25 08:00:06,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:53:44,#P00378742,M251609PKMXL,2025-11-25 08:00:06,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:53:44,#P00378742,W241190IGXXL,2025-11-25 08:00:06,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:53:44,#P00378742,W241188BLTXL,2025-11-25 08:00:06,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:51:37,#P00378739,M251187IGXS,2025-11-25 08:00:05,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:52:39,#P00378697,NZTF252080BLXXS,2025-11-25 08:00:05,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:52:39,#P00378697,NZTF252043CBYXS,2025-11-25 08:00:05,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:49:55,#P00378570,F251183PNUMPS,2025-11-25 08:00:02,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:49:55,#P00378570,F251104PDIDPS,2025-11-25 08:00:02,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:49:55,#P00378570,W241122PIMIPS,2025-11-25 08:00:02,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:49:55,#P00378570,F251173BWLXS,2025-11-25 08:00:02,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:49:55,#P00378570,F251621PBLMPS,2025-11-25 08:00:02,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:49:55,#P00378570,W241163PBLTPS,2025-11-25 08:00:02,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:49:55,#P00378570,M251841PDID4P,2025-11-25 08:00:02,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:49:55,#P00378570,F251134PTAUPS,2025-11-25 08:00:02,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:49:55,#P00378570,M251851PIMI4P,2025-11-25 08:00:02,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:49:55,#P00378570,14777025364126,2025-11-25 08:00:02,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:48:15,#P00378449,F251033PWALPS,2025-11-25 08:00:01,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:48:15,#P00378449,F251033PWALPP,2025-11-25 08:00:01,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:48:52,#P00378411,M251130BLTS,2025-11-25 08:00:00,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:48:52,#P00378411,ELVF259139SNSS,2025-11-25 08:00:00,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:48:52,#P00378411,F251110NUMS,2025-11-25 08:00:00,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:48:27,#P00378384,F251371PCOCPL,2025-11-25 08:00:00,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:48:27,#P00378384,F251371COCL,2025-11-25 08:00:00,39,PASSES 48hr filter,-128
+nicandzoe,niczoeproduction.myshopify.com,2025-10-17 07:44:25,#P00378241,14776991907998,2025-11-25 07:59:56,39,PASSES 48hr filter,-127

@@ -1,0 +1,51 @@
+retailer_moniker,shopify_domain,recent_orders_3days,week_old_orders,month_old_orders,very_old_orders,total_records,oldest_order_date,newest_order_date,date_span_days,has_return,no_return,oldest_return_date,newest_return_date,distinct_order_dates,pct_old_data,problem_classification
+nicandzoe,niczoeproduction.myshopify.com,1006,3028,17575,342109,363718,2025-09-26,2025-11-20,55,150,363568,2025-11-18,2025-11-20,31,99.72,CRITICAL: >1K very old orders
+icebreakerapac,icebreaker-apac.myshopify.com,2046,340,1866,5840,10092,2025-09-22,2025-11-20,59,7,10085,2025-11-11,2025-11-20,60,79.73,CRITICAL: >1K very old orders
+skims,skimsbody.myshopify.com,282341,144940,47507,5423,480211,2025-05-21,2025-11-20,183,11131,469080,2025-09-23,2025-11-20,148,41.2,CRITICAL: >1K very old orders
+milly,millyny.myshopify.com,426,223,675,3643,4967,2025-09-05,2025-11-20,76,158,4809,2025-11-06,2025-11-20,77,91.42,CRITICAL: >1K very old orders
+stevemadden,stevemadden.myshopify.com,22789,16865,7927,3118,50699,2025-05-26,2025-11-20,178,1712,48987,2025-10-05,2025-11-20,117,55.05,CRITICAL: >1K very old orders
+stanley1913br,stanley-br-live.myshopify.com,21224,10061,11930,2778,45993,2025-08-05,2025-11-20,107,79,45914,2025-10-20,2025-11-20,52,53.85,CRITICAL: >1K very old orders
+bostonproper,bostonproper.myshopify.com,9193,14285,5111,1419,30008,2025-05-28,2025-11-20,176,2173,27835,2025-10-22,2025-11-20,78,69.36,CRITICAL: >1K very old orders
+naturallife,twinoakstest.myshopify.com,52557,124295,22100,1236,200188,2025-07-07,2025-11-20,136,2645,197543,2025-10-07,2025-11-20,73,73.75,CRITICAL: >1K very old orders
+kuiu,kuiu-shop.myshopify.com,20592,21944,9181,775,52492,2025-05-21,2025-11-20,183,1921,50571,2025-10-13,2025-11-20,92,60.77,HIGH: >5K month-old orders
+benchmade,benchmade-prod.myshopify.com,8236,6155,4389,749,19529,2025-05-21,2025-11-20,183,21,19508,2025-11-06,2025-11-20,82,57.83,LOW: Wide date span but few records
+complex,sean-wotherspoon-ntwrk.myshopify.com,2640,1471,5017,585,9713,2025-07-03,2025-11-20,140,1,9712,2025-11-20,2025-11-20,103,72.82,HIGH: >5K month-old orders
+dolcevita,smdolcevita.myshopify.com,6186,5865,3171,557,15779,2025-07-15,2025-11-20,128,1281,14498,2025-09-29,2025-11-20,91,60.8,LOW: Wide date span but few records
+stanley1913,stanley-pmi.myshopify.com,317455,75428,5644,514,399041,2025-06-03,2025-11-20,170,1069,397972,2025-09-19,2025-11-20,97,20.45,HIGH: >5K month-old orders
+disturbia-us,disturbia-us.myshopify.com,8030,9683,2211,480,20404,2025-09-01,2025-11-20,80,511,19893,2025-10-26,2025-11-20,63,60.64,LOW: Wide date span but few records
+ringconcierge,ring-concierge.myshopify.com,5845,4042,752,424,11063,2025-07-26,2025-11-20,117,239,10824,2025-11-06,2025-11-20,89,47.17,LOW: Wide date span but few records
+dkny,dkny-giii.myshopify.com,16629,2025,2007,403,21064,2025-07-27,2025-11-20,116,192,20872,2025-10-30,2025-11-20,81,21.05,LOW: Wide date span but few records
+cutsclothing,cuts-clothing.myshopify.com,7950,10972,4934,373,24229,2025-07-11,2025-11-20,132,0,24229,,,72,67.19,MEDIUM: >10K week-old orders
+teveo,teveo-com.myshopify.com,54863,189562,9542,363,254330,2025-05-25,2025-11-20,179,11439,242891,2025-10-06,2025-11-20,78,78.43,HIGH: >5K month-old orders
+kutfromkloth,kutk.myshopify.com,5992,7449,3513,339,17293,2025-05-26,2025-11-20,178,0,17293,,,62,65.35,LOW: Wide date span but few records
+disturbia-uk,disturbia-uk.myshopify.com,10129,6012,2234,326,18701,2025-08-10,2025-11-20,102,1119,17582,2025-10-25,2025-11-20,61,45.84,LOW: Wide date span but few records
+gozneyus,gozney-us.myshopify.com,1615,152,297,321,2385,2025-06-18,2025-11-20,155,5,2380,2025-10-29,2025-11-01,60,32.29,LOW: Wide date span but few records
+nobullproject,nobull.myshopify.com,20501,24083,5926,314,50824,2025-05-24,2025-11-20,180,1147,49677,2025-10-14,2025-11-20,88,59.66,HIGH: >5K month-old orders
+sachin-and-babi,sachinandbabi.myshopify.com,454,193,21,314,982,2025-05-30,2025-11-20,174,0,982,,,83,53.77,LOW: Wide date span but few records
+untuckit,untuckit.myshopify.com,13103,11292,3306,279,27980,2025-07-01,2025-11-20,142,536,27444,2025-10-24,2025-11-20,61,53.17,MEDIUM: >10K week-old orders
+stio,stiomountain.myshopify.com,5654,6246,2952,255,15107,2025-05-22,2025-11-20,182,880,14227,2025-10-20,2025-11-20,67,62.57,LOW: Wide date span but few records
+fentybeauty,fentybeautyshop.myshopify.com,16626,14723,1014,253,32616,2025-05-24,2025-11-20,180,173,32443,2025-10-25,2025-11-20,59,49.03,MEDIUM: >10K week-old orders
+nydj,nydj-apparel.myshopify.com,5412,10820,2613,245,19090,2025-07-12,2025-11-20,131,1041,18049,2025-10-21,2025-11-20,72,71.65,MEDIUM: >10K week-old orders
+kieljamespatrick,kiel-james-patrick.myshopify.com,2033,1475,741,233,4482,2025-05-27,2025-11-20,177,162,4320,2025-10-22,2025-11-20,71,54.64,LOW: Wide date span but few records
+magnolia,magnoliamom.myshopify.com,12215,15220,12023,217,39675,2025-06-25,2025-11-20,148,475,39200,2025-11-04,2025-11-20,66,69.21,HIGH: >5K month-old orders
+pinklily,pinklilyboutique.myshopify.com,15321,29492,13349,201,58363,2025-08-26,2025-11-20,86,885,57478,2025-10-10,2025-11-20,56,73.75,HIGH: >5K month-old orders
+avocadomattress,avocadomattress.myshopify.com,2902,2590,1590,189,7271,2025-05-23,2025-11-20,181,97,7174,2025-10-25,2025-11-20,88,60.09,LOW: Wide date span but few records
+ayr,ayr-production.myshopify.com,8451,2923,2810,178,14362,2025-06-07,2025-11-20,166,1787,12575,2025-10-23,2025-11-20,63,41.16,LOW: Wide date span but few records
+spanx-ca,spanx-ca-com.myshopify.com,6678,2999,628,177,10482,2025-08-22,2025-11-20,90,0,10482,,,59,36.29,LOW: Wide date span but few records
+stanley1913eu,eu-stanley1913.myshopify.com,12929,3133,529,174,16765,2025-05-21,2025-11-20,183,239,16526,2025-10-31,2025-11-20,101,22.88,LOW: Wide date span but few records
+soldejaneiro,sol-de-janeiro.myshopify.com,44155,18212,7331,167,69865,2025-06-13,2025-11-20,160,37,69828,2025-11-19,2025-11-20,61,36.8,HIGH: >5K month-old orders
+beistravel,beistravel.myshopify.com,11874,7769,845,166,20654,2025-05-23,2025-11-20,181,311,20343,2025-10-24,2025-11-20,74,42.51,LOW: Wide date span but few records
+bluemercury,bluemercury-inc.myshopify.com,12701,2251,463,163,15578,2025-06-21,2025-11-20,152,79,15499,2025-10-26,2025-11-20,62,18.47,LOW: Wide date span but few records
+karlagerfeldparis,karl-lagerfeld-paris.myshopify.com,4612,2399,1586,162,8759,2025-07-16,2025-11-20,127,198,8561,2025-09-25,2025-11-20,60,47.35,LOW: Wide date span but few records
+karenlazardesign,karen-lazar.myshopify.com,338,92,90,162,682,2025-05-21,2025-11-20,183,3,679,2025-11-18,2025-11-18,28,50.44,LOW: Wide date span but few records
+barenecessities,0f7345-9b.myshopify.com,5645,3907,1817,146,11515,2025-08-27,2025-11-20,85,843,10672,2025-09-27,2025-11-20,58,50.98,LOW: Wide date span but few records
+mikuta,mikuta.myshopify.com,4035,6106,1226,135,11502,2025-08-19,2025-11-20,93,643,10859,2025-10-28,2025-11-20,55,64.92,LOW: Wide date span but few records
+firstliteapparel,first-lite-apparel.myshopify.com,775886,2820,674,130,779510,2025-06-07,2025-11-20,166,169,779341,2025-10-01,2025-11-20,63,0.46,LOW: Wide date span but few records
+florencemarinex,florencemarinex-com.myshopify.com,1168,574,141,125,2008,2025-06-30,2025-11-20,143,0,2008,,,45,41.83,LOW: Wide date span but few records
+jlindeberg,jlindeberg-europe.myshopify.com,621,411,571,120,1723,2025-06-29,2025-11-20,144,333,1390,2025-10-15,2025-11-20,55,63.96,LOW: Wide date span but few records
+stanley1913uk,emea-uk.myshopify.com,7200,2993,278,117,10588,2025-05-29,2025-11-20,175,93,10495,2025-10-31,2025-11-20,102,32.0,LOW: Wide date span but few records
+olaplex,olaplex.myshopify.com,5809,2585,467,116,8977,2025-06-14,2025-11-20,159,99,8878,2025-11-13,2025-11-20,56,35.29,LOW: Wide date span but few records
+groovelife,groove-rings.myshopify.com,7108,3575,366,107,11156,2025-06-16,2025-11-20,157,2,11154,2025-11-20,2025-11-20,51,36.29,LOW: Wide date span but few records
+glossier,glossier-admin.myshopify.com,23688,16874,2390,101,43053,2025-06-29,2025-11-20,144,119,42934,2025-11-19,2025-11-20,59,44.98,MEDIUM: >10K week-old orders
+47brand,47brand.myshopify.com,8680,11567,4119,95,24461,2025-07-19,2025-11-20,124,391,24070,2025-10-25,2025-11-20,56,64.51,MEDIUM: >10K week-old orders
+bombshellsportswear,bombshell-sportswear.myshopify.com,23850,1558,636,94,26138,2025-08-13,2025-11-20,99,139,25999,2025-11-05,2025-11-20,51,8.75,LOW: Wide date span but few records

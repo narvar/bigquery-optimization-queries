@@ -77,53 +77,87 @@ DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights
 
 ---
 
-## This Week Actions (2-4 hours)
+## This Week Actions (4-8 hours)
 
-### 4. Investigate ingestion_timestamp Column
+### 4. Investigate Continuous Data Backfill ✅ **COMPLETE**
 
-**Query 1**: Check if column exists
-```sql
-SELECT column_name, data_type
-FROM `narvar-data-lake.return_insights_base.INFORMATION_SCHEMA.COLUMNS`
-WHERE table_name = 'v_order_items'
-AND column_name LIKE '%ingestion%'
-ORDER BY column_name;
-```
+**UPDATE**: Investigation complete via Queries 10-13.
 
-**Query 2**: If column exists, check values
-```sql
-SELECT 
-    MIN(ingestion_timestamp) AS min_ingestion,
-    MAX(ingestion_timestamp) AS max_ingestion,
-    COUNT(*) AS total_rows,
-    COUNTIF(ingestion_timestamp IS NULL) AS null_count,
-    COUNTIF(ingestion_timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 48 HOUR)) AS last_48hrs,
-    COUNTIF(ingestion_timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)) AS last_7days
-FROM `narvar-data-lake.return_insights_base.v_order_items`
-LIMIT 1;  -- Metadata only, no actual row scan
-```
+**Findings**:
+1. ✅ `ingestion_timestamp` column exists in `v_order_items_atlas`
+2. ✅ Filter is working correctly
+3. ✅ **ROOT CAUSE**: Continuous re-ingestion of historical orders
+4. ✅ **Proof**: Oct 15-17 orders have Nov 25 ingestion timestamps
+5. ✅ **Concentration**: nicandzoe (342K), icebreakerapac (5.8K), skims (5.4K), milly (3.6K), stevemadden (3.1K)
+6. ✅ **Pattern**: 98% have NO returns - not driven by return activity
 
-**Query 3**: Get view definition
-```sql
-SELECT view_definition
-FROM `narvar-data-lake.return_insights_base.INFORMATION_SCHEMA.VIEWS`
-WHERE table_name = 'v_order_items';
-```
-
-**Possible findings**:
-- Column doesn't exist → Need to add it to view
-- Column exists but is NULL → Need to populate from source table
-- Column exists but has wrong values → Need to fix upstream ETL
+**See**: `BACKFILL_ROOT_CAUSE.md` for complete analysis
 
 ---
 
-### 5. Fix Root Cause (TBD based on findings)
+### 5. Identify Backfill Source and Owner
 
-**If column missing**: Add to view definition  
-**If column NULL**: Modify view to populate from source  
-**If values wrong**: Fix upstream Dataflow/ETL pipeline
+**Questions to answer**:
 
-**Effort**: Depends on finding (2 hours - 2 days)
+1. **Who owns `v_order_items_atlas` ingestion?**
+   ```sql
+   -- Find recent INSERT/MERGE jobs to v_order_items_atlas
+   SELECT 
+       creation_time,
+       user_email,
+       job_type,
+       destination_table.table_id,
+       total_slot_ms,
+       total_bytes_processed
+   FROM 
+       `narvar-data-lake.region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT`
+   WHERE 
+       creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+       AND destination_table.table_id = 'v_order_items_atlas'
+   ORDER BY creation_time DESC
+   LIMIT 100;
+   ```
+
+2. **Is backfill intentional or a bug?**
+   - Check Dataflow job logs
+   - Check Airflow DAG schedules
+   - Interview team that owns the pipeline
+
+3. **Why these specific retailers?**
+   - nicandzoe dominates (342K of 360K very old orders)
+   - Is there a data quality issue for these retailers?
+   - Recent schema change affecting them?
+
+4. **What's the backfill pattern/schedule?**
+   - Query 13 shows ingestion at: 08:00, 09:00, 12:00, 13:00, 15:00, 16:00, 17:00, 18:00, 19:00
+   - Continuous? Hourly? Event-driven?
+
+**Effort**: 2-3 hours  
+**Risk**: Low (just investigation, no changes)
+
+---
+
+### 6. Fix Root Cause - Stop Unnecessary Backfill
+
+**Action depends on findings from Step 5**:
+
+**If backfill is intentional** (data quality fixes):
+- Add `is_backfill` boolean flag to `v_order_items_atlas`
+- Update DAG to exclude: `WHERE is_backfill IS NOT TRUE`
+- Or use separate table for backfilled data
+
+**If backfill is a bug**:
+- Fix upstream ETL/Dataflow pipeline
+- Prevent continuous re-ingestion
+- Potentially one-time cleanup of historical data
+
+**If backfill is needed**:
+- Batch it (daily instead of continuous)
+- Process backfill separately from real-time ingestion
+- Add explicit backfill tracking
+
+**Effort**: 4-8 hours + coordination time  
+**Risk**: Medium (requires upstream team changes)
 
 ---
 

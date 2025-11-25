@@ -64,7 +64,40 @@ Key metrics:
 
 ## Question 2: Execution Plan Analysis
 
-I've analyzed the execution plans for both failed and successful jobs. **Key finding: This is NOT a cartesian join** - it's an **aggregation explosion**.
+I've analyzed the execution plans for both failed and successful jobs. **Key finding: This is NOT a cartesian join** - it's an **aggregation explosion** caused by continuous data backfill.
+
+### CRITICAL UPDATE: Ongoing Data Backfill Discovered
+
+**The ingestion_timestamp filter IS working correctly**, but old orders are being **continuously re-ingested**:
+
+**Evidence (Query 13)**:
+- Orders from **Oct 15-17, 2025** (35-41 days old)
+- Have `ingestion_timestamp` = **Nov 25, 2025** (TODAY!)
+- They **legitimately pass** the 48-hour filter because they were re-ingested recently
+- Result: 350K old orders from Oct 15-17 accumulate in temp table
+
+**Affected Retailers** (Query 11):
+1. **nicandzoe**: 342,109 very old orders (99.7% of their data) - Sep 26 to Nov 20
+2. **icebreakerapac**: 5,840 very old orders (79.7%) - Sep 22 to Nov 20
+3. **skims**: 5,423 very old orders (41.2%) - May 21 to Nov 20
+4. **stevemadden**: 3,118 very old orders (55.1%)
+5. **milly**: 3,643 very old orders (91.4%)
+
+**Pattern**: 98% of old orders have NO returns - not driven by recent return activity, driven by re-ingestion.
+
+### Tables and Views Explanation
+
+```
+Query reads from:
+  `narvar-data-lake.return_insights_base.v_order_items` (VIEW)
+    └─> Defined as: SELECT from v_order_items_atlas
+        └─> Source table: `narvar-data-lake.return_insights_base.v_order_items_atlas`
+             └─> Contains: ingestion_timestamp column (working correctly)
+
+The problem: v_order_items_atlas is being continuously backfilled/re-ingested
+             Old orders get new ingestion_timestamp values
+             They legitimately pass the 48-hour filter
+```
 
 ### The Evidence
 
@@ -324,5 +357,75 @@ WHERE
 
 **Proof**: Both jobs read ~236M rows from the fact table and produce ~20M joined rows. If cartesian, would produce 978 billion rows. The bottleneck is the GROUP BY aggregation, not the join.
 
-Let me know if you need clarification on any specific stage or metric!
+---
+
+## CRITICAL UPDATE: Continuous Data Backfill Root Cause
+
+**Your question about whether records are theoretically legitimate was excellent!** It led to discovering the actual root cause.
+
+### What I Found (Queries 10-13)
+
+**The `ingestion_timestamp` filter IS working**, but specific retailers have **ongoing data backfill**:
+
+1. **nicandzoe** has 342K orders being continuously re-ingested
+   - Order dates: Sep 26 - Nov 20 (55 days)
+   - Ingestion timestamps: Nov 25, 2025 (TODAY!)
+   - 99.7% of their data is historical orders with recent ingestion
+   - Only 150 have returns (0.04%)
+
+2. **icebreakerapac**, **skims**, **stevemadden**, **milly** show same pattern
+   - Combined: 360K old orders with recent ingestion timestamps
+   - Date spans: 55-183 days
+   - 98% have NO returns
+
+### Why the Filter "Works But Fails"
+
+The filter logic:
+```sql
+WHERE o.ingestion_timestamp >= TIMESTAMP_SUB(TIMESTAMP('2025-11-20'), INTERVAL 48 HOUR)
+```
+
+**Is working correctly** - checking ingestion timestamp, not order date.
+
+**But**: Upstream ETL is continuously re-ingesting historical orders with new timestamps:
+- Oct 15 order placed 35 days ago
+- Re-ingested Nov 25 (today)
+- Gets `ingestion_timestamp = 2025-11-25 19:48:22`
+- **Passes 48hr filter legitimately!**
+
+### Evidence
+
+From `v_order_items` for Oct 15-17 orders (Query 13):
+```
+retailer_moniker: skims
+order_date: 2025-10-16 12:25:28
+ingestion_timestamp: 2025-11-25 19:48:22
+days_order_to_ingestion: 40 days
+filter_status: PASSES 48hr filter
+```
+
+**All 100 sampled old orders show the same pattern**: Recent ingestion timestamps (last 24 hours), old order dates (Oct 15-17).
+
+### Tables/Views Chain
+
+1. **DAG queries**: `v_order_items` view
+2. **View definition** (Query 12):
+   ```sql
+   SELECT ... a.ingestion_timestamp, a.event_ts
+   FROM `narvar-data-lake.return_insights_base.v_order_items_atlas` a
+   ```
+3. **Source table**: `v_order_items_atlas` contains `ingestion_timestamp` column
+4. **Backfill source**: Upstream ETL continuously re-ingesting historical orders
+
+### Why This Causes Aggregation Explosion
+
+Even though each individual re-ingestion might only be a few thousand rows:
+- They accumulate across **183 distinct order dates**
+- Each date adds cardinality to the GROUP BY
+- Result: 183 dates × 194 retailers × 648K SKUs = 10-50M groups
+- Timeout after 6 hours
+
+---
+
+## The Evidence
 

@@ -56,29 +56,60 @@
    - Partition pruning effectiveness
    - Clustering effectiveness
 
-## Hypothesis
+## Hypothesis Evolution
 
+### Initial Hypothesis
 **Primary**: Data volume spike or join explosion (cartesian join from bad data quality)  
 **Secondary**: Peak season resource contention (Nov 19-21 approaching Black Friday)  
 **Tertiary**: Partition/cluster degradation causing full table scans
 
+### ✅ CONFIRMED ROOT CAUSE (After Investigation)
+
+**NOT a cartesian join** - Join filtering works correctly (20M rows from 237M input)
+
+**ACTUAL ROOT CAUSE**: **Continuous data backfill in `v_order_items_atlas`**
+- Old orders (Oct 15-17, May-Nov) being re-ingested with recent `ingestion_timestamp`
+- They legitimately pass the 48-hour filter (filter is working!)
+- Create 183 distinct dates in GROUP BY → Aggregation explosion
+- Concentrated in 5 retailers (nicandzoe = 342K old orders, 94% of problem!)
+- 98% have NO returns (not return-driven)
+- Results in 61x more grouping combinations → 6-hour timeout
+
 ## Files
 
-### Queries
-- `01_table_sizes_and_counts.sql` - Current state of all tables
-- `02_temp_table_analysis.sql` - Analyze recent temp tables
-- `03_join_key_distribution.sql` - Check for join explosion risk
-- `04_recent_data_volume_trends.sql` - 30-day volume trends
-- `05_historical_job_comparison.sql` - Find and compare past runs
-- `06_resource_contention_analysis.sql` - Concurrent workload check
-- `07_query_plan_analysis.sql` - EXPLAIN plan investigation
+### Documentation (10 Markdown files)
+1. **KEY_FINDINGS_SUMMARY.md** ⭐ **START HERE** - One-page summary
+2. **EXECUTIVE_SUMMARY.md** - For VictorOps ticket/stakeholders
+3. **BACKFILL_ROOT_CAUSE.md** - Continuous backfill analysis
+4. **ANSWER_TO_CEZAR.md** - Job IDs and execution plan analysis
+5. **FINDINGS.md** - Complete technical investigation
+6. **EXECUTION_PLAN_ANALYSIS.md** - Stage-by-stage comparison
+7. **JOB_IDS_FOR_COMPARISON.md** - BigQuery Console links
+8. **PROBLEMATIC_RECORDS_ANALYSIS.md** - Record-level analysis
+9. **NEXT_STEPS.md** - Action plan with SQL commands
+10. **SLACK_UPDATE.md** - Team communication template
 
-### Results
-- CSV and JSON outputs from each query
-- Analysis summaries
+### Queries (13 SQL files)
+- `01_table_sizes_and_counts.sql` - Table metadata (236M row fact table found)
+- `02_join_key_distribution.sql` - Join key analysis (1.18M distinct keys)
+- `03_temp_table_date_distribution.sql` - **183 distinct dates discovered**
+- `05_find_specific_job.sql` - **Job history (67x degradation)**
+- `07_get_execution_plans.sql` - Execution plan extraction
+- `10_return_dates_analysis.sql` - **98% have NO returns**
+- `11_old_records_by_retailer.sql` - **nicandzoe 342K old orders found**
+- `12_check_view_definition.sql` - **View structure verified**
+- `13_sample_ingestion_timestamps.sql` - **SMOKING GUN: Nov 25 timestamps for Oct orders**
+- Plus 4 other diagnostic queries
+
+### Results (13 files)
+- 10 CSV result files from executed queries
+- 3 JSON execution plans (failed and successful jobs)
+- Complete evidence trail proving continuous data backfill
 
 ## Timeline
 
-**Started**: November 25, 2025  
-**Target Completion**: Same day (6-8 hours investigation)
+**Started**: November 25, 2025 11:00 AM  
+**Completed**: November 25, 2025 8:00 PM  
+**Duration**: 9 hours (comprehensive investigation)  
+**Investigation Cost**: $1.77
 

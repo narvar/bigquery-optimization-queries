@@ -20,18 +20,39 @@ The `load_shopify_order_item_details` DAG is timing out because the temp table c
 
 ---
 
-## Root Cause
+## Root Cause: Continuous Data Backfill
+
+**UPDATE (Nov 25 Evening)**: Discovered the actual root cause after deeper investigation.
 
 The temp table `tmp_order_item_details` has **183 days of historical data** (4.2M rows) instead of the expected **2 days** (500K rows).
 
-**Why?** The 48-hour filter isn't working:
-```sql
-WHERE o.ingestion_timestamp >= TIMESTAMP_SUB(TIMESTAMP('{execution_date}'), INTERVAL 48 HOUR)
+**Why?** Old orders are being **continuously re-ingested** with recent `ingestion_timestamp` values:
+
+```
+Oct 15-17 orders (35-41 days old)
+  └─> Re-ingested on Nov 25, 2025 (TODAY!)
+  └─> Get ingestion_timestamp = 2025-11-25 (recent)
+  └─> PASS the 48-hour filter legitimately
 ```
 
-The `v_order_items.ingestion_timestamp` column either doesn't exist or has incorrect values.
+**Tables/Views Chain**:
+```
+v_order_items (view)
+  └─> v_order_items_atlas (table) ← Source of ingestion_timestamp
+       └─> Being continuously backfilled by upstream ETL
+```
 
-**Impact**: Aggregation query scans 60x more data → 67x slower execution → 6-hour timeout
+**Evidence**: Sampled 100 old orders, ALL have Nov 25 ingestion timestamps
+
+**Affected Retailers**:
+- **nicandzoe**: 342K old orders (99.7% of their data!) - **MAJOR OUTLIER**
+- icebreakerapac: 5,840 old orders (79.7%)
+- skims: 5,423 old orders (41.2%)
+- Top 5 retailers = 360K problematic records
+
+**Pattern**: 98% of old orders have NO returns - backfill is not return-driven
+
+**Impact**: Aggregation query processes 183 dates → 61x more grouping combinations → 6-hour timeout
 
 ---
 
@@ -91,11 +112,29 @@ Investigate why `ingestion_timestamp` filter doesn't work and fix permanently
 
 ---
 
-## Questions
+## Questions (UPDATED)
 
+### ✅ Answered
 1. Does `v_order_items` have `ingestion_timestamp` column?
-2. Why specifically Nov 19-20 fail but Nov 18 and Nov 21+ work?
-3. Business impact of missing Nov 19-20 data?
+   - **YES** - Exists in `v_order_items_atlas` and working correctly
+   
+### 🔴 Critical New Questions
+
+2. **Who owns `v_order_items_atlas` ingestion pipeline?**
+   - Need to contact them about continuous backfill
+   
+3. **Why is nicandzoe data being continuously re-ingested?**
+   - 342K old orders (Sep 26 - Nov 20) with Nov 25 ingestion timestamps
+   - 99.7% of their data is historical backfill!
+   
+4. **Is this backfill intentional or a bug?**
+   - If intentional: Need `is_backfill` flag to exclude from DAG
+   - If bug: Need to stop the continuous re-ingestion
+
+### ⏳ Still Need to Know
+
+5. Why specifically Nov 19-20 fail but Nov 18 and Nov 21+ work?
+6. Business impact of missing Nov 19-20 data?
 
 ---
 

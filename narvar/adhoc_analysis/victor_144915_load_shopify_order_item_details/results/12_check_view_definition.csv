@@ -1,0 +1,119 @@
+table_name,view_definition
+v_order_items,"WITH retailers AS (
+    SELECT distinct retailer_moniker
+    from analytics.v_shop_id_domain_moniker_mapping 
+    where retailer_moniker is not null
+    and updated_timestamp >= '2024-12-01'
+    )
+    -- bypassing Atlas order data for now due to incorrect records for multi-shop retailers
+    SELECT 
+        a.retailer_moniker,
+        a.store_name,
+        order_date,
+        order_number,
+        order_name,
+        shop_order_number,
+        is_backfill,
+        order_number_hash,
+        order_number_sku_hash,
+        order_item_sku,
+        order_item_sku_hash,
+        SAFE_CAST(order_item_quantity AS INT64) AS order_item_quantity,
+        order_item_size,
+        order_item_color,
+        order_item_style,
+        order_item_description,
+        order_item_name,
+        initcap(coalesce(order_item_vendor, p.vendor)) as order_item_vendor,
+        order_item_product_id,
+        initcap(coalesce(order_item_product_type, p.product_type)) as order_item_product_type,
+        SAFE_CAST(order_item_price AS FLOAT64) AS order_item_price,
+        SAFE_CAST(order_item_discount_amount AS FLOAT64) AS order_item_discount_amount,
+        SAFE_CAST(order_item_discount_percent AS FLOAT64) AS order_item_discount_percent,
+        order_checkout_locale,
+        order_checkout_brand,
+        order_billing_method,
+        order_billing_card,
+        order_billing_is_gift_card,
+        order_billing_merchant,
+        order_custom_attribute1,
+        order_currency_code,
+        order_fulfillment_status,
+        order_is_gift,
+        order_item_variant_id,
+        v.title as order_item_variant_title,
+        SAFE_CAST(order_shipped_item_quantity AS INT64) AS order_shipped_item_quantity,
+        order_shipped_item_sku,
+        order_shipped_item_id,
+        order_carrier_moniker,
+        order_carrier_service,
+        a.ingestion_timestamp,
+        a.event_ts
+    FROM `narvar-data-lake.return_insights_base.v_order_items_atlas` a
+        left join `narvar-data-lake.shopify_product_catalog.v_products` p 
+            on a.retailer_moniker = p.retailer_moniker
+            and safe_cast(order_item_product_id as int64) = p.id
+        left join `narvar-data-lake.shopify_product_catalog.v_variants` v 
+            on a.retailer_moniker = v.retailer_moniker 
+            and safe_cast(order_item_variant_id as int64) = v.id
+
+    WHERE a.retailer_moniker in (select retailer_moniker from retailers)
+
+    -- UNION ALL
+
+    -- SELECT 
+    --     a.retailer_moniker,
+    --     a.store_name,
+    --     order_date,
+    --     order_number,
+    --     order_number_hash,
+    --     order_number_sku_hash,
+    --     order_item_sku_hash,
+    --     order_item_sku,
+    --     SAFE_CAST(order_item_quantity AS INT64) AS order_item_quantity,
+    --     order_item_size,
+    --     order_item_color,
+    --     order_item_style,
+    --     order_item_description,
+    --     order_item_name,
+    --     initcap(coalesce(order_item_vendor, p.vendor)) as order_item_vendor,
+    --     order_item_product_id,
+    --     initcap(coalesce(order_item_product_type, p.product_type)) as order_item_product_type,
+    --     SAFE_CAST(order_item_price AS FLOAT64) AS order_item_price,
+    --     SAFE_CAST(order_item_discount_amount AS FLOAT64) AS order_item_discount_amount,
+    --     SAFE_CAST(order_item_discount_percent AS FLOAT64) AS order_item_discount_percent,
+    --     order_checkout_locale,
+    --     order_checkout_brand,
+    --     order_billing_method,
+    --     order_billing_card,
+    --     order_billing_is_gift_card,
+    --     order_billing_merchant,
+    --     order_custom_attribute1,
+    --     order_currency_code,
+    --     order_fulfillment_status,
+    --     order_is_gift,
+    --     order_item_variant_id,
+    --     v.title as order_item_variant_title,
+    --     SAFE_CAST(order_shipped_item_quantity AS INT64) AS order_shipped_item_quantity,
+    --     order_shipped_item_sku,
+    --     order_shipped_item_id,
+    --     order_carrier_moniker,
+    --     order_carrier_service,
+    --     a.ingestion_timestamp,
+    --     a.event_ts
+    -- FROM `narvar-data-lake.return_insights_base.v_order_items_order_api` a
+    --     left join `narvar-data-lake.shopify_product_catalog.v_products` p 
+    --         on a.retailer_moniker = p.retailer_moniker
+    --         and safe_cast(order_item_product_id as int64) = p.id
+    --     left join `narvar-data-lake.shopify_product_catalog.v_variants` v 
+    --         on a.retailer_moniker = v.retailer_moniker 
+    --         and safe_cast(order_item_variant_id as int64) = v.id
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY 
+            date(order_date), 
+            retailer_moniker, 
+            store_name, 
+            order_number, 
+            order_item_sku 
+        ORDER BY ingestion_timestamp DESC
+    ) = 1"

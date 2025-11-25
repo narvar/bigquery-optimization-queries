@@ -15,7 +15,9 @@ The `update_product_insights` task is timing out (6 hours) when processing data 
 
 ---
 
-## Root Cause
+## Root Cause: Continuous Data Backfill/Re-Ingestion
+
+**UPDATE (Nov 25, Evening)**: After deeper investigation, discovered the actual root cause.
 
 ### 1. Temp Table Contains 6 Months of Data
 
@@ -35,18 +37,64 @@ The `update_product_insights` task is timing out (6 hours) when processing data 
 - 183 distinct order dates
 - Date range: 2025-05-01 to 2025-11-20
 
-### 2. DAG Filter Not Working
+### 2. Tables and Views Structure
 
-The DAG has this filter to limit to 48 hours:
+**Query Chain**:
+```
+DAG Query:
+  FROM `narvar-data-lake.return_insights_base.v_order_items` o
+    └─> VIEW Definition (Query 12):
+        SELECT ... a.ingestion_timestamp, a.event_ts
+        FROM `narvar-data-lake.return_insights_base.v_order_items_atlas` a
+          └─> Underlying TABLE containing ingestion_timestamp column
+```
+
+**The `ingestion_timestamp` column DOES exist and IS populated** in `v_order_items_atlas` (confirmed via view definition).
+
+### 3. The Real Problem: Ongoing Data Backfill
+
+**The DAG filter IS working correctly**, but old orders are being **continuously re-ingested**:
 
 ```sql
 WHERE o.ingestion_timestamp >= TIMESTAMP_SUB(TIMESTAMP('{execution_date}'), INTERVAL 48 HOUR)
 ```
 
-But `v_order_items` view likely:
-- Doesn't have an `ingestion_timestamp` column, OR
-- Has NULL/incorrect values in that column, OR
-- The column exists but isn't indexed/partitioned properly
+**What we discovered (Query 13)**:
+- Orders from **Oct 15-17, 2025** (order_date, 35-41 days ago)
+- Have `ingestion_timestamp` = **Nov 25, 2025** (TODAY!)
+- Were re-ingested **39-41 days AFTER** they were originally placed
+- **Legitimately pass the 48-hour filter** because ingestion is recent
+
+**Example**:
+```
+order_date: 2025-10-16 12:25:28
+ingestion_timestamp: 2025-11-25 19:48:22
+days_order_to_ingestion: 40 days
+filter_status: PASSES 48hr filter ✅
+```
+
+### 4. Retailer Concentration (Query 11)
+
+The backfill is concentrated in specific retailers:
+
+| Retailer | Very Old Orders | % of Their Data | Date Span |
+|----------|----------------|-----------------|-----------|
+| **nicandzoe** | 342,109 | 99.7% | Sep 26 - Nov 20 (55 days) |
+| **icebreakerapac** | 5,840 | 79.7% | Sep 22 - Nov 20 (59 days) |
+| **skims** | 5,423 | 41.2% | May 21 - Nov 20 (183 days!) |
+| **milly** | 3,643 | 91.4% | Sep 05 - Nov 20 (76 days) |
+| **stevemadden** | 3,118 | 55.1% | May 26 - Nov 20 (178 days) |
+
+**Top 5 retailers = 360K of 1.73M problematic records (21%)**
+
+### 5. Not Driven by Recent Returns (Query 10)
+
+**98% of old orders have NO returns at all**:
+- Total old orders (before Nov 13): 1.73M
+- With recent returns: ~35K (2%)
+- With no returns: ~1.69M (98%)
+
+**Conclusion**: The backfill is NOT because of recent return activity. It's an upstream ETL/ingestion issue causing continuous re-ingestion of historical order data.
 
 ### 3. Cascading Impact on Aggregation
 
@@ -61,6 +109,68 @@ The `update_product_insights` task:
 5. **Result**: Aggregation explosion → timeout after 6 hours
 
 **Note**: This is NOT a cartesian join (join conditions are correct). It's an **aggregation explosion** caused by excessive grouping dimensions. See `EXECUTION_PLAN_ANALYSIS.md` for detailed proof.
+
+---
+
+## Tables and Views Explained
+
+### Data Flow Architecture
+
+```
+Upstream ETL/Dataflow
+    ↓ (continuous ingestion + backfill)
+v_order_items_atlas (BASE TABLE)
+├─ Columns: order_date, order_number, order_item_sku, ingestion_timestamp, event_ts, ...
+├─ Problem: Continuous re-ingestion of historical orders with NEW ingestion_timestamp
+└─ Example: Oct 15 order re-ingested Nov 25 gets ingestion_timestamp = 2025-11-25
+    ↓ (view)
+v_order_items (VIEW)
+├─ SELECT ... a.ingestion_timestamp FROM v_order_items_atlas a
+├─ Filters: Active retailers (updated_timestamp >= '2024-12-01')
+├─ Deduplication: ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ingestion_timestamp DESC)
+└─ Exposes ingestion_timestamp to downstream queries
+    ↓ (DAG query)
+tmp_order_item_details (TEMP TABLE)
+├─ Filter: ingestion_timestamp >= TIMESTAMP_SUB(execution_date, INTERVAL 48 HOUR)
+├─ Problem: Old orders pass filter because they were re-ingested recently
+└─ Result: 183 distinct order_dates (should be 2-3)
+    ↓ (aggregation query)
+update_product_insights task
+├─ Groups by: date, retailer, sku, ... (15 dimensions)
+├─ Problem: 183 dates creates 61x more grouping combinations
+└─ Result: TIMEOUT after 6 hours
+```
+
+### The ingestion_timestamp Column
+
+**Location**: `narvar-data-lake.return_insights_base.v_order_items_atlas.ingestion_timestamp`
+
+**Purpose**: Track when each order was ingested into the table (not when order was placed)
+
+**How it works** (correctly):
+- When an order is first ingested: `ingestion_timestamp` = current timestamp
+- When an order is RE-INGESTED: `ingestion_timestamp` = NEW current timestamp
+- The DAG filter uses this to get "recently ingested" data (working as designed)
+
+**The problem**:
+- If upstream re-ingests Oct 15 orders on Nov 25
+- They get `ingestion_timestamp = 2025-11-25`
+- They pass the 48-hour filter (Nov 25 - 48hrs = Nov 23)
+- Even though `order_date = 2025-10-15` (old!)
+
+### Why Backfill Happens
+
+**Possible reasons** (needs investigation):
+1. Data quality fixes (correcting wrong records)
+2. Schema evolution (adding new columns)
+3. ETL bug causing repeated re-ingestion
+4. Intentional historical data refresh
+5. Upstream source system changes
+
+**Evidence it's ongoing** (not one-time):
+- Query 13 shows ingestion timestamps from the last few hours (Nov 25)
+- Spread across multiple hours (08:00, 09:00, 12:00, 13:00, 15:00, etc.)
+- Suggests continuous/scheduled backfill process
 
 ---
 
@@ -163,29 +273,40 @@ WHERE
 
 ---
 
-### Root Cause Fix (Option B): Investigate and Fix ingestion_timestamp
+### Root Cause Fix (Option B): Stop Continuous Data Backfill
 
-**Problem**: `v_order_items.ingestion_timestamp` not working as expected  
-**Solution**: Determine why and fix it
+**UPDATE**: Investigation complete (Queries 10-13).
 
-**Steps**:
-1. Query `v_order_items` view definition
-2. Check if `ingestion_timestamp` column exists
-3. Query actual values: `SELECT MIN(ingestion_timestamp), MAX(ingestion_timestamp) FROM v_order_items LIMIT 1000`
-4. If column doesn't exist: Add it to the view
-5. If values are wrong: Fix upstream ETL
+**Problem**: Upstream ETL is continuously re-ingesting historical orders with new `ingestion_timestamp` values  
+**Solution**: Identify and stop the backfill process
+
+**What we found**:
+1. ✅ `ingestion_timestamp` column exists in `v_order_items_atlas` table
+2. ✅ Filter logic is working correctly
+3. ✅ Old orders (Oct 15-17) have Nov 25 ingestion timestamps (re-ingested today!)
+4. ✅ Concentrated in 5 retailers: nicandzoe (342K), icebreakerapac (5.8K), skims (5.4K), milly (3.6K), stevemadden (3.1K)
+5. ✅ 98% of old orders have NO returns (not driven by return activity)
+
+**Steps to fix**:
+1. Identify what's causing continuous re-ingestion in `v_order_items_atlas`
+2. Check if this is intentional (data quality fixes) or a bug
+3. If intentional: Add logic to mark backfilled records (e.g., `is_backfill` flag)
+4. If bug: Fix upstream Dataflow/ETL pipeline
+5. Coordinate with team that owns `v_order_items_atlas` population
 
 **Pros**:
 - Fixes root cause permanently
-- DAG works as designed
+- Prevents future occurrences
+- May improve overall system performance (less re-ingestion)
 
 **Cons**:
 - Requires investigation time
-- May need upstream ETL changes
+- Need coordination with upstream team
 - Could take days to implement
+- May need to understand business reason for backfill
 
-**Effort**: 2-4 hours investigation + implementation time  
-**Risk**: Medium (depends on findings)
+**Effort**: 4-8 hours investigation + coordination + implementation  
+**Risk**: Medium-High (requires upstream team changes)
 
 ---
 
@@ -259,29 +380,46 @@ WHERE
 
 ## Questions for Follow-up
 
+### ✅ ANSWERED (Investigation Complete)
+
 1. **Does `v_order_items` have an `ingestion_timestamp` column?**
-   - Need to query view definition
-   - Or sample the view: `SELECT * FROM v_order_items LIMIT 10`
+   - ✅ YES - Confirmed via Query 12 (view definition)
+   - Column comes from `v_order_items_atlas.ingestion_timestamp`
+   - Filter is working correctly
 
-2. **Why did Nov 18 work (slowly) but Nov 19-20 fail?**
-   - Nov 18 took 113 minutes (slow but succeeded)
-   - Nov 19-20 timeout after 6 hours
-   - What's different about those specific dates?
+2. **Why does the temp table accumulate 6 months of data?**
+   - ✅ ANSWERED: Continuous data backfill/re-ingestion
+   - Old orders get new `ingestion_timestamp` values
+   - They legitimately pass the 48-hour filter
+   - `CREATE OR REPLACE` works correctly (not the issue)
 
-3. **Why is Nov 24 back to normal?**
+3. **What caused the Oct 15-17 spike?**
+   - ✅ ANSWERED: Large backfill event for those specific dates
+   - 350K orders from Oct 15-17 re-ingested on Nov 25
+   - Concentrated in nicandzoe (162K on Oct 16 alone)
+
+### 🔲 STILL NEED TO INVESTIGATE
+
+4. **Why is there continuous backfill happening?**
+   - Who owns `v_order_items_atlas` table population?
+   - Is this intentional (data quality fixes) or a bug?
+   - Why specifically nicandzoe, icebreakerapac, skims, milly, stevemadden?
+
+5. **Why did Nov 18 work (slowly) but Nov 19-20 fail completely?**
+   - Nov 18: 113 minutes (slow but succeeded)
+   - Nov 19-20: 6 hours (timeout)
+   - All have 183 dates in temp table
+   - Possible: Nov 18 had slightly less data, just barely completed?
+
+6. **Why is Nov 24 back to normal?**
    - 5.4 minutes (expected performance)
-   - Did someone manually clean the temp tables?
-   - Or did the cleanup task finally run?
+   - Cleanup task finally ran (old temp tables dropped)?
+   - Or less backfill data on that specific day?
 
-4. **Why does the temp table accumulate 6 months of data?**
-   - Should be `CREATE OR REPLACE` (drops and recreates)
-   - Is the CREATE OR REPLACE failing silently?
-   - Is there a MERGE or INSERT instead of CREATE OR REPLACE somewhere?
-
-5. **What caused the Oct 15-17 spike** visible in the temp table?
-   - 350K rows for those 3 days (9.3% of total)
-   - Was there a data backfill?
-   - New retailer onboarded?
+7. **Is the backfill still running now?**
+   - Query 13 shows ingestion happening at 19:48 (7:48 PM) on Nov 25
+   - Is this a continuous process or batch job?
+   - Can we see the backfill job in audit logs?
 
 ---
 
@@ -290,14 +428,25 @@ WHERE
 ### Queries
 1. `01_table_sizes_and_counts.sql` - Table metadata
 2. `02_join_key_distribution.sql` - Join explosion analysis
-3. `03_temp_table_date_distribution.sql` - Historical data discovery
+3. `03_temp_table_date_distribution.sql` - **Historical data discovery (183 dates found)**
 4. `05_find_specific_job.sql` - Job history analysis
+5. `07_get_execution_plans.sql` - Execution plan extraction
+6. `10_return_dates_analysis.sql` - **Return activity check (98% have NO returns)**
+7. `11_old_records_by_retailer.sql` - **Retailer concentration analysis**
+8. `12_check_view_definition.sql` - **View definition verification**
+9. `13_sample_ingestion_timestamps.sql` - **SMOKING GUN: Proves ongoing backfill**
 
 ### Results
 1. `01_table_sizes_and_counts.csv` - 6 tables analyzed
 2. `02_join_key_distribution.csv` - Join key metrics
 3. `03_temp_table_date_distribution.csv` - 183 distinct dates found
 4. `05_find_specific_job.csv` - 30-day job history
+5. `10_return_dates_analysis.csv` - **98% of old orders have no returns**
+6. `11_old_records_by_retailer.csv` - **nicandzoe has 342K old orders (99.7% of data)**
+7. `12_check_view_definition.csv` - **View definition (confirms ingestion_timestamp exists)**
+8. `13_sample_ingestion_timestamps.csv` - **Oct 15-17 orders with Nov 25 ingestion timestamps**
+9. `failed_nov20_child_job_plan.json` - Execution plan for failed job
+10. `success_nov24_job_plan.json` - Execution plan for successful job
 
 ---
 

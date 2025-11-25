@@ -1,0 +1,3 @@
+Error in query string: Error processing job 'narvar-data-
+lake:bqjob_r52210e9eb22bd2dc_0000019abceb95af_1': SELECT list expression
+references column order_date which is neither grouped nor aggregated at [13:40]

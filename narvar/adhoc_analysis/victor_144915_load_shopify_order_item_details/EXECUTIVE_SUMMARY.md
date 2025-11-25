@@ -16,9 +16,22 @@ The `load_shopify_order_item_details` Airflow DAG task `update_product_insights`
 
 ---
 
-## Root Cause
+## Root Cause: Continuous Data Backfill/Re-Ingestion
 
 The temp table `tmp_order_item_details` contains **6 months of historical data** (4.2M rows, 183 distinct dates) instead of the expected **2 days** (500K rows, 2-3 dates).
+
+**UPDATE (Nov 25, Evening)**: The `ingestion_timestamp` filter IS working correctly, but old orders are being **continuously re-ingested** with recent timestamps, causing them to legitimately pass the 48-hour filter.
+
+### Tables and Views Involved
+
+**Query Source**:
+```
+`narvar-data-lake.return_insights_base.v_order_items` (view)
+  └─> `narvar-data-lake.return_insights_base.v_order_items_atlas` (underlying table)
+       └─> Contains `ingestion_timestamp` column (confirmed)
+```
+
+**View Definition**: The view selects from `v_order_items_atlas` and includes `a.ingestion_timestamp` field.
 
 ### Why This Causes Timeout
 
@@ -27,16 +40,30 @@ The aggregation query joins 4.2M rows against 236M rows across 183 dates, creati
 - **1.18M distinct join keys** (should be ~20K)
 - Aggregations across 183 dates × 194 retailers × 648K SKUs
 
-### Why The Filter Fails
+### Why Old Data Passes the Filter
 
-The DAG has a 48-hour filter:
-```sql
-WHERE o.ingestion_timestamp >= TIMESTAMP_SUB(TIMESTAMP('{execution_date}'), INTERVAL 48 HOUR)
+**The Backfill Pattern**:
+
+1. Orders from **Oct 15-17, 2025** (35+ days old) have `ingestion_timestamp` of **Nov 25, 2025** (today!)
+2. These re-ingested orders **legitimately pass** the 48-hour filter:
+   ```sql
+   WHERE o.ingestion_timestamp >= TIMESTAMP_SUB(TIMESTAMP('2025-11-20'), INTERVAL 48 HOUR)
+   ```
+3. Because `ingestion_timestamp` = Nov 25 (recent), not Oct 15 (order date)
+
+**Evidence from Query 13**:
+```
+order_date: 2025-10-16
+ingestion_timestamp: 2025-11-25 19:48:22
+filter_status: PASSES 48hr filter
+hours_before_execution: -139 (future timestamp!)
 ```
 
-This filter is NOT WORKING because:
-- `v_order_items` view likely doesn't have `ingestion_timestamp` column, OR
-- Column exists but has NULL/incorrect values
+**Affected Retailers** (continuous backfill):
+- **nicandzoe**: 342K old orders (99.7% of their data) spanning Sep 26 - Nov 20
+- **icebreakerapac**: 5,840 old orders (79.7% of their data) spanning Sep 22 - Nov 20
+- **skims**: 5,423 old orders (41.2% of their data) spanning May 21 - Nov 20
+- **98% of these old orders have NO returns** - not driven by return activity
 
 ---
 
@@ -109,19 +136,23 @@ Then manually trigger Airflow DAG for those dates.
 
 **Effort**: 30 minutes
 
-### Root Cause Investigation (Option C): Fix ingestion_timestamp Filter
+### Root Cause Investigation (Option C): Stop Continuous Data Backfill
+
+**UPDATE**: Investigation complete - the issue is upstream data backfill.
 
 **Steps**:
-1. Query `v_order_items` view definition
-2. Check if `ingestion_timestamp` exists and has correct values
-3. If missing: Add column to view
-4. If incorrect: Fix upstream ETL
+1. ✅ **Confirmed**: `ingestion_timestamp` column exists in `v_order_items_atlas` and is working
+2. ✅ **Discovered**: Old orders (Oct 15-17) are being re-ingested with Nov 25 timestamps
+3. ✅ **Identified**: nicandzoe (342K), icebreakerapac (5.8K), skims (5.4K) are top offenders
+4. 🔲 **Investigate**: Why is `v_order_items_atlas` being continuously backfilled?
+5. 🔲 **Fix**: Stop the continuous re-ingestion at the source (upstream ETL/Dataflow)
 
 **Benefits**:
 - Permanent fix
-- DAG works as designed
+- Prevents future occurrences
+- Fixes root cause (not just symptom)
 
-**Effort**: 2-4 hours investigation + implementation time
+**Effort**: 4-8 hours (requires upstream team coordination)
 
 ---
 
