@@ -445,7 +445,7 @@ This section provides a complete cost attribution analysis, combining:
 
 ### Cost Distribution Histogram
 
-![Retailer Cost Distribution](file:///Users/cezarmihaila/.gemini/antigravity/brain/405671d3-8e4f-498a-b53b-df95c9b5eb36/cost_distribution_histogram_1764033639234.png)
+![Retailer Cost Distribution](cost_distribution_histogram.png)
 
 **Distribution Summary:**
 - **$10,000+:** 2 retailers (Gap, Nike)
