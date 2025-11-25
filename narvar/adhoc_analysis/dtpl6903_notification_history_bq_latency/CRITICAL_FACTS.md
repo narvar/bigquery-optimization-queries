@@ -204,30 +204,71 @@ Total: $1,700/month ($20,400/year)
 
 ---
 
-## 🎯 RECOMMENDED DECISION
+## 🎯 DECISION STATUS: POSTPONED (Nov 25, 2025)
 
-### ✅ START WITH OPTION 1: ON-DEMAND ($27/month)
+### ⏸️ Deployment Postponed - Awaiting Business Justification
 
-**Rationale:**
-1. **Cost:** 63x cheaper than alternatives ($27 vs $1,700+)
-2. **Performance:** Unlimited capacity, no queue delays
-3. **Risk:** Low - can switch to reservation if costs spike
-4. **Implementation:** Simple - no reservation management needed
+**Decision by:** Saurabh (Director)  
+**Reason:** Messaging team must justify that resolving 8-minute delays is worth the cost  
+**Cost in question:** ~$1,700/month for flex reservation (50 baseline + autoscale 50)
 
-**Monitor for 30 days and switch to Option 2 (Flex) IF:**
-- Monthly scanned data exceeds 24 TB ($150/month on-demand)
-- Need guaranteed capacity for SLA compliance
-- Query patterns change significantly
+**What Saurabh needs:**
+- Business case from messaging team
+- Customer impact quantification (churn risk, revenue impact)
+- Acknowledgment that $1,700/month (~$20,400/year) is justified for this feature
+- Alternative solutions considered (if any)
+
+---
+
+### 💡 COST OPTIONS AVAILABLE
+
+**Option 1: On-Demand ($27/month) - Lowest Cost ⭐**
+- Current usage: 4.3 TB/month × $6.25/TB = **$27/month**
+- Unlimited capacity, no queue delays
+- **63x cheaper than flex reservation**
+- **Recommendation:** Start here, escalate to flex only if needed
+
+**Option 2: Flex Reservation ($1,700/month) - Guaranteed Capacity**
+- 50 baseline slots: $1,460/month (always running)
+- 50 autoscale slots: $240/month (during 9pm peak, ~4 hrs/day)
+- **Total: $1,700/month ($20,400/year)**
+- Provides guaranteed capacity with autoscale for peaks
+- **This is the cost Saurabh is questioning**
 
 **Break-even analysis:**
 ```
 On-demand becomes expensive at: 24 TB/month × $6.25 = $150/month
-Flex baseline cost: $1,460/month
-Break-even point: 234 TB/month scanned
+Flex break-even: 234 TB/month scanned
+Current usage: 4.3 TB/month (54x below break-even)
 
-Current usage: 4.3 TB/month
-Would need 54x increase to justify flex reservation
+Conclusion: On-demand is financially optimal for current workload
 ```
+
+---
+
+### ❓ QUESTIONS FOR MESSAGING TEAM
+
+Before deployment can proceed, need answers to:
+
+1. **Business impact:** What is the cost of 8-minute delays?
+   - How many retailer searches affected per day?
+   - Customer churn risk quantified?
+   - Revenue impact if unresolved?
+
+2. **Urgency:** How critical is this to resolve?
+   - Lands' End escalation (NT-1363) severity?
+   - Other retailers complaining?
+   - Timeline pressure?
+
+3. **Alternatives considered:**
+   - Can retailers tolerate delays during specific hours?
+   - Can we optimize queries further?
+   - Can we reduce query volume?
+
+4. **Cost approval:**
+   - Is $27/month (on-demand) acceptable? If yes, why not start there?
+   - Is $1,700/month (flex) justified? If yes, what's the ROI?
+   - Who has budget authority to approve?
 
 ---
 
@@ -242,13 +283,21 @@ Would need 54x increase to justify flex reservation
 
 ---
 
-## 📋 NEXT STEPS - IMPLEMENTATION PLAN
+## 📋 IMPLEMENTATION STATUS: ON HOLD
 
 ### ✅ COMPLETED
 - [x] Project created: `messaging-hub-bq-dedicated`
 - [x] Cezar has owner permissions
+- [x] Cost analysis completed and verified
 
-### 🔄 IN PROGRESS - Day 1 (Infrastructure Setup - 2 hours)
+### ⏸️ POSTPONED (Nov 25, 2025)
+**Decision:** Saurabh postponed deployment until messaging team justifies cost
+
+**Blocker:** Business justification needed for ~$1,700/month flex reservation cost
+
+**Alternative available:** $27/month on-demand solution (63x cheaper) - unclear if considered
+
+### 📋 IF/WHEN APPROVED - Day 1 (Infrastructure Setup - 2 hours)
 
 **Step 1: Link Billing Account**
 ```bash

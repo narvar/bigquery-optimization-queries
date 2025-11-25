@@ -1,14 +1,14 @@
 # DTPL-6903: Notification History Latency - Executive Summary
 
 **Date:** November 21, 2025 (Updated: November 25, 2025)  
-**Status:** ✅ READY TO IMPLEMENT - Project created, configuration in progress  
+**Status:** ⏸️ POSTPONED - Awaiting messaging team business justification  
 **Impact:** Customer-facing notification history feature experiencing 8-minute delays
 
-> 📋 **Critical Facts & Decision:** See [`CRITICAL_FACTS.md`](CRITICAL_FACTS.md) for verified costs, options comparison, and implementation plan
+> 📋 **Critical Facts & Decision:** See [`CRITICAL_FACTS.md`](CRITICAL_FACTS.md) for verified costs, options comparison, and business justification questions
 
-> 📋 **Live Status Tracking:** See [`IMPLEMENTATION_LOG.md`](IMPLEMENTATION_LOG.md) for real-time progress
+> 📋 **Live Status Tracking:** See [`IMPLEMENTATION_LOG.md`](IMPLEMENTATION_LOG.md) for current status
 
-> ✅ **Blocker Resolved (Nov 25):** Project `messaging-hub-bq-dedicated` created successfully. Cezar has owner permissions.
+> ⏸️ **Decision (Nov 25):** Saurabh postponed deployment until messaging team justifies that ~$1,700/month cost is warranted. Project `messaging-hub-bq-dedicated` created but not configured. On-demand alternative at $27/month available but decision pending.
 
 ---
 
@@ -16,7 +16,9 @@
 
 **Problem:** The Notification History feature, used by retailers including Lands' End to search notification details by order number, is experiencing significant delays of up to 8-9 minutes. Investigation confirms the queries themselves are well-optimized and execute in 1-2 seconds, but are waiting 8+ minutes for database processing capacity due to shared infrastructure saturation. This issue started November 13th and has escalated, with peak delays occurring during overnight and morning hours (midnight-9am PST). The delays are caused by competing batch data processing and analytics workloads (Airflow 46%, Metabase 31%) monopolizing shared database resources, leaving insufficient capacity for customer-facing interactive features.
 
-**Solution:** We are implementing a dedicated BigQuery project (`messaging-hub-bq-dedicated`) that uses on-demand billing, completely isolating messaging queries from the saturated shared reservation. The project has been created and is ready for configuration. This approach provides complete isolation from competing workloads at minimal cost (~$27/month for current 4.3 TB/month usage, with unlimited capacity and no queue delays). Implementation requires configuring cross-project data access (2 hours), updating the messaging application to use the new project ID (1-2 days), and deploying via rolling restart (zero downtime). Total timeline is 3-4 days. If usage grows significantly (>24 TB/month), we can transition to a dedicated reservation, but current volume makes on-demand the most cost-effective option. This will restore the Notification History feature to its expected performance level of <3 seconds end-to-end response time, eliminating the 8-minute queue delays.
+**Solution (Designed, Pending Approval):** A dedicated BigQuery project (`messaging-hub-bq-dedicated`) has been created to isolate messaging queries from the saturated shared reservation. Two cost options exist: (1) On-demand billing at ~$27/month for current usage with unlimited capacity, or (2) Flex reservation at ~$1,700/month for guaranteed capacity with autoscale. Implementation timeline is 3-4 days with zero downtime deployment. This will restore the Notification History feature to its expected performance level of <3 seconds end-to-end response time, eliminating the 8-minute queue delays.
+
+**Current Status (Nov 25):** Deployment postponed by Saurabh. Messaging team must provide business justification demonstrating that resolving the 8-minute delays is worth the investment (~$1,700/month for flex reservation, or $27/month for on-demand). Decision pending on: (1) quantified business impact (churn risk, revenue), (2) customer escalation severity, (3) cost approval authority, and (4) which cost option ($27/month vs $1,700/month) is appropriate for the business need.
 
 ---
 
@@ -224,35 +226,44 @@ WHERE event_ts BETWEEN TIMESTAMP '2025-11-20T05:25:43'
 ### ✅ Completed (Nov 21-25):
 1. ✅ **Investigation complete** - Root cause confirmed (reservation saturation by Airflow 46% + Metabase 31%)
 2. ✅ **Choke points identified** - n8n Shopify causes 88% of notification history delays during 8-9am window
-3. ✅ **Peak analysis complete** - Daily 9pm spike (186-386 slots) requires handling
-4. ✅ **Solution designed** - Separate project with on-demand billing
+3. ✅ **Peak analysis complete** - Daily 9pm spike (186-386 slots) documented
+4. ✅ **Solution designed** - Separate project with two cost options (on-demand $27/month or flex $1,700/month)
 5. ✅ **Project created** - `messaging-hub-bq-dedicated` (Cezar has owner permissions)
-6. ✅ **Cost analysis corrected** - On-demand $27/month vs flex $1,700/month
+6. ✅ **Cost analysis completed** - Verified pricing, break-even analysis, options comparison
 
-### 🔄 In Progress (Nov 25 - Day 1):
-7. **Infrastructure setup** (2 hours remaining):
-   - [ ] Link billing account
-   - [ ] Enable BigQuery API
-   - [ ] Grant service account (`messaging@narvar-data-lake`) access to new project
-   - [ ] Grant data read access to messaging tables
-   - [ ] Test cross-project query
-   - [ ] Grant admin access (Saurabh, Julia, Eric, data-eng group)
+### ⏸️ Postponed (Nov 25):
+**Decision by:** Saurabh (Director)  
+**Reason:** Messaging team must justify business value vs cost
 
-### 📅 Remaining (Days 2-4):
-8. **Days 2-3:** Messaging team deployment
-   - Update project_id: `"narvar-data-lake"` → `"messaging-hub-bq-dedicated"`
-   - Update table references to fully-qualified: `\`narvar-data-lake.messaging.table\``
-   - Deploy to staging and test
-   - Production rollout (rolling restart, zero downtime)
+**Questions requiring answers:**
+- What is the business impact of 8-minute delays? (quantified churn risk, revenue impact)
+- How critical is the Lands' End escalation (NT-1363)?
+- Who has budget authority to approve $27/month (on-demand) or $1,700/month (flex)?
+- Is there business case for $20,400/year investment?
 
-9. **Day 4:** Validation and close
+**Next step:** Messaging team provides business justification, then Saurabh approves cost option
+
+### 📅 When Approved - Implementation Timeline:
+
+**Day 1 (2 hours):** Infrastructure setup
+   - Link billing account
+   - Enable BigQuery API
+   - Grant service account access
+   - Test cross-project query
+   - Grant admin access
+
+**Days 2-3:** Messaging team deployment
+   - Update project_id configuration
+   - Update table references to fully-qualified names
+   - Deploy to staging, test, then production
+
+**Day 4:** Validation
    - Monitor queue times (<1 second expected)
-   - Verify cost (~$27/month for 4.3 TB)
-   - Confirm reservation = "NONE" in audit logs (on-demand billing)
-   - Update Jira DTPL-6903 as resolved
+   - Verify cost ($27/month on-demand or $1,700/month flex)
+   - Close DTPL-6903
 
 **Detailed tracking:** `IMPLEMENTATION_LOG.md`  
-**Cost analysis:** `CRITICAL_FACTS.md`  
+**Cost analysis & business questions:** `CRITICAL_FACTS.md`  
 **Complete guide:** `SEPARATE_PROJECT_SOLUTION.md`
 
 ---
@@ -342,38 +353,65 @@ Break-even vs flex: 234 TB/month
 
 ---
 
-## Business Impact
+## Business Impact & Justification Required
 
-**Current State:**
+### Current State (Problem)
 - Retailers experiencing 8-minute delays for notification history lookups
-- Customer-facing feature unusable during business hours
+- Customer-facing feature degraded during business hours
 - Lands' End escalation (NT-1363) - potential churn risk
 - Root cause: Airflow (46%) + Metabase (31%) saturating shared reservation
 
-**Post-Deployment:**
+### Expected Post-Deployment (Benefits)
 - Queue delays eliminated: 558s → <1s (99.8% reduction)
 - Query execution unchanged: ~2.2 seconds (queries are well-optimized)
 - Total response time: <3 seconds end-to-end
-- Unlimited capacity (on-demand auto-scales)
+- Unlimited capacity (no future saturation risk)
 
-**Cost Impact (CORRECTED - Nov 25):**
-- **On-demand billing:** ~$27/month (~$324/year)
-- **Calculation:** 4.3 TB/month × $6.25/TB = $27/month ✅ VERIFIED
-- **Previous error:** Stated $219/month (7.8x overestimate)
-- **Isolated billing:** Clean separation from main project costs
-- **Cost protection:** Monitor usage; can switch to flex ($1,700/month) if grows >24 TB/month
+### Cost-Benefit Analysis (Nov 25)
 
-**Timeline:**
-- ✅ Project created: `messaging-hub-bq-dedicated` (Nov 25)
-- 🔄 Infrastructure setup: 2 hours (in progress)
-- Application deployment: 2-3 days (messaging team)
-- Total: 3-4 days to resolution
+**Option 1: On-Demand Billing - $27/month**
+- Cost: 4.3 TB/month × $6.25/TB = **$27/month ($324/year)**
+- Benefits: Unlimited capacity, complete isolation, no commitment
+- Risk: Variable cost if usage spikes significantly (>24 TB/month)
+- **Break-even:** Would need 54x usage increase to justify flex
 
-**Solution Approach (UPDATED):**
-- ✅ On-demand billing: **$27/month** - RECOMMENDED (separate project, no reservation)
-- Flex reservation: $1,700/month - Only if usage exceeds 24 TB/month
-- Annual commitment: $1,000/month - Only for stable high volume
-- **Key insight:** Separate project enables on-demand billing (org-level assignment doesn't apply to new projects)
+**Option 2: Flex Reservation - $1,700/month**
+- Cost: 50 baseline + 50 autoscale = **$1,700/month ($20,400/year)**
+- Benefits: Guaranteed capacity, predictable cost ceiling, handles peaks
+- Risk: Over-provisioned for current 4.3 TB/month usage (63x more expensive than on-demand)
+- **Use case:** Only if need capacity guarantee or usage >24 TB/month
+
+### Decision Required: Business Justification
+
+**Saurabh's question:** Is resolving 8-minute delays worth the investment?
+
+**Messaging team must provide:**
+
+1. **Quantified business impact:**
+   - How many retailer searches affected per day?
+   - Customer churn risk quantified ($/year)?
+   - Revenue impact if unresolved?
+   - How many retailers affected beyond Lands' End?
+
+2. **Escalation severity:**
+   - NT-1363 (Lands' End) - how critical?
+   - Timeline pressure? Contract renewal risk?
+   - Impact on customer satisfaction scores?
+
+3. **Cost approval:**
+   - Is $27/month (on-demand) acceptable? If yes, approve immediately.
+   - Is $1,700/month (flex) justified? Show ROI calculation.
+   - Who has budget authority?
+
+4. **Alternatives considered:**
+   - Can we optimize further to reduce volume?
+   - Can delays be tolerated during off-peak hours only?
+   - Can we reduce query frequency?
+
+### Implementation Status
+- ⏸️ **Postponed (Nov 25):** Awaiting messaging team business justification
+- ✅ **Project ready:** `messaging-hub-bq-dedicated` created, ready to configure
+- 📋 **Timeline if approved:** 3-4 days to resolution (zero downtime)
 
 **Customer Impact:**
 - Eliminates churn risk from poor UX

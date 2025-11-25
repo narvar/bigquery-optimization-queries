@@ -3,15 +3,26 @@
 **Date:** November 24-25, 2025  
 **Implementer:** Cezar Mihaila  
 **Goal:** Create separate BigQuery project for messaging with **on-demand billing** (no reservation)  
-**Cost:** ~$27/month (4.3 TB × $6.25/TB)  
+**Cost:** ~$27/month (4.3 TB × $6.25/TB) or ~$1,700/month (flex with autoscale)  
 **Reference:** CRITICAL_FACTS.md, SEPARATE_PROJECT_SOLUTION.md
 
 ---
 
-## Implementation Status: 🔄 IN PROGRESS - Day 1 Infrastructure Setup
+## Implementation Status: ⏸️ POSTPONED - Awaiting Business Justification
 
 **Started:** November 24, 2025 3:00pm PST  
-**Resumed:** November 25, 2025 (after blocker resolved)
+**Project created:** November 25, 2025  
+**Postponed:** November 25, 2025 (Saurabh decision)
+
+**Reason for postponement:**
+- Saurabh requires messaging team to justify business value vs cost (~$1,700/month for flex)
+- Need quantified business impact (churn risk, revenue, customer escalations)
+- Decision pending on cost approval and which option (on-demand $27/month vs flex $1,700/month)
+
+**Current state:**
+- Project `messaging-hub-bq-dedicated` exists but not configured
+- No infrastructure setup performed (billing, API, permissions)
+- Awaiting messaging team business case and Saurabh approval
 
 ---
 
