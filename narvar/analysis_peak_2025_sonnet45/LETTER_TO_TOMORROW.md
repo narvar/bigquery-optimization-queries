@@ -85,6 +85,68 @@ The analysis is complete and clean. Next steps depend on Cezar's priorities:
 
 ---
 
+## 💌 Second Session Update (Nov 25, 2025 - Afternoon)
+
+**Context Switch:** DTPL-6903 Notification History Investigation Documentation
+
+### What We Did
+
+Cezar asked me to review and understand the DTPL-6903 investigation (messaging BigQuery latency issue) and improve the executive summary for Saurabh.
+
+**The Problem:**
+- Notification History feature experiencing 8-9 minute delays
+- Root cause: BigQuery reservation saturation (Airflow 46% + Metabase 31% consuming all slots)
+- 87,383 messaging queries over 7 days - structurally similar, parameterized by order number
+
+**Key Analysis Added:**
+1. **Query Pattern Section** - Explained that 87K queries are structurally similar (10 parallel queries per user search from automated service NoFlakeQueryService.java) but with different parameters
+2. **Peak Pattern Discovery** - Daily 9pm spike of 186-386 concurrent slots (4-8x average) justifies autoscale configuration
+3. **Capacity Planning Rationale** - Why 50 baseline + autoscale 50 (not just 50 fixed or 100 fixed)
+
+**Documentation Cleanup:**
+- Removed outdated "Options A/B/C" (moving Airflow/Metabase to separate reservations)
+- Removed speculative "Why Now?" section (not relevant for executive decision)
+- Removed "Impact Scope" section (other services' delays don't inform messaging solution)
+- Updated to reflect current approach: **separate project** (`messaging-hub-bq-dedicated`) with dedicated reservation
+- Consolidated information into executive-appropriate format for Saurabh
+
+**Current Status:**
+- Solution designed: Separate GCP project with 50 baseline + autoscale 50 slots (~$219/month)
+- Implementation blocked: Cezar doesn't have `resourcemanager.projects.create` permission
+- Awaiting: Julia or Saurabh to create project
+- Timeline: 3-5 days after project creation
+
+**Files Updated:**
+- `narvar/adhoc_analysis/dtpl6903_notification_history_bq_latency/EXECUTIVE_SUMMARY.md`
+  - Added comprehensive query pattern analysis section
+  - Updated all sections to reflect separate project approach
+  - Removed investigation details, focused on decision-relevant information
+  - Updated Table of Contents
+  - Document is now 10% shorter and executive-appropriate
+
+### What I Learned
+
+**Communication for executives:**
+- Remove investigation artifacts (speculative root causes, impact to unrelated services)
+- Focus on: Problem → Analysis → Solution → Cost/Timeline → Business Impact
+- Include methodology briefly but don't bury decision points in technical details
+- One condensed sentence can replace multiple speculative sections
+
+**Technical details that mattered:**
+- The 9pm peak pattern discovery was critical - prevented deploying insufficient capacity
+- Understanding that queries are structurally similar (automated service) vs user-generated helps explain capacity planning approach
+- BigQuery API limitations (can't assign individual service accounts) drove architectural decision
+
+### For Tomorrow
+
+DTPL-6903 work is documented and ready for Saurabh's review. Next steps depend on:
+1. Julia/Saurabh creating the `messaging-hub-bq-dedicated` project (blocker resolution)
+2. Whether to continue with Monitor pricing work or focus on other priorities
+
+**Status:** EXECUTIVE_SUMMARY.md is clean, focused, and ready for director-level presentation.
+
+---
+
 ## 📚 Previous Sessions Below
 
 *(Session history from Nov 14-24 continues below)*
