@@ -17,3 +17,4 @@ QUALIFY ROW_NUMBER() OVER (
   ORDER BY event_ts DESC
 ) = 1
 
+

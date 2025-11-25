@@ -106,3 +106,4 @@ for idx, row in df.nlargest(10, 'total_cost_usd').iterrows():
 
 plt.close()
 
+

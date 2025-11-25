@@ -12,3 +12,4 @@
 
 📊 [Executive Summary](https://github.com/narvar/bigquery-optimization-queries/blob/main/narvar/analysis_peak_2025_sonnet45/DELIVERABLES/MONITOR_COST_EXECUTIVE_SUMMARY.md) | [90-Day Analysis](https://github.com/narvar/bigquery-optimization-queries/blob/main/narvar/analysis_peak_2025_sonnet45/DELIVERABLES/90DAY_FULL_ANALYSIS_SUMMARY.md)
 
+

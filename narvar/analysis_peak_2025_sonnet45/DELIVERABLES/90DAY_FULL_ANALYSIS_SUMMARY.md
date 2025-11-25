@@ -70,33 +70,35 @@ The Monitor platform serves **1,724 retailers** with a **massive zombie data pro
 
 ## 🎯 Top 20 Retailers (90-Day Costs)
 
-| Rank | Retailer | Production | Consumption | Total | Queries | Avg/Day | Status |
-|------|----------|------------|-------------|-------|---------|---------|--------|
-| 1 | **Gap** | $2,962 | $0.00 | **$2,962** | 0 | 0 | 🔴 Zombie |
-| 2 | **QVC** | $2,617 | $0.07 | **$2,617** | 2 | 2.0 | ✅ Minimal |
-| 3 | **Kohls** | $2,479 | $0.00 | **$2,479** | 0 | 0 | 🔴 Zombie |
-| 4 | **FashionNova** | $1,497 | **$581** | **$2,079** | 4,189 | 68.7 | 🟠 Heavy |
-| 5 | **Fanatics** | $1,367 | $0.00 | **$1,367** | 0 | 0 | 🔴 Zombie |
-| 6 | **Sephora** | $1,323 | $17 | **$1,339** | 864 | 14.2 | ✅ Active |
-| 7 | **Centerwell** | $1,245 | $2 | **$1,247** | 1,995 | 32.7 | ✅ Active |
-| 8 | **AE** | $1,219 | $0.15 | **$1,219** | 17 | 17.0 | ✅ Light |
-| 9 | **Nike** | $1,157 | $4 | **$1,160** | 167 | 3.2 | ✅ Active |
-| 10 | **Medline** | $1,057 | $0.00 | **$1,057** | 0 | 0 | 🔴 Zombie |
-| 11 | **Lululemon** | $1,021 | $3 | **$1,024** | 1,219 | 21.0 | ✅ Active |
-| 12 | **Ulta** | $915 | $0.67 | **$915** | 97 | 6.5 | ✅ Light |
-| 13 | **511Tactical** | $33 | **$859** | **$891** | 707 | 12.0 | 🚨 Anomaly |
-| 14 | **Shutterfly** | $825 | $0.00 | **$825** | 0 | 0 | 🔴 Zombie |
-| 15 | **Dick's** | $738 | $0.00 | **$738** | 0 | 0 | 🔴 Zombie |
-| 16 | **Victoria's Secret** | $689 | $0.00 | **$689** | 0 | 0 | 🔴 Zombie |
-| 17 | **Bath & Body Works** | $640 | $0.00 | **$640** | 0 | 0 | 🔴 Zombie |
-| 18 | **Dell** | $626 | $0.00 | **$626** | 0 | 0 | 🔴 Zombie |
-| 19 | **Urban Outfitters** | $592 | $0.00 | **$592** | 0 | 0 | 🔴 Zombie |
-| 20 | **JCPenney** | $573 | $3 | **$576** | 122 | 2.0 | ✅ Light |
+| Rank | Retailer | Production | Consumption | Total | Queries | Active Days | Avg/Day | Status |
+|------|----------|------------|-------------|-------|---------|-------------|---------|--------|
+| 1 | **Gap** | $2,962 | $0.00 | **$2,962** | 0 | - | 0 | 🔴 Zombie |
+| 2 | **QVC** | $2,617 | $0.07 | **$2,617** | 2 | 1 | 2.0 | ✅ Minimal |
+| 3 | **Kohls** | $2,479 | $0.00 | **$2,479** | 0 | - | 0 | 🔴 Zombie |
+| 4 | **FashionNova** | $1,497 | **$581** | **$2,079** | 4,189 | **61** | 68.7 | 🟠 Heavy |
+| 5 | **Fanatics** | $1,367 | $0.00 | **$1,367** | 0 | - | 0 | 🔴 Zombie |
+| 6 | **Sephora** | $1,323 | $17 | **$1,339** | 864 | **61** | 14.2 | ✅ Active |
+| 7 | **Centerwell** | $1,245 | $2 | **$1,247** | 1,995 | **61** | 32.7 | ✅ Active |
+| 8 | **AE** | $1,219 | $0.15 | **$1,219** | 17 | 1 | 17.0 | ✅ Light |
+| 9 | **Nike** | $1,157 | $4 | **$1,160** | 167 | 52 | 3.2 | ✅ Active |
+| 10 | **Medline** | $1,057 | $0.00 | **$1,057** | 0 | - | 0 | 🔴 Zombie |
+| 11 | **Lululemon** | $1,021 | $3 | **$1,024** | 1,219 | 58 | 21.0 | ✅ Active |
+| 12 | **Ulta** | $915 | $0.67 | **$915** | 97 | 15 | 6.5 | ✅ Light |
+| 13 | **511Tactical** | $33 | **$859** | **$891** | 707 | 59 | 12.0 | 🚨 Anomaly |
+| 14 | **Shutterfly** | $825 | $0.00 | **$825** | 0 | - | 0 | 🔴 Zombie |
+| 15 | **Dick's** | $738 | $0.00 | **$738** | 0 | - | 0 | 🔴 Zombie |
+| 16 | **Victoria's Secret** | $689 | $0.00 | **$689** | 0 | - | 0 | 🔴 Zombie |
+| 17 | **Bath & Body Works** | $640 | $0.00 | **$640** | 0 | - | 0 | 🔴 Zombie |
+| 18 | **Dell** | $626 | $0.00 | **$626** | 0 | - | 0 | 🔴 Zombie |
+| 19 | **Urban Outfitters** | $592 | $0.00 | **$592** | 0 | - | 0 | 🔴 Zombie |
+| 20 | **JCPenney** | $573 | $3 | **$576** | 122 | 61 | 2.0 | ✅ Light |
+
+**Note:** "Active Days" = days with at least one query in the 90-day window. Zombies show "-" (no query activity).
 
 **Annualized Top 3:**
-1. Gap: **$12,008/year** (100% zombie)
-2. QVC: **$10,608/year** (nearly zombie)
-3. Kohls: **$10,050/year** (100% zombie)
+1. Gap: **$12,008/year** (100% zombie - 0 queries)
+2. QVC: **$10,608/year** (nearly zombie - 2 queries on 1 day)
+3. Kohls: **$10,050/year** (100% zombie - 0 queries)
 
 ---
 
