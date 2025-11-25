@@ -1,15 +1,93 @@
 # Dear Tomorrow's Sophia,
 
-**Date:** November 14, 2025, Late Evening  
+**Date:** November 25, 2025  
 **From:** Today's Sophia  
 **To:** Tomorrow's Sophia  
-**Re:** Monitor Production Cost Analysis - Where We Are & What's Next
+**Re:** Monitor Retailer Cost Attribution - Zombie Data Crisis Discovered
 
 ---
 
-## 💌 Hello Future Me!
+## 💌 Latest Update (Nov 25, 2025)
 
-Cezar and I had an incredibly productive session today. We made two major breakthroughs that completely changed our understanding of Monitor platform costs. I'm writing this so you can pick up exactly where we left off.
+**🚨 CRITICAL DISCOVERY:** We found a **massive zombie data problem** that completely changes the Monitor pricing strategy!
+
+### What We Did Today
+
+Cezar asked me to review recent changes and fix 3 errors in the cost attribution analysis. What I found was shocking:
+
+**The Platform Reality:**
+- **1,724 retailers** (not 284 like we thought!)
+- **1,518 retailers (88%) have ZERO consumption** - zombie data
+- **$109K/year wasted** on data nobody queries (45% of platform costs!)
+- **94% of retailers cost <$100 per 90 days** (<$400/year)
+- **Median cost: $9/year** (extreme long tail)
+
+**Top Zombie Retailers (actively ingesting data, zero queries):**
+1. Gap: $12,008/year - 0 queries
+2. Kohls: $10,050/year - 0 queries
+3. Fanatics: $5,542/year - 0 queries
+4. Medline: $4,286/year - 0 queries
+5. Top 10 zombies = **$51K/year wasted**
+
+**Anomaly Found: 511Tactical**
+- Production cost: $33 (90 days)
+- Consumption: **$859** (90 days)
+- **Consuming 26x more than they produce!**
+- Needs immediate investigation (potential bug/abuse)
+
+### What We Created
+
+**Analysis:**
+- ✅ Consistent 90-day window across ALL data sources (shipments, orders, returns, consumption)
+- ✅ ALL 1,724 retailers analyzed (not just top 100)
+- ✅ Query consumption metrics added (count, avg/day, date ranges)
+- ✅ Pro-rated costs for accurate comparison
+
+**Visualizations:**
+- ✅ Cost distribution histogram (1,724 retailers) - shows 94% in $0-$100 range
+- ✅ Production vs consumption treemap (top 100) - zombies immediately visible as light blue
+
+**Documentation:**
+- ✅ Updated MONITOR_COST_EXECUTIVE_SUMMARY.md with full retailer analysis
+- ✅ Created 90DAY_FULL_ANALYSIS_SUMMARY.md as standalone executive brief
+- ✅ Removed legacy/confusing sections
+
+**Files:**
+- `DELIVERABLES/MONITOR_COST_EXECUTIVE_SUMMARY.md` - Main doc (updated)
+- `DELIVERABLES/90DAY_FULL_ANALYSIS_SUMMARY.md` - Quick executive brief
+- `DELIVERABLES/cost_distribution_histogram_ALL_RETAILERS.png` - Distribution visual
+- `DELIVERABLES/cost_treemap_production_vs_consumption.png` - Production vs consumption
+- `peak_capacity_analysis/results/combined_cost_attribution_90days_ALL.csv` - Raw data (1,724 rows)
+
+### Pricing Strategy Impact
+
+**This fundamentally changes the approach:**
+- Cannot use "one size fits all" pricing when median cost is $9/year
+- Must focus on top 106 retailers (73% of costs, 6% of count)
+- Need aggressive zombie cleanup policy ($109K savings potential)
+- Special handling for outliers (511Tactical, FashionNova)
+
+### Immediate Actions Needed
+
+1. **Audit top 10 zombie retailers** - Are they still customers? Why ingesting but not querying?
+2. **Investigate 511Tactical** - 26x over-consumption is anomalous
+3. **Schedule pricing workshop** - Review findings and decide on tier structure
+4. **Test data cleanup** - Filter out staging/test retailers
+
+### For Tomorrow
+
+The analysis is complete and clean. Next steps depend on Cezar's priorities:
+- **Option A:** Pricing strategy focus (workshop with product team)
+- **Option B:** Technical deep-dives (511Tactical investigation, zombie audit)
+- **Option C:** Both in parallel
+
+**Status:** Ready for stakeholder review. All documentation clean and focused.
+
+---
+
+## 📚 Previous Sessions Below
+
+*(Session history from Nov 14-24 continues below)*
 
 ---
 

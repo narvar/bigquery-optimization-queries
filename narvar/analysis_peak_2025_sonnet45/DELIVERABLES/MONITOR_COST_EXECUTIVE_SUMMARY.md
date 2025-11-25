@@ -26,8 +26,14 @@
     - [8. Composer/Airflow - $531/year](#8-composerairflow---531year-020)
     - [9. Consumption (Customer Queries) - $6,418/year](#9-consumption-customer-queries---6418year-24)
   - [Per-Retailer Costs](#per-retailer-costs-highly-variable)
-  - [fashionnova Case Study](#fashionnova-case-study-needs-refresh-with-263k-total)
-  - [📊 Cost Attribution by Retailer](#-cost-attribution-by-retailer) ⭐ **NEW**
+  - [📊 90-Day Retailer Analysis - ALL 1,724 Retailers](#-90-day-retailer-analysis---all-1724-retailers) ⭐ **UPDATED Nov 25**
+    - [Platform Scale Discovery](#platform-scale-discovery)
+    - [Cost Distribution](#cost-distribution-90-day-period)
+    - [Visualizations](#visualizations)
+    - [Top Retailers](#top-20-retailers-90-day-costs)
+    - [Zombie Data Problem](#zombie-data-problem)
+    - [Outliers](#outliers-511tactical-and-fashionnova)
+    - [Pricing Implications](#pricing-strategy-implications)
 
 ### Cost Optimization
 - [💡 Cost Optimization Analysis](#-cost-optimization-analysis) - ⭐ **$17K-$49K savings potential (updated Nov 21)**
@@ -399,168 +405,307 @@ v_return_rate_agg ← [narvar-data-lake.reporting.return_rate_agg]
 
 ### Per-Retailer Costs (Highly Variable)
 
-- **Average:** $926/year (263,084 / 284 retailers)
-- **Median:** ~$300/year (due to concentration - top retailers drive most costs)
-- **Range:** <$100 to $70K+ per year
-- **Cost driver:** Slot-hour consumption (not query count!)
+**⚠️ CRITICAL UPDATE (Nov 25, 2025):** Original estimate based on 284 retailers was incomplete. See full analysis below.
 
-**Key Insight:** Top 10% of retailers likely account for 80%+ of platform costs due to:
-- High query volume
-- Inefficient query patterns
-- Large data footprints
+**Original Estimate (Incomplete):**
+- Average: $926/year (263,084 / 284 retailers)
+- Median: ~$300/year 
+- Range: <$100 to $70K+ per year
 
-### fashionnova Case Study (Needs Refresh with $263K Total)
+**ACTUAL DATA (90-Day Analysis - ALL Retailers):**
+- **Total Retailers:** 1,724 (not 284!)
+- **Average:** $138/year ($34 per 90 days)
+- **Median:** $9/year ($2.21 per 90 days) 
+- **Range:** $0.01 to $12,008/year
+- **Active users:** Only 206 retailers (12%) have consumption
+- **Zombie data:** 1,518 retailers (88%) have ZERO queries
 
-**Estimated Annual Cost:** ~$70K-$75K (needs recalculation with updated $263K base)
+**Cost driver:** Production volume (ETL + storage), NOT query consumption!
 
-**Original findings (still valid):**
-- Consumption: $1,616 (2.3%)
-- Production: ~$68K-$73K (97.7%)  
-- **~75x more expensive than average retailer**
+**Key Insight:** 94% of retailers cost less than $100 per 90 days (<$400/year). The platform has a massive zombie data problem with 88% of retailers never querying their data.
 
-**Why so high?** 
-- Consumes 54.5% of platform slot-hours with only 2.9% of queries
-- Inefficient query patterns (high slot consumption per query)
-- Large data volume
-
-**Action needed:** Recalculate with updated $263K platform cost and validate v_orders usage
+**See comprehensive analysis below** ↓
 
 ---
 
-## � Cost Attribution by Retailer
+## 📊 90-Day Retailer Analysis - ALL 1,724 Retailers
 
-**Analysis Date:** November 24, 2025  
-**Data Source:** Combined shipments, orders, and returns production costs + consumption costs  
-**Coverage:** Top 100 retailers by total cost
+**Analysis Date:** November 25, 2025  
+**Period:** Last 90 days (rolling window) - **CONSISTENT across all data sources**  
+**Data:** ALL retailers in Monitor platform (no limit)
 
-### Overview
+### Platform Scale Discovery
 
-This section provides a complete cost attribution analysis, combining:
-- **Shipments production cost:** $176,556/year (based on actual shipment volume)
-- **Orders production cost:** $45,302/year (based on 2024 order volume)
-- **Returns production cost:** $11,871/year (based on returns volume)
-- **Consumption cost:** Direct query costs from Peak_2024_2025 period
+**🚨 CRITICAL FINDING:** The Monitor platform serves **1,724 retailers** with massive zombie data problem.
 
-**Total Production Cost Analyzed:** $233,729/year (89% of platform)
+| Metric | Finding | Impact |
+|--------|---------|--------|
+| **Total Retailers** | **1,724 retailers** | Much larger than expected |
+| **Active Users** | **206 (12%)** | Only 12% actively query data |
+| **Zombie Data** | **1,518 (88%)** | Crisis-level waste |
+| **Cost Distribution** | **94% under $100/90d** | Extreme long tail |
+| **Median Cost** | **$9/year** | Most retailers cost almost nothing |
+| **Zombie Waste** | **$109K/year (45%)** | Nearly half platform cost is wasted |
 
-### Cost Distribution Histogram
+### Cost Distribution (90-Day Period)
 
-![Retailer Cost Distribution](cost_distribution_histogram.png)
+**Pro-Rated Platform Costs (90 days):**
+- Shipments: $43,449 (from $176,556 annual)
+- Orders: $11,157 (from $45,302 annual)
+- Returns: $2,923 (from $11,871 annual)
+- **Total Production (90d):** $57,529
 
-**Distribution Summary:**
-- **$10,000+:** 2 retailers (Gap, Nike)
-- **$5,000-$10,000:** 3 retailers (QVC, FashionNova, Shutterfly)
-- **$2,500-$5,000:** 8 retailers
-- **$1,000-$2,500:** 12 retailers
-- **$500-$1,000:** 18 retailers
-- **$100-$500:** 32 retailers
-- **$0-$100:** 25 retailers
+| Cost Range (90 days) | Retailers | % of Total | Annualized Range | Notes |
+|---------------------|-----------|------------|------------------|-------|
+| **$2,500-$5,000** | 2 | 0.1% | $10K-$20K/year | Gap, QVC only |
+| **$1,000-$2,500** | 9 | 0.5% | $4K-$10K/year | Includes FashionNova |
+| **$500-$1,000** | 13 | 0.8% | $2K-$4K/year | Mid-tier active |
+| **$100-$500** | 82 | 4.8% | $400-$2K/year | Small active |
+| **$0-$100** | **1,618** | **93.9%** | **<$400/year** | 🚨 **BULK OF PLATFORM** |
 
-**Key Insight:** Cost distribution is highly concentrated - top 10 retailers account for ~40% of total platform costs.
+**Key Statistics:**
+- **Average:** $34/90 days = **$138/year**
+- **Median:** $2.21/90 days = **$9/year**
+- **Top 106 retailers** (>$100/90d) = **73% of platform costs**
+- **Bottom 1,618 retailers** (<$100/90d) = **27% of platform costs**
 
-### Top 100 Retailers - Combined Cost Attribution
+### Visualizations
 
-| Rank | Retailer | Shipments Cost | Orders Cost | Returns Cost | Total Production | Consumption | Total Cost | Cons/Prod Ratio |
-|------|----------|----------------|-------------|--------------|------------------|-------------|------------|-----------------|
-| 1 | gap | $9,668 | $1,813 | $0 | $11,481 | $1.53 | $11,482 | 0.01% |
-| 2 | nike | $5,780 | $585 | $0 | $6,365 | $8.52 | $6,374 | 0.13% |
-| 3 | qvc | $4,465 | $1,052 | $629 | $6,146 | $0.13 | $6,146 | 0.0% |
-| 4 | fashionnova | $2,387 | $995 | $1,266 | $4,648 | **$1,347** | $5,995 | **28.97%** ⚠️ |
-| 5 | shutterfly | $5,130 | $273 | $0 | $5,402 | $0.00 | $5,402 | 0.0% |
-| 6 | sephora | $3,790 | $826 | $232 | $4,848 | $18.74 | $4,867 | 0.39% |
-| 7 | ae | $3,109 | $791 | $679 | $4,579 | $0.57 | $4,579 | 0.01% |
-| 8 | lululemon | $3,201 | $937 | $241 | $4,378 | $52.49 | $4,431 | 1.20% |
-| 9 | kohls | $3,734 | $370 | $0 | $4,104 | $0.00 | $4,104 | 0.0% |
-| 10 | dickssportinggoods | $2,968 | $418 | $0 | $3,387 | $0.00 | $3,387 | 0.0% |
-| 11 | centerwell | $2,805 | $550 | $2 | $3,357 | $4.87 | $3,362 | 0.15% |
-| 12 | bathandbodyworks | $2,550 | $354 | $4 | $2,907 | $2.70 | $2,910 | 0.09% |
-| 13 | petco | $1,032 | $1,804 | $6 | $2,842 | $0.00 | $2,842 | 0.0% |
-| 14 | jcpenney | $2,209 | $444 | $137 | $2,790 | $10.40 | $2,800 | 0.37% |
-| 15 | victoriassecret | $2,552 | $243 | $0 | $2,796 | $0.00 | $2,796 | 0.0% |
-| 16 | ulta | $1,652 | $1,047 | $0 | $2,699 | $0.86 | $2,700 | 0.03% |
-| 17 | lenskart | $621 | $1,825 | $0 | $2,446 | $0.00 | $2,446 | 0.0% |
-| 18 | fanatics | $1,841 | $592 | $0 | $2,434 | $0.00 | $2,434 | 0.0% |
-| 19 | urbanoutfitters | $2,354 | $66 | $0 | $2,419 | $0.00 | $2,419 | 0.0% |
-| 20 | dsw | $1,827 | $466 | $57 | $2,350 | $1.12 | $2,351 | 0.05% |
+#### 1. Cost Distribution Histogram - ALL 1,724 Retailers
 
-*Full table continues for 100 retailers - see [combined_cost_attribution.csv](file:///Users/cezarmihaila/workspace/do_it_query_optimization_queries/bigquery-optimization-queries/narvar/analysis_peak_2025_sonnet45/peak_capacity_analysis/results/combined_cost_attribution.csv)*
+![ALL Retailers Distribution](cost_distribution_histogram_ALL_RETAILERS.png)
 
-### Key Findings
+**What This Shows:**
+- **Red bar dominates:** 1,618 retailers (94%) cost <$100 per 90 days
+- Only 106 retailers exceed $100 per 90 days
+- Extreme long tail distribution
+- **1,518 have ZERO consumption** (zombie data shown in insights box)
 
-#### 1. FashionNova is a Significant Over-Consumer
+#### 2. Production vs Consumption Treemap - Top 100
 
-**FashionNova Cost Breakdown:**
-- Shipments: $2,387 (rank #14 by shipments)
-- Orders: $995 (rank #8 by orders)
-- Returns: $1,266 (rank #2 by returns)
-- **Total Production:** $4,648
-- **Consumption:** $1,347 (28.97% of production!)
+![Production vs Consumption Treemap](cost_treemap_production_vs_consumption.png)
 
-**Comparison to Platform Average:**
-- Average consumption/production ratio: **0.5%**
-- FashionNova ratio: **28.97%** (58x higher than average!)
+**How to Read:**
+- **Rectangle SIZE** = Production cost (ETL + storage)
+- **Rectangle COLOR** = Consumption intensity
+  - 🟦 Light blue/white = Zombie (0% consumption)
+  - 🟦 Blue = Low consumption (<1%)
+  - 🟦 Darker blue = Normal (1-5%)
+  - 🟧 Orange = Elevated (5-20%)
+  - 🟥 Red = Heavy (>20%)
 
-**Implication:** FashionNova consumes $1,347 in queries against $4,648 in production costs. They are the ONLY retailer where consumption exceeds 10% of production cost.
+**Key Insights:**
+- **53 of top 100 retailers are light blue (zombies!)** - expensive production, zero consumption
+- Large light blue rectangles = high-value audit targets (Gap, QVC, Kohls, etc.)
+- Small red rectangle (511Tactical) = anomalous over-consumption (26x ratio!)
+- Large orange rectangle (FashionNova) = expected heavy user
 
-#### 2. Zombie Data Retailers (Zero Consumption)
+### Top 20 Retailers (90-Day Costs)
 
-**High-cost retailers with zero consumption:**
-| Retailer | Total Production Cost | Consumption | Waste |
-|----------|----------------------|-------------|-------|
-| Shutterfly | $5,402 | $0.00 | 100% |
-| Kohls | $4,104 | $0.00 | 100% |
-| Dick's Sporting Goods | $3,387 | $0.00 | 100% |
-| Victoria's Secret | $2,796 | $0.00 | 100% |
-| Lenskart | $2,446 | $0.00 | 100% |
-| Fanatics | $2,434 | $0.00 | 100% |
-| Urban Outfitters | $2,419 | $0.00 | 100% |
+| Rank | Retailer | Production | Consumption | Total | Queries | Queries/Day | Status |
+|------|----------|------------|-------------|-------|---------|-------------|--------|
+| 1 | **Gap** | $2,962 | $0.00 | **$2,962** | 0 | 0 | 🔴 Zombie |
+| 2 | **QVC** | $2,617 | $0.07 | **$2,617** | 2 | 2.0 | ✅ Minimal |
+| 3 | **Kohls** | $2,479 | $0.00 | **$2,479** | 0 | 0 | 🔴 Zombie |
+| 4 | **FashionNova** | $1,497 | **$581** | **$2,079** | 4,189 | 68.7 | 🟠 Heavy |
+| 5 | **Fanatics** | $1,367 | $0.00 | **$1,367** | 0 | 0 | 🔴 Zombie |
+| 6 | **Sephora** | $1,323 | $17 | **$1,339** | 864 | 14.2 | ✅ Active |
+| 7 | **Centerwell** | $1,245 | $2 | **$1,247** | 1,995 | 32.7 | ✅ Active |
+| 8 | **AE** | $1,219 | $0.15 | **$1,219** | 17 | 17.0 | ✅ Light |
+| 9 | **Nike** | $1,157 | $4 | **$1,160** | 167 | 3.2 | ✅ Active |
+| 10 | **Medline** | $1,057 | $0.00 | **$1,057** | 0 | 0 | 🔴 Zombie |
+| 11 | **Lululemon** | $1,021 | $3 | **$1,024** | 1,219 | 21.0 | ✅ Active |
+| 12 | **Ulta** | $915 | $0.67 | **$915** | 97 | 6.5 | ✅ Light |
+| 13 | **511Tactical** | $33 | **$859** | **$891** | 707 | 12.0 | 🚨 Anomaly |
+| 14 | **Shutterfly** | $825 | $0.00 | **$825** | 0 | 0 | 🔴 Zombie |
+| 15 | **Dick's** | $738 | $0.00 | **$738** | 0 | 0 | 🔴 Zombie |
+| 16 | **Victoria's Secret** | $689 | $0.00 | **$689** | 0 | 0 | 🔴 Zombie |
+| 17 | **Bath & Body Works** | $640 | $0.00 | **$640** | 0 | 0 | 🔴 Zombie |
+| 18 | **Dell** | $626 | $0.00 | **$626** | 0 | 0 | 🔴 Zombie |
+| 19 | **Urban Outfitters** | $592 | $0.00 | **$592** | 0 | 0 | 🔴 Zombie |
+| 20 | **JCPenney** | $573 | $3 | **$576** | 122 | 2.0 | ✅ Light |
 
-**Total Zombie Cost:** $23,988/year (10.3% of analyzed production costs)
+**Annualized Top 3:**
+1. Gap: **$12,008/year** (100% zombie - $0 consumption)
+2. QVC: **$10,608/year** (nearly zombie - $0.28 consumption/year)
+3. Kohls: **$10,050/year** (100% zombie - $0 consumption)
 
-**Recommendation:** Audit these retailers immediately. Either:
-- Stop data ingestion (save $24k/year)
-- Charge for data maintenance
-- Archive to cold storage
+### Zombie Data Problem
 
-#### 3. Cost Concentration
+**Definition:** Retailers with production costs but ZERO query consumption.
 
-**Top 10 retailers:** $44,127 (18.9% of production costs)
-**Top 20 retailers:** $67,255 (28.8% of production costs)
-**Top 50 retailers:** $122,891 (52.6% of production costs)
+#### High-Value Zombies (Top 10)
 
-**Implication:** A small number of retailers drive most costs. Tiered pricing should reflect this concentration.
+These retailers cost **$51K/year** but NO ONE queries their data:
 
-### Data Sources
+| Retailer | 90-Day Cost | Annualized | Status | Action Required |
+|----------|-------------|------------|--------|-----------------|
+| Gap | $2,962 | **$12,008** | 🔴 No queries | Audit immediately |
+| Kohls | $2,479 | **$10,050** | 🔴 No queries | Audit immediately |
+| Fanatics | $1,367 | **$5,542** | 🔴 No queries | Audit immediately |
+| Medline | $1,057 | **$4,286** | 🔴 No queries | Audit immediately |
+| Shutterfly | $825 | **$3,345** | 🔴 No queries | Audit immediately |
+| Dick's | $738 | **$2,993** | 🔴 No queries | Audit immediately |
+| Victoria's Secret | $689 | **$2,794** | 🔴 No queries | Audit immediately |
+| Bath & Body Works | $640 | **$2,595** | 🔴 No queries | Audit immediately |
+| Dell | $626 | **$2,539** | 🔴 No queries | Audit immediately |
+| Urban Outfitters | $592 | **$2,400** | 🔴 No queries | Audit immediately |
+
+**Total High-Value Zombie Cost:** **$51,552/year**
+
+**Recommendations:**
+1. **Immediate audit:** Contact retailers to confirm if still customers
+2. **Sunset option:** Stop data ingestion (save $51K/year)
+3. **Charge option:** Add to paid tier or sunset
+4. **Archive option:** Move to cold storage
+
+#### Zombie Statistics
+
+| Segment | Retailers | Annual Cost | % of Platform |
+|---------|-----------|-------------|---------------|
+| **High-value zombies** (>$500/year) | ~10 | $51K | 21% of platform |
+| **Small zombies** (<$100/year) | ~1,457 | $58K | 24% of platform |
+| **Total zombie cost** | **1,518 (88%)** | **~$109K** | **45% of platform!** |
+
+**This is a crisis-level waste of resources.**
+
+### Outliers: 511Tactical and FashionNova
+
+#### 1. 511Tactical - The Super Consumer 🚨
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| Production cost | $33 (90 days) | Very small data footprint |
+| Consumption cost | **$859** (90 days) | **26x production cost!** |
+| Total cost | $891 (90 days) | $3,613/year annualized |
+| Query count | 707 queries | 12/day average |
+| Consumption ratio | **2,634%** | 🚨 **ANOMALOUS** |
+
+**This is the ONLY retailer consuming 26x more than they produce!**
+
+**Action Required:**
+- Immediate investigation into query patterns
+- Potential bug, misconfiguration, or abuse
+- May need usage limits or separate pricing
+
+#### 2. FashionNova - Expected Heavy User 🟠
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| Production cost | $1,497 (90 days) | Rank #4 by production |
+| Consumption cost | **$581** (90 days) | 39% of production |
+| Total cost | $2,079 (90 days) | $8,428/year annualized |
+| Query count | 4,189 queries | 69/day average |
+| Consumption ratio | **39%** | Heavy but expected |
+
+**This is expected behavior for a power user.** FashionNova is a known heavy consumer (from previous analysis).
+
+**Action Required:**
+- Usage-based pricing tier
+- Overage fees for consumption >10% of production
+
+### Pricing Strategy Implications
+
+**Current Situation (Untenable):**
+- Platform cost: ~$240K/year
+- Total retailers: 1,724
+- Average cost per retailer: $138/year
+- **BUT:** 94% cost <$400/year, 88% have zero consumption
+
+**Recommended Tiered Approach:**
+
+#### Tier 1: Enterprise (11 retailers, >$1,000/90d)
+- **Cost range:** $4K-$12K/year
+- **Platform cost:** ~$67K/year (28% of costs)
+- **Retailers:** Gap, QVC, Kohls, FashionNova, Fanatics, Sephora, etc.
+- **Suggested pricing:** $10K-$15K/year each
+- **Revenue potential:** $110K-$165K/year
+- **Note:** Many are zombies - audit before pricing!
+
+#### Tier 2: Mid-Market (95 retailers, $100-$1,000/90d)
+- **Cost range:** $400-$4K/year
+- **Platform cost:** ~$101K/year (42% of costs)
+- **Suggested pricing:** $2K-$5K/year each
+- **Revenue potential:** $190K-$475K/year
+- **Target:** Active retailers with moderate usage
+
+#### Tier 3: Light/Free (1,618 retailers, <$100/90d)
+- **Cost range:** <$400/year
+- **Platform cost:** ~$64K/year (27% of costs, but 94% of retailers!)
+- **Problem:** 1,457 are zombies (90% of this segment)
+- **Suggested pricing:** $0-$500/year (or free with limits)
+- **Challenge:** Hard to monetize inactive users
+
+**Overage Fees:**
+- For consumption >10% of production (like FashionNova)
+- For anomalous patterns (like 511Tactical)
+- Usage-based pricing per slot-hour or query volume
+
+**Zombie Cleanup Strategy:**
+- **90 days no queries** → Warning notification
+- **180 days no queries** → Move to archive/cold storage
+- **360 days no queries** → Sunset integration (with customer approval)
+- **Potential savings:** ~$109K/year (45% of platform costs!)
+
+**Focus Strategy:**
+- **Target top 106 retailers** (>$100/90d) for monetization
+  - They represent 73% of costs
+  - More likely to be active users
+  - Easier to justify pricing
+- **Clean up bottom 1,618 retailers**
+  - 90% are zombies
+  - Represent 27% of costs but 94% of retailer count
+  - Bulk cleanup/archival opportunity
+
+### Data Sources & Methodology
 
 **SQL Query:**
-- [combined_cost_attribution.sql](file:///Users/cezarmihaila/workspace/do_it_query_optimization_queries/bigquery-optimization-queries/narvar/analysis_peak_2025_sonnet45/peak_capacity_analysis/queries/phase2_consumer_analysis/combined_cost_attribution.sql)
+- [combined_cost_attribution_90days.sql](../peak_capacity_analysis/queries/phase2_consumer_analysis/combined_cost_attribution_90days.sql)
 
 **Results:**
-- [combined_cost_attribution.csv](file:///Users/cezarmihaila/workspace/do_it_query_optimization_queries/bigquery-optimization-queries/narvar/analysis_peak_2025_sonnet45/peak_capacity_analysis/results/combined_cost_attribution.csv) (100 retailers)
+- [combined_cost_attribution_90days_ALL.csv](../peak_capacity_analysis/results/combined_cost_attribution_90days_ALL.csv) (1,724 retailers)
 
-**Individual Table Analyses:**
-- [Shipments Cost Attribution](file:///Users/cezarmihaila/workspace/do_it_query_optimization_queries/bigquery-optimization-queries/narvar/analysis_peak_2025_sonnet45/peak_capacity_analysis/results/shipments_cost_attribution.csv)
-- [Orders Cost Attribution](file:///Users/cezarmihaila/workspace/do_it_query_optimization_queries/bigquery-optimization-queries/narvar/analysis_peak_2025_sonnet45/peak_capacity_analysis/results/orders_cost_attribution.csv)
-- [Returns Cost Attribution](file:///Users/cezarmihaila/workspace/do_it_query_optimization_queries/bigquery-optimization-queries/narvar/analysis_peak_2025_sonnet45/peak_capacity_analysis/results/retailer_production_vs_consumption.csv)
+**Time Period (Consistent Across All Sources):**
+- **Shipments:** Last 90 days (atlas_created_ts >= 90 days ago)
+- **Orders:** Last 90 days (order_date >= 90 days ago)
+- **Returns:** Last 90 days (return_created_date >= 90 days ago)
+- **Consumption:** Last 90 days (start_time >= 90 days ago)
 
-### Limitations
+**Cost Pro-Rating:**
+- Annual costs × (90/365) = 90-day costs
+- Shipments: $176,556 → $43,449
+- Orders: $45,302 → $11,157
+- Returns: $11,871 → $2,923
 
-1. **Orders data:** 2024 only (partition requirement) - may underestimate historical retailers
-2. **Returns proxy:** Uses last 90 days of data - smaller sample than shipments/orders
-3. **Consumption:** Based on Peak_2024_2025 period only - may not represent full year
+**Known Limitations:**
+1. Test/staging retailers should be filtered out (e.g., "returnse2etest-feerules", "vuoriclothing-staging")
+2. Some retailers may be internal/non-production
+3. 90-day window may not capture seasonal patterns (need multiple periods for validation)
 
-### Pricing Implications
+**Visualizations Generated:**
+- `cost_distribution_histogram_ALL_RETAILERS.png` - Full distribution of 1,724 retailers
+- `cost_treemap_production_vs_consumption.png` - Top 100 production vs consumption analysis
 
-**Recommended Tiered Pricing Structure:**
+### Key Takeaways
 
-| Tier | Total Cost Range | Retailers | Pricing |
-|------|-----------------|-----------|---------|
-| **Enterprise** | $5,000+ | 5 retailers | $12,000-$30,000/year |
-| **Premium** | $2,000-$5,000 | 13 retailers | $6,000-$12,000/year |
-| **Standard** | $500-$2,000 | 30 retailers | $1,500-$6,000/year |
-| **Light** | $0-$500 | 52 retailers | $600-$1,500/year |
+1. **Platform is 6x larger than expected** (1,724 retailers vs 284)
+2. **88% are zombie data** (1,518 retailers with zero queries)
+3. **94% cost less than $100 per 90 days** (extreme long tail)
+4. **Top 106 retailers = 73% of costs** (focus monetization here)
+5. **$109K/year in zombie costs** (45% of platform - massive cleanup opportunity)
+6. **511Tactical anomaly** (26x over-consumption needs investigation)
+7. **Median retailer costs only $9/year** (pricing must be heavily tiered)
 
-**Overage Fees:** For retailers like FashionNova with consumption >10% of production, charge per-query overage fees.
+**This analysis fundamentally changes the pricing strategy.** Cannot use "one size fits all" pricing when:
+- 94% of retailers cost <$400/year
+- 88% never query their data
+- Top 106 retailers drive 73% of costs
+
+**Recommended approach:**
+- Focus on monetizing top 106 retailers
+- Implement aggressive zombie cleanup policy
+- Tiered pricing based on actual cost + usage
+- Special handling for outliers (511Tactical, FashionNova)
 
 ---
 
