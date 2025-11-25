@@ -1,22 +1,22 @@
 # DTPL-6903: Notification History Latency - Executive Summary
 
 **Date:** November 21, 2025 (Updated: November 25, 2025)  
-**Status:** 🟡 IN PROGRESS - Solution designed, blocked on project creation permission  
+**Status:** ✅ READY TO IMPLEMENT - Project created, configuration in progress  
 **Impact:** Customer-facing notification history feature experiencing 8-minute delays
 
-> 📋 **Implementation Guide:** See [`SEPARATE_PROJECT_SOLUTION.md`](SEPARATE_PROJECT_SOLUTION.md) for complete setup steps
+> 📋 **Critical Facts & Decision:** See [`CRITICAL_FACTS.md`](CRITICAL_FACTS.md) for verified costs, options comparison, and implementation plan
 
 > 📋 **Live Status Tracking:** See [`IMPLEMENTATION_LOG.md`](IMPLEMENTATION_LOG.md) for real-time progress
 
-> ⚠️ **Current Blocker (Nov 25):** Project creation requires `resourcemanager.projects.create` permission. Awaiting Julia or Saurabh to create `messaging-hub-bq-dedicated` project. See [`REQUEST_FOR_JULIA_SAURABH.md`](REQUEST_FOR_JULIA_SAURABH.md) for copy-paste commands.
+> ✅ **Blocker Resolved (Nov 25):** Project `messaging-hub-bq-dedicated` created successfully. Cezar has owner permissions.
 
 ---
 
 ## Executive Summary (For Internal & External Communication)
 
-**Problem:** The Notification History feature, used by retailers including Lands' End to search notification details by order number, is experiencing significant delays of up to 8-9 minutes. Investigation confirms the queries themselves are well-optimized and execute in 1-2 seconds, but are waiting 8+ minutes for database processing capacity due to shared infrastructure saturation. This issue started November 13th and has escalated, with peak delays occurring during overnight and morning hours (midnight-9am PST). The delays are caused by competing batch data processing and analytics workloads monopolizing shared database resources, leaving insufficient capacity for customer-facing interactive features.
+**Problem:** The Notification History feature, used by retailers including Lands' End to search notification details by order number, is experiencing significant delays of up to 8-9 minutes. Investigation confirms the queries themselves are well-optimized and execute in 1-2 seconds, but are waiting 8+ minutes for database processing capacity due to shared infrastructure saturation. This issue started November 13th and has escalated, with peak delays occurring during overnight and morning hours (midnight-9am PST). The delays are caused by competing batch data processing and analytics workloads (Airflow 46%, Metabase 31%) monopolizing shared database resources, leaving insufficient capacity for customer-facing interactive features.
 
-**Solution:** We are implementing a dedicated BigQuery project (`messaging-hub-bq-dedicated`) with isolated capacity specifically for the Notification History feature. This approach creates a separate billing project assigned to a dedicated reservation with 50 baseline slots and autoscale capability to 100 slots, handling peak loads that occur daily at 9pm. The solution provides complete isolation from competing workloads while maintaining cost predictability at ~$219/month. Implementation requires creating the GCP project (currently blocked on permissions), configuring cross-project data access, and updating the messaging application to use the new project ID. Timeline is 3-5 days after project creation, with zero downtime deployment via rolling restart. This will restore the Notification History feature to its expected performance level of <3 seconds end-to-end response time, eliminating the 8-minute queue delays.
+**Solution:** We are implementing a dedicated BigQuery project (`messaging-hub-bq-dedicated`) that uses on-demand billing, completely isolating messaging queries from the saturated shared reservation. The project has been created and is ready for configuration. This approach provides complete isolation from competing workloads at minimal cost (~$27/month for current 4.3 TB/month usage, with unlimited capacity and no queue delays). Implementation requires configuring cross-project data access (2 hours), updating the messaging application to use the new project ID (1-2 days), and deploying via rolling restart (zero downtime). Total timeline is 3-4 days. If usage grows significantly (>24 TB/month), we can transition to a dedicated reservation, but current volume makes on-demand the most cost-effective option. This will restore the Notification History feature to its expected performance level of <3 seconds end-to-end response time, eliminating the 8-minute queue delays.
 
 ---
 
@@ -184,150 +184,161 @@ WHERE event_ts BETWEEN TIMESTAMP '2025-11-20T05:25:43'
 
 ---
 
-## Solution Approach: Separate Project with Dedicated Reservation
+## Solution Approach: Separate Project with On-Demand Billing ⭐
 
-### Selected Solution: messaging-hub-bq-dedicated Project
+### Selected Solution: messaging-hub-bq-dedicated Project (CREATED ✅)
 
-**Approach:** Create dedicated GCP project for messaging BigQuery operations with dedicated reservation
+**Approach:** Dedicated GCP project for messaging BigQuery operations using **on-demand billing** (no reservation)
+
+**Cost Analysis:**
+- **On-demand:** ~$27/month (4.3 TB × $6.25/TB) ⭐ **RECOMMENDED**
+- **Flex reservation:** ~$1,700/month (50 baseline + autoscale 50)
+- **Annual commitment:** ~$1,000/month (50 slots, 1-year lock-in)
 
 **Benefits:**
-- ✅ Complete isolation from other workloads (Airflow, Metabase, n8n)
-- ✅ Dedicated 50-slot baseline + autoscale to 100 slots (handles 9pm peak)
-- ✅ Cost control: Fixed $146 baseline + predictable autoscale (~$73/month)
-- ✅ Queue times <1 second guaranteed
-- ✅ Reuses existing service account (simpler deployment)
+- ✅ **Lowest cost:** $27/month (63x cheaper than alternatives)
+- ✅ **Unlimited capacity:** No queue delays, auto-scales infinitely
+- ✅ **Complete isolation:** Separate from Airflow/Metabase saturation
+- ✅ **No commitment:** Pay only for usage
+- ✅ **Simple setup:** No reservation management needed
+- ✅ **Reuses existing service account:** No credential changes
 
-**Trade-offs:**
+**Implementation:**
 - ⚠️ Requires application changes (project_id parameter + fully-qualified table names)
-- ⚠️ Cross-project BigQuery access setup
+- ⚠️ Cross-project BigQuery access setup (simple permission grants)
 - ⚠️ Testing required before production rollout
-- ⚠️ Timeline: 3-5 days (not immediate)
-- ⚠️ Cost: ~$219/month (vs $27 on-demand, but provides capacity guarantee)
+- ⚠️ Timeline: 3-4 days total
 
-**Why This Approach:**
-- Cannot assign individual service accounts to reservations (API limitation discovered)
-- Org-level assignment prevents simple on-demand solution
-- Separate project provides clean isolation with cost control
-- Application changes are minimal (no credential swap needed)
+**Cost Management:**
+- Monitor monthly scanned data volume
+- If exceeds 24 TB/month (~$150): Consider switching to flex reservation
+- Break-even: Would need 234 TB/month to justify $1,700 flex cost
+- Current: 4.3 TB/month = 54x below break-even point
 
-**Reference:** See `SEPARATE_PROJECT_SOLUTION.md` for complete implementation guide
+**Reference:** See `CRITICAL_FACTS.md` for detailed cost analysis and `SEPARATE_PROJECT_SOLUTION.md` for implementation guide
 
 ---
 
 ## Implementation Status
 
-### Completed (Nov 21-24):
-1. ✅ **Investigation complete** - Root cause confirmed (reservation saturation)
-2. ✅ **Choke points identified** - n8n Shopify causes 88% of notification history delays
-3. ✅ **Peak analysis complete** - Daily 9pm spike requires autoscale capacity
-4. ✅ **Solution designed** - Separate project approach with dedicated reservation
-5. ✅ **messaging-dedicated reservation created** - 50 baseline + autoscale 50 slots
+### ✅ Completed (Nov 21-25):
+1. ✅ **Investigation complete** - Root cause confirmed (reservation saturation by Airflow 46% + Metabase 31%)
+2. ✅ **Choke points identified** - n8n Shopify causes 88% of notification history delays during 8-9am window
+3. ✅ **Peak analysis complete** - Daily 9pm spike (186-386 slots) requires handling
+4. ✅ **Solution designed** - Separate project with on-demand billing
+5. ✅ **Project created** - `messaging-hub-bq-dedicated` (Cezar has owner permissions)
+6. ✅ **Cost analysis corrected** - On-demand $27/month vs flex $1,700/month
 
-### In Progress (Nov 25):
-6. 🟡 **Project creation** - Blocked on resourcemanager.projects.create permission
-   - **Blocker:** Cezar does not have permission to create projects
-   - **Resolution needed:** Julia or Saurabh must either:
-     - Option A: Create `messaging-hub-bq-dedicated` project (5 minutes)
-     - Option B: Grant Cezar project creator role
-   - **See:** `REQUEST_FOR_JULIA_SAURABH.md` for copy-paste commands
+### 🔄 In Progress (Nov 25 - Day 1):
+7. **Infrastructure setup** (2 hours remaining):
+   - [ ] Link billing account
+   - [ ] Enable BigQuery API
+   - [ ] Grant service account (`messaging@narvar-data-lake`) access to new project
+   - [ ] Grant data read access to messaging tables
+   - [ ] Test cross-project query
+   - [ ] Grant admin access (Saurabh, Julia, Eric, data-eng group)
 
-### Remaining Steps (3-4 days after project created):
-7. **Day 1:** Complete infrastructure setup
-   - Link billing account
-   - Enable BigQuery API
-   - Assign project to messaging-dedicated reservation
-   - Grant service account permissions
-   - Test cross-project queries
-
-8. **Days 2-3:** Messaging team staging and production deployment
-   - Update project_id configuration
-   - Update table references to fully-qualified names
+### 📅 Remaining (Days 2-4):
+8. **Days 2-3:** Messaging team deployment
+   - Update project_id: `"narvar-data-lake"` → `"messaging-hub-bq-dedicated"`
+   - Update table references to fully-qualified: `\`narvar-data-lake.messaging.table\``
    - Deploy to staging and test
-   - Production rollout with monitoring
+   - Production rollout (rolling restart, zero downtime)
 
-9. **Days 4-5:** Validation and documentation
-   - Monitor queue times (<1 second target)
-   - Verify cost (~$219/month)
+9. **Day 4:** Validation and close
+   - Monitor queue times (<1 second expected)
+   - Verify cost (~$27/month for 4.3 TB)
+   - Confirm reservation = "NONE" in audit logs (on-demand billing)
    - Update Jira DTPL-6903 as resolved
 
-**Implementation tracked in:** `IMPLEMENTATION_LOG.md`  
+**Detailed tracking:** `IMPLEMENTATION_LOG.md`  
+**Cost analysis:** `CRITICAL_FACTS.md`  
 **Complete guide:** `SEPARATE_PROJECT_SOLUTION.md`
 
 ---
 
-## Deployment Solution: Separate Project with Dedicated Reservation
+## Deployment Solution: Separate Project with On-Demand Billing ⭐
 
-**⚠️ Final Approach (Nov 24-25):** Create separate `messaging-hub-bq-dedicated` project assigned to dedicated reservation
+**✅ Final Approach (Nov 25):** Create separate `messaging-hub-bq-dedicated` project using **on-demand billing** (no reservation)
 
-> 📋 **For complete implementation guide, see:** [`SEPARATE_PROJECT_SOLUTION.md`](SEPARATE_PROJECT_SOLUTION.md)  
-> Includes: project setup, cross-project permissions, application changes, testing checklist, rollback procedures
+> 📋 **For detailed cost analysis and options, see:** [`CRITICAL_FACTS.md`](CRITICAL_FACTS.md)  
+> Includes: verified pricing calculations, option comparisons, break-even analysis
+
+> 📋 **For implementation steps, see:** [`SEPARATE_PROJECT_SOLUTION.md`](SEPARATE_PROJECT_SOLUTION.md)  
+> Includes: project setup, cross-project permissions, application changes, testing checklist
 
 > 📋 **Implementation tracking:** [`IMPLEMENTATION_LOG.md`](IMPLEMENTATION_LOG.md)  
 > Real-time status of each deployment step
 
-### Why Separate Project (Not Service Account Assignment)?
+### Why Separate Project with On-Demand?
 
-**Discovery:** BigQuery Reservation API only supports project/folder/organization-level assignments
+**Root cause:** narvar-data-lake project is assigned to saturated `bq-narvar-admin:US.default` reservation (org-level)
 - Cannot assign individual service accounts to reservations (API limitation)
-- Org-level assignment prevents clean on-demand solution
-- **Solution:** Create dedicated project for messaging, assign entire project to reservation
+- **Solution:** Create dedicated project for messaging, leave it UNASSIGNED to use on-demand billing
+- **Result:** Complete isolation at minimal cost
 
 ### Architecture Overview
 
 ```
-messaging-hub-bq-dedicated (new project)
+messaging-hub-bq-dedicated (new project) ✅ CREATED
 ├── Billing: Same as narvar-data-lake
-├── Assigned to: messaging-dedicated reservation
-│   ├── Baseline: 50 slots ($146/month)
-│   └── Autoscale: +50 slots (~$73/month during peaks)
+├── Reservation: NONE (uses on-demand billing)
+│   ├── Cost: $6.25 per TB scanned
+│   └── Current: 4.3 TB/month = $27/month
+├── Capacity: Unlimited (auto-scales, no queue delays)
 ├── Service account: messaging@narvar-data-lake (reused, no new credentials)
 └── Queries: Cross-project access to narvar-data-lake.messaging tables
 ```
 
 ### Benefits
 
-1. **Complete isolation** - Dedicated capacity, no contention
-2. **Cost control** - Predictable ~$219/month (capped)
-3. **Handles peak loads** - 50 baseline + autoscale 50 = 100 slots total
+1. **Lowest cost** - $27/month (vs $1,700 for flex reservation)
+2. **Unlimited capacity** - No queue delays, scales automatically
+3. **Complete isolation** - Separate from Airflow/Metabase saturation
 4. **Simple credential management** - Reuses existing service account
-5. **Clean architecture** - Separates billing and capacity from main project
+5. **No commitment** - Pay only for usage, can add reservation later if needed
 
 ### Implementation Requirements
 
-**Infrastructure (Data Engineering):**
-- Create GCP project: `messaging-hub-bq-dedicated`
-- Assign to messaging-dedicated reservation (already created)
-- Grant existing service account jobUser permission
-- Grant admin access to data engineering team
+**Infrastructure (Data Engineering) - 2 hours:**
+- ✅ Create GCP project: `messaging-hub-bq-dedicated` (DONE)
+- Enable BigQuery API
+- Grant existing service account jobUser permission on new project
+- Grant data read access to messaging tables in narvar-data-lake
+- Test cross-project query
+- Grant admin access to Saurabh, Julia, Eric, data-eng team
 
-**Application (Messaging Team):**
-- Update project_id: `narvar-data-lake` → `messaging-hub-bq-dedicated`
+**Application (Messaging Team) - 1-2 days:**
+- Update project_id: `"narvar-data-lake"` → `"messaging-hub-bq-dedicated"`
 - Update table references to fully-qualified names:
   - ❌ Wrong: `FROM messaging.pubsub_rules_engine_pulsar_debug`
-  - ✅ Correct: `FROM narvar-data-lake.messaging.pubsub_rules_engine_pulsar_debug`
+  - ✅ Correct: ``FROM `narvar-data-lake.messaging.pubsub_rules_engine_pulsar_debug` ``
 - No credential changes needed (same service account)
+- Deploy to staging → test → production (rolling restart)
 
-### Cost Analysis
+### Cost Analysis (CORRECTED)
 
-**Monthly cost: ~$219**
-- Baseline: $146/month (50 slots, always active)
-- Autoscale: ~$73/month (50 slots, active during 9pm peak ~4 hours/day)
-- Total capacity: 100 slots (handles 99.4% of traffic)
+**On-Demand (Recommended):**
+```
+Current: 4.3 TB/month × $6.25/TB = $27/month ($324/year)
+If grows to 10 TB/month: $63/month
+If grows to 24 TB/month: $150/month (still viable)
+Break-even vs flex: 234 TB/month
+```
 
-**vs Alternatives:**
-- ❌ On-demand ($27/month): Not achievable due to API limitations
-- ❌ Service account assignment: Not supported by BigQuery API
-- ✅ Separate project: Achieves isolation with cost control
+**Alternative Options (if needed later):**
+- **Flex reservation:** $1,700/month (50 baseline + autoscale 50) - Only if usage exceeds 24 TB/month
+- **Annual commitment:** $1,000/month (50 slots, 1-year) - Only for very high stable volume
 
 ### Timeline
 
-**Total: 3-5 days** (after project creation)
-- Day 1: Infrastructure setup (2 hours)
+**Total: 3-4 days**
+- ✅ Day 0: Project created (`messaging-hub-bq-dedicated`)
+- 🔄 Day 1: Infrastructure setup (2 hours) - IN PROGRESS
 - Days 2-3: Messaging team staging + production deployment
-- Days 4-5: Validation and monitoring
+- Day 4: Validation and monitoring
 
-**Current blocker:** Project creation requires `resourcemanager.projects.create` permission
-- **Resolution:** Julia or Saurabh must create project (see `REQUEST_FOR_JULIA_SAURABH.md`)
+**Status:** ✅ Project creation blocker resolved
 
 ---
 
@@ -337,28 +348,32 @@ messaging-hub-bq-dedicated (new project)
 - Retailers experiencing 8-minute delays for notification history lookups
 - Customer-facing feature unusable during business hours
 - Lands' End escalation (NT-1363) - potential churn risk
+- Root cause: Airflow (46%) + Metabase (31%) saturating shared reservation
 
 **Post-Deployment:**
-- Delays reduced to <1 second (dedicated 100-slot capacity with autoscale)
-- Query execution time unchanged: 2.2 seconds (queries are well-optimized)
+- Queue delays eliminated: 558s → <1s (99.8% reduction)
+- Query execution unchanged: ~2.2 seconds (queries are well-optimized)
 - Total response time: <3 seconds end-to-end
-- 99.6% reduction in queue wait time (558s → <1s)
+- Unlimited capacity (on-demand auto-scales)
 
-**Cost Impact:**
-- New cost: ~$219/month (dedicated project + reservation)
-- Breakdown: $146 baseline + ~$73 autoscale (active ~4 hours/day for 9pm peak)
-- Predictable monthly cost with capped maximum
-- Isolated billing for messaging workload
+**Cost Impact (CORRECTED - Nov 25):**
+- **On-demand billing:** ~$27/month (~$324/year)
+- **Calculation:** 4.3 TB/month × $6.25/TB = $27/month ✅ VERIFIED
+- **Previous error:** Stated $219/month (7.8x overestimate)
+- **Isolated billing:** Clean separation from main project costs
+- **Cost protection:** Monitor usage; can switch to flex ($1,700/month) if grows >24 TB/month
 
 **Timeline:**
-- Current status: Blocked on project creation permission (Nov 25)
-- Estimated completion: 3-5 days after project created
-- Zero downtime deployment (rolling restart)
+- ✅ Project created: `messaging-hub-bq-dedicated` (Nov 25)
+- 🔄 Infrastructure setup: 2 hours (in progress)
+- Application deployment: 2-3 days (messaging team)
+- Total: 3-4 days to resolution
 
-**Alternatives Considered:**
-- ❌ On-demand ($27/month): Not achievable due to BigQuery API limitations
-- ❌ Service account assignment: API does not support individual service accounts
-- ✅ Separate project: Only viable approach for isolated capacity with cost control
+**Solution Approach (UPDATED):**
+- ✅ On-demand billing: **$27/month** - RECOMMENDED (separate project, no reservation)
+- Flex reservation: $1,700/month - Only if usage exceeds 24 TB/month
+- Annual commitment: $1,000/month - Only for stable high volume
+- **Key insight:** Separate project enables on-demand billing (org-level assignment doesn't apply to new projects)
 
 **Customer Impact:**
 - Eliminates churn risk from poor UX
@@ -402,7 +417,7 @@ SQL queries: `queries/` folder (9 analysis queries, $1.85 cost)
 - **REQUEST_FOR_JULIA_SAURABH.md** - Project Creation Request
   - Copy-paste commands for org admins to create project
   - Resolves current blocker (resourcemanager.projects.create permission)
-
+  
 - **MESSAGING_CAPACITY_PLANNING.md** - Capacity Analysis Reference
   - Original capacity calculations (still valid)
   - Workload characteristics (87,383 queries, 8,040 slot-hours)

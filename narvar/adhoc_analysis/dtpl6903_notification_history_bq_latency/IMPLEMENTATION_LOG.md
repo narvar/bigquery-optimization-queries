@@ -1,23 +1,25 @@
 # Implementation Log - messaging-hub-bq-dedicated Project Setup
 
-**Date:** November 24, 2025  
+**Date:** November 24-25, 2025  
 **Implementer:** Cezar Mihaila  
-**Goal:** Create separate BigQuery project for messaging with dedicated reservation  
-**Reference:** SEPARATE_PROJECT_SOLUTION.md
+**Goal:** Create separate BigQuery project for messaging with **on-demand billing** (no reservation)  
+**Cost:** ~$27/month (4.3 TB × $6.25/TB)  
+**Reference:** CRITICAL_FACTS.md, SEPARATE_PROJECT_SOLUTION.md
 
 ---
 
-## Implementation Status: 🟡 IN PROGRESS
+## Implementation Status: 🔄 IN PROGRESS - Day 1 Infrastructure Setup
 
-**Started:** 3:00pm PST, November 24, 2025
+**Started:** November 24, 2025 3:00pm PST  
+**Resumed:** November 25, 2025 (after blocker resolved)
 
 ---
 
-## Phase 1: Infrastructure Setup (Day 1)
+## Phase 1: Infrastructure Setup (Day 1 - 2 hours)
 
 ### Step 1: Create GCP Project
 
-**Status:** [x] Attempted
+**Status:** [x] ✅ SUCCESS
 
 **Command:**
 ```bash
@@ -27,26 +29,27 @@ gcloud projects create messaging-hub-bq-dedicated \
   --labels=purpose=bigquery-isolation,team=messaging
 ```
 
-**Expected output:** Project created successfully
+**Initial attempt (Nov 24):**
+```
+ERROR: (gcloud.projects.create) PERMISSION_DENIED
+```
+**Blocker:** Cezar did not have resourcemanager.projects.create permission
 
-**Actual result:**
-```
-ERROR: (gcloud.projects.create) PERMISSION_DENIED: 
-Permission 'resourcemanager.projects.create' denied on resource (or it may not exist). 
-This command is authenticated as cezar.mihaila@narvar.com
-```
+**Resolution (Nov 25):**
+- Project created by authorized user (Julia/Saurabh)
+- Cezar granted owner permissions
 
 **Success criteria:**
-- [ ] Project created - ❌ FAILED
-- [ ] Project ID: messaging-hub-bq-dedicated - ❌ NOT CREATED
+- [x] Project created - ✅ SUCCESS
+- [x] Project ID: messaging-hub-bq-dedicated - ✅ CONFIRMED
+- [x] Cezar has owner permissions - ✅ CONFIRMED
 
-**Timestamp:** 3:05pm PST, November 24, 2025  
-**Status:** [x] ❌ FAILED
+**Timestamp:** November 25, 2025  
+**Status:** [x] ✅ SUCCESS
 
 **Notes:**
-- Cezar does not have resourcemanager.projects.create permission
-- Need to request this permission OR ask someone who has it (Platform team, Saurabh, Julia)
-- **Blocker:** Cannot proceed with remaining steps until project is created
+- Blocker resolved
+- Ready to proceed with remaining infrastructure setup
 
 ---
 
