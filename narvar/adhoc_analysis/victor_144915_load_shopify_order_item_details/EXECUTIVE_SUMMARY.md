@@ -102,21 +102,28 @@ hours_before_execution: -139 (future timestamp!)
 
 ### Immediate Action (Option A): Add Safety Net Date Filter
 
-Add explicit date filter to prevent runaway queries:
+**WHERE TO DEPLOY**:
+- **File**: `/Users/cezarmihaila/workspace/composer/dags/shopify/load_shopify_order_item_details.py`
+- **Task**: `merge_order_item_details` (line 227)
+- **Location**: Lines 335-342 (WHERE clause)
+- **Insert after**: Line 340
 
-```sql
-WHERE 
-    o.ingestion_timestamp >= TIMESTAMP_SUB(TIMESTAMP('{execution_date}'), INTERVAL 48 HOUR)
-    AND DATE(o.order_date) >= DATE_SUB(DATE('{execution_date}'), INTERVAL 7 DAY)  -- NEW
+**See**: [EXACT_CODE_CHANGE.md](./EXACT_CODE_CHANGE.md) for line-by-line instructions
+
+**The change** - Add these 2 lines after line 340:
+```python
+                AND DATE(o.order_date) >= DATE_SUB(DATE('{execution_date}'), INTERVAL 7 DAY)
+                AND DATE(o.order_date) <= DATE('{execution_date}')
 ```
 
 **Benefits**:
-- Protects against future occurrences
+- Protects against backfilled old orders
 - 5 minute deployment
 - Low risk
+- Blocks Oct 15 orders even if re-ingested Nov 25
 
 **Trade-offs**:
-- Doesn't fix root cause
+- Doesn't fix upstream root cause (continuous backfill)
 - 7-day window larger than designed 2-day window (but still safe)
 
 ### Manual Cleanup (Option B): Drop Bad Temp Tables and Retry

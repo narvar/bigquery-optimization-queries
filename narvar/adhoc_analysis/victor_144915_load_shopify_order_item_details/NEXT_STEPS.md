@@ -9,37 +9,61 @@
 
 ### 1. Deploy Safety Net Filter (5 minutes)
 
-**File to modify**: The Airflow DAG Python file (likely in `/Users/cezarmihaila/workspace/composer/dags/shopify/`)
+**EXACT FILE LOCATION**: `/Users/cezarmihaila/workspace/composer/dags/shopify/load_shopify_order_item_details.py`
 
-**Change needed**: In the `merge_order_item_details` task SQL, modify the WHERE clause:
+**EXACT LINE**: Insert after line 340
 
-**From:**
-```sql
-WHERE 
-    o.ingestion_timestamp >= TIMESTAMP_SUB(
-        TIMESTAMP('{execution_date}'),
-        INTERVAL 48 HOUR
-    )
-    AND DATE(o.order_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
-    AND o.order_date >= '2024-01-01'
+**See detailed instructions**: [EXACT_CODE_CHANGE.md](./EXACT_CODE_CHANGE.md) ⭐
+
+**Quick Reference**:
+
+**Current code (lines 335-342)**:
+```python
+            WHERE 
+                o.ingestion_timestamp >= TIMESTAMP_SUB(
+                    TIMESTAMP('{execution_date}'),
+                    INTERVAL 48 HOUR
+                )
+                AND DATE(o.order_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+                AND o.order_date >= '2024-01-01'
+        );
 ```
 
-**To:**
-```sql
-WHERE 
-    o.ingestion_timestamp >= TIMESTAMP_SUB(
-        TIMESTAMP('{execution_date}'),
-        INTERVAL 48 HOUR
-    )
-    AND DATE(o.order_date) >= DATE_SUB(DATE('{execution_date}'), INTERVAL 7 DAY)  -- NEW: Safety net
-    AND DATE(o.order_date) <= DATE('{execution_date}')  -- NEW: Upper bound
+**Add these 2 lines after line 340** (after the closing paren):
+```python
+                AND DATE(o.order_date) >= DATE_SUB(DATE('{execution_date}'), INTERVAL 7 DAY)
+                AND DATE(o.order_date) <= DATE('{execution_date}')
+```
+
+**Result**:
+```python
+            WHERE 
+                o.ingestion_timestamp >= TIMESTAMP_SUB(
+                    TIMESTAMP('{execution_date}'),
+                    INTERVAL 48 HOUR
+                )
+                AND DATE(o.order_date) >= DATE_SUB(DATE('{execution_date}'), INTERVAL 7 DAY)  -- NEW
+                AND DATE(o.order_date) <= DATE('{execution_date}')  -- NEW
+                AND o.order_date >= '2024-01-01'
+        );
 ```
 
 **Testing**:
 ```bash
-# Deploy to Airflow
-# Test with dry-run if possible
-# Monitor tonight's DAG run
+# Optional: Test the modified filter with dry-run
+cd /Users/cezarmihaila/workspace/do_it_query_optimization_queries/bigquery-optimization-queries/narvar/adhoc_analysis/victor_144915_load_shopify_order_item_details
+
+# Run the test query from EXACT_CODE_CHANGE.md
+bq query --dry_run --use_legacy_sql=false < test_modified_query.sql
+```
+
+**Deploy**:
+```bash
+cd /Users/cezarmihaila/workspace/composer
+git add dags/shopify/load_shopify_order_item_details.py
+git commit -m "Fix VICTOR-144915: Add date filter to prevent backfilled data"
+git push
+# Wait 1-2 minutes for Composer to sync
 ```
 
 ---

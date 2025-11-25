@@ -150,10 +150,22 @@ You asked: "According to the logic, I think they are legit. Can you check?"
 
 ## Action Items Updated
 
-### Immediate (5 min)
-Deploy explicit date filter:
-```sql
-AND DATE(o.order_date) >= DATE_SUB(DATE('{execution_date}'), INTERVAL 7 DAY)
+### Immediate (5 min) - Deploy Explicit Date Filter
+
+**EXACT LOCATION**:
+- **File**: `/Users/cezarmihaila/workspace/composer/dags/shopify/load_shopify_order_item_details.py`
+- **Task**: `merge_order_item_details` (line 227)
+- **WHERE clause**: Lines 335-342
+- **Insert after**: Line 340 (after the `INTERVAL 48 HOUR` closing paren)
+
+**See**: 
+- [EXACT_CODE_CHANGE.md](./EXACT_CODE_CHANGE.md) ⭐ **Exact line-by-line instructions**
+- [DEPLOYMENT_INSTRUCTIONS.md](./DEPLOYMENT_INSTRUCTIONS.md) - Full deployment guide
+
+**The change** (insert these 2 lines after line 340):
+```python
+                AND DATE(o.order_date) >= DATE_SUB(DATE('{execution_date}'), INTERVAL 7 DAY)
+                AND DATE(o.order_date) <= DATE('{execution_date}')
 ```
 
 ### This Week (4-8 hours)
