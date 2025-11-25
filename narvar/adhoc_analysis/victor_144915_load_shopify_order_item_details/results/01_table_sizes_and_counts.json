@@ -1,0 +1,75 @@
+Waiting on bqjob_r76323a16f0bbd93f_0000019abc205689_1 ... (0s) Current status: DONE   
+[
+  {
+    "active_gb": "1.56", 
+    "created_at": "2025-11-21 00:30:57", 
+    "dataset": "return_insights_base", 
+    "days_since_created": "4", 
+    "long_term_gb": "0.0", 
+    "row_count": "4207927", 
+    "size_gb": "1.56", 
+    "size_tb": "0.0", 
+    "table_name": "tmp_order_item_details_2025-11-20", 
+    "table_type": "BASE TABLE"
+  }, 
+  {
+    "active_gb": "1.48", 
+    "created_at": "2025-11-20 00:16:49", 
+    "dataset": "return_insights_base", 
+    "days_since_created": "5", 
+    "long_term_gb": "0.0", 
+    "row_count": "4019883", 
+    "size_gb": "1.48", 
+    "size_tb": "0.0", 
+    "table_name": "tmp_order_item_details_2025-11-19", 
+    "table_type": "BASE TABLE"
+  }, 
+  {
+    "active_gb": "30.01", 
+    "created_at": "2025-09-30 15:55:17", 
+    "dataset": "return_insights_base", 
+    "days_since_created": "56", 
+    "long_term_gb": "0.0", 
+    "row_count": "78898128", 
+    "size_gb": "30.01", 
+    "size_tb": "0.03", 
+    "table_name": "product_insights", 
+    "table_type": "BASE TABLE"
+  }, 
+  {
+    "active_gb": "95.51", 
+    "created_at": "2025-09-30 15:53:58", 
+    "dataset": "return_insights_base", 
+    "days_since_created": "56", 
+    "long_term_gb": "0.0", 
+    "row_count": "236340306", 
+    "size_gb": "95.51", 
+    "size_tb": "0.09", 
+    "table_name": "order_item_details", 
+    "table_type": "BASE TABLE"
+  }, 
+  {
+    "active_gb": "30.34", 
+    "created_at": "2025-09-30 14:31:28", 
+    "dataset": "return_insights_base", 
+    "days_since_created": "56", 
+    "long_term_gb": "0.0", 
+    "row_count": "28445007", 
+    "size_gb": "30.34", 
+    "size_tb": "0.03", 
+    "table_name": "return_item_details", 
+    "table_type": "BASE TABLE"
+  }, 
+  {
+    "active_gb": "0.0", 
+    "created_at": "2025-02-20 00:43:05", 
+    "dataset": "return_insights_base", 
+    "days_since_created": "278", 
+    "long_term_gb": "0.0", 
+    "row_count": "0", 
+    "size_gb": "0.0", 
+    "size_tb": "0.0", 
+    "table_name": "duplicate_matches", 
+    "table_type": "BASE TABLE"
+  }
+]

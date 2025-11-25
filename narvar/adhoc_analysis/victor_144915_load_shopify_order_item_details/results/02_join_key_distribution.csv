@@ -1,0 +1,4 @@
+Waiting on bqjob_r33e46a74e894528b_0000019abc214b2e_1 ... (0s) Current status: RUNNING                                                                                      Waiting on bqjob_r33e46a74e894528b_0000019abc214b2e_1 ... (1s) Current status: RUNNING                                                                                      Waiting on bqjob_r33e46a74e894528b_0000019abc214b2e_1 ... (2s) Current status: RUNNING                                                                                      Waiting on bqjob_r33e46a74e894528b_0000019abc214b2e_1 ... (2s) Current status: DONE   
+source,total_rows,distinct_retailers,distinct_domains,distinct_dates,distinct_skus,distinct_join_keys,null_retailer,null_domain,null_date,null_sku
+temp_table,4207927,194,207,183,648642,1180017,0,0,0,0
+order_item_details_7day_sample,5420564,194,207,8,593788,1143598,0,0,0,0

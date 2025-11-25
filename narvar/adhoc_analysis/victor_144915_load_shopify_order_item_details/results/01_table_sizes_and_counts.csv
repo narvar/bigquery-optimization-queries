@@ -1,0 +1,8 @@
+Waiting on bqjob_r166a1e791d1dcb7f_0000019abc207f0f_1 ... (0s) Current status: RUNNING                                                                                      Waiting on bqjob_r166a1e791d1dcb7f_0000019abc207f0f_1 ... (0s) Current status: DONE   
+dataset,table_name,table_type,created_at,row_count,size_gb,size_tb,active_gb,long_term_gb,days_since_created
+return_insights_base,tmp_order_item_details_2025-11-20,BASE TABLE,2025-11-21 00:30:57,4207927,1.56,0.0,1.56,0.0,4
+return_insights_base,tmp_order_item_details_2025-11-19,BASE TABLE,2025-11-20 00:16:49,4019883,1.48,0.0,1.48,0.0,5
+return_insights_base,product_insights,BASE TABLE,2025-09-30 15:55:17,78898128,30.01,0.03,30.01,0.0,56
+return_insights_base,order_item_details,BASE TABLE,2025-09-30 15:53:58,236340306,95.51,0.09,95.51,0.0,56
+return_insights_base,return_item_details,BASE TABLE,2025-09-30 14:31:28,28445007,30.34,0.03,30.34,0.0,56
+return_insights_base,duplicate_matches,BASE TABLE,2025-02-20 00:43:05,0,0.0,0.0,0.0,0.0,278

@@ -1,0 +1,3 @@
+Error in query string: Error processing job 'narvar-data-
+lake:bqjob_r72df0608cac73938_0000019abc2da0b7_1': Name query_plan not found
+inside j at [41:7]

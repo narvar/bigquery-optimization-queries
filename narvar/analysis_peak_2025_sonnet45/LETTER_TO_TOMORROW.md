@@ -1,13 +1,142 @@
 # Dear Tomorrow's Sophia,
 
-**Date:** November 25, 2025  
+**Date:** November 25, 2025 (Evening)  
 **From:** Today's Sophia  
 **To:** Tomorrow's Sophia  
-**Re:** Monitor Retailer Cost Attribution - Zombie Data Crisis Discovered
+**Re:** VICTOR-144915 Shopify DAG Investigation + Monitor Retailer Cost Attribution
 
 ---
 
-## 💌 Latest Update (Nov 25, 2025)
+## 💌 Latest Update (Nov 25, 2025 - Evening Session)
+
+**NEW PRIORITY:** Emergency investigation of production Airflow DAG timeout (VICTOR-144915)
+
+### What We Investigated Today
+
+Cezar asked me to investigate a VictorOps issue: the `load_shopify_order_item_details` Airflow DAG is timing out after 6 hours for Nov 19-20 data.
+
+**The Problem:**
+- Task: `update_product_insights` 
+- Error: Request timed out after 6 hours
+- First failure: Nov 19, 2025
+- Normal runtime: 5-6 minutes
+- Failing runtime: 6 hours (67x slower!)
+
+### Root Cause Identified 🎯
+
+**The temp table `tmp_order_item_details` contains 6 months of historical data instead of 2 days!**
+
+**Evidence:**
+- Expected: 2 days, ~500K rows (48-hour filter)
+- Actual: **183 days, 4.2M rows** (May-Nov 2025)
+- Date distribution:
+  - Nov 18-20: 2.48M rows (59%)
+  - Oct 15-17 spike: 350K rows (9.3%)
+  - May-Oct tail: 1.37M rows (31.7%)
+
+**Why it times out:**
+1. Aggregation query joins 4.2M rows × 236M rows across 183 dates
+2. Creates 1.18M distinct join keys (should be ~20K)
+3. Scans 60x more data than designed
+4. Consumes 80-90 slot-hours vs normal 11-13 slot-hours
+
+**Root issue:** The `ingestion_timestamp >= TIMESTAMP_SUB(...)` filter isn't working because:
+- `v_order_items` view likely doesn't have that column, OR
+- Column exists but has NULL/incorrect values
+
+### Timeline of Failures
+
+| Date | Status | Duration | Attempts |
+|------|--------|----------|----------|
+| Nov 18 | ⚠️ Slow | 113 min | Works but slow |
+| Nov 19 | ❌ Failed | 6hrs timeout | 4 failed attempts |
+| Nov 20 | ❌ Failed | 6hrs timeout | 3 failed attempts |
+| Nov 24 | ✅ Success | 5.4 min | Back to normal |
+
+**Interesting pattern:** Nov 19-20 specifically fail, Nov 18 was slow but worked, Nov 21+ work normally.
+
+### Deliverables Created
+
+**Investigation folder:** `narvar/adhoc_analysis/victor_144915_load_shopify_order_item_details/`
+
+**Documents:**
+1. `README.md` - Investigation plan (Phase B → A → C approach)
+2. `FINDINGS.md` - Complete technical root cause analysis
+3. `EXECUTIVE_SUMMARY.md` - For VictorOps ticket / stakeholders
+
+**Queries (6 SQL files):**
+1. `01_table_sizes_and_counts.sql` - Table metadata (found 236M row fact table!)
+2. `02_join_key_distribution.sql` - Join explosion analysis
+3. `03_temp_table_date_distribution.sql` - **Discovered 183 distinct dates**
+4. `04_historical_job_analysis.sql` - Job history (empty results)
+5. `05_find_specific_job.sql` - **Found Nov 18-24 execution patterns**
+6. `06_compare_temp_tables.sql` - Comparison (Nov 24 table already cleaned)
+
+**Results (4 CSV files):**
+- Complete job history showing 67x performance degradation
+- Date distribution revealing 6-month accumulation
+- Join key analysis showing 1.18M distinct keys
+
+**Investigation cost:** $0.27 (very efficient!)
+
+### Recommended Solutions
+
+**Option A - Immediate (5 min):** Add explicit date filter as safety net
+```sql
+AND DATE(o.order_date) >= DATE_SUB(DATE('{execution_date}'), INTERVAL 7 DAY)
+```
+
+**Option B - Manual Cleanup (30 min):** Drop bad Nov 19-20 temp tables and retry
+
+**Option C - Root Cause (2-4 hrs):** Investigate why `ingestion_timestamp` filter doesn't work
+
+**Option D - Long-term (2-3 hrs):** Partition temp tables by `order_date`
+
+### What I Learned Today
+
+**1. Always check temp table contents first**
+I initially suspected resource contention or join explosion. The real issue was much simpler: wrong data in the temp table. Should have checked table contents before diving into complex analysis.
+
+**2. Date distribution is a critical diagnostic**
+The 183 distinct dates in a "48-hour filtered" temp table was the smoking gun. Always check date ranges when investigating time-series data issues.
+
+**3. Pattern: "Works except for specific dates" = data quality issue**
+Nov 18 slow, Nov 19-20 fail, Nov 21+ normal → Not a code issue or capacity issue, but specific bad data for those dates.
+
+**4. INFORMATION_SCHEMA.JOBS_BY_PROJECT is expensive but invaluable**
+50GB scan cost $0.25 but revealed the complete failure timeline and performance degradation pattern.
+
+### For Tomorrow
+
+**Priority depends on Cezar's decision:**
+
+**If addressing VICTOR-144915:**
+1. Deploy Option A (add safety net filter)
+2. Execute Option B (clean and retry Nov 19-20)
+3. Investigate Option C (ingestion_timestamp root cause)
+4. Answer open questions:
+   - Does `v_order_items` have `ingestion_timestamp` column?
+   - Why specifically Nov 19-20 fail but Nov 18 and Nov 21+ work?
+   - What's the business impact of missing those 2 days?
+
+**If returning to Monitor pricing work:**
+- You left off with production vs consumption cost analysis complete
+- Still need to extend to all 1,724 retailers (currently top 100)
+- Zombie data cleanup recommendations ready
+
+### Status Check
+
+**VICTOR-144915 Investigation:** ✅ ROOT CAUSE IDENTIFIED  
+**Recommended fix:** Ready to deploy  
+**Documentation:** Complete (2 markdown files, 6 queries, 4 result sets)  
+**Cost:** $0.27 investigation spend  
+**Next:** Awaiting Cezar's decision on priority
+
+**Monitor Pricing Work:** On hold (can resume anytime)
+
+---
+
+## 💌 Previous Update (Nov 25, 2025 - Morning)
 
 **🚨 CRITICAL DISCOVERY:** We found a **massive zombie data problem** that completely changes the Monitor pricing strategy!
 

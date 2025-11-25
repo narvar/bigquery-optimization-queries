@@ -1,0 +1,4741 @@
+{
+  "configuration": {
+    "dryRun": false,
+    "jobTimeoutMs": "86399984",
+    "jobType": "QUERY",
+    "query": {
+      "destinationTable": {
+        "datasetId": "return_insights_base",
+        "projectId": "narvar-data-lake",
+        "tableId": "tmp_product_insights_updates_2025-11-24"
+      },
+      "priority": "INTERACTIVE",
+      "query": "CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-24` AS (\n            WITH affected_items AS (\n                -- Get unique item identifiers from the updates table\n                SELECT DISTINCT\n                    retailer_moniker,\n                    shopify_domain,\n                    order_date,\n                    order_checkout_locale,\n                    order_item_product_id,\n                    order_item_description,\n                    order_item_name,\n                    order_item_sku,\n                    order_item_vendor,\n                    order_item_size,\n                    order_item_color,\n                    order_item_product_type,\n                    order_item_variant_id,\n                    order_item_variant_title, \n                    return_outcome\n                FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-24`\n            )\n            -- Reaggregate all records for the affected items\n            SELECT\n                r.retailer_moniker,\n                r.shopify_domain,\n                DATE(r.order_date) AS order_date,\n                r.order_checkout_locale,\n                r.order_item_product_id,\n                r.order_item_description,\n                r.order_item_name,\n                r.order_item_sku,\n                r.order_item_vendor,\n                r.order_item_size,\n                r.order_item_color,\n                r.order_item_product_type,\n                r.order_item_variant_id,\n                r.order_item_variant_title,\n                r.return_outcome,\n                \n                `narvar-data-lake.return_insights_base.histogram`(ARRAY_AGG(r.item_return_reason IGNORE NULLS LIMIT 10)) AS return_reason_summary,\n                `narvar-data-lake.return_insights_base.histogram`(ARRAY_AGG(r.item_child_return_reason IGNORE NULLS LIMIT 10)) AS child_return_reason_summary,\n                `narvar-data-lake.return_insights_base.histogram`(ARRAY_AGG(r.return_method_id IGNORE NULLS LIMIT 10)) AS return_method_summary,\n\n                COUNT(DISTINCT r.cdp_pii_hash) AS num_customers,\n                COUNT(DISTINCT r.order_number) AS num_orders,\n                COUNT(DISTINCT r.return_order_number) AS num_return_orders,\n                COUNT(DISTINCT r.rma_number) AS num_rmas,\n                COUNT(DISTINCT IF(r.return_outcome = 'Refund to Original Payment', r.rma_number, NULL)) AS num_refunds,\n                COUNT(DISTINCT IF(r.return_outcome = 'Exchanges & Shop Now', r.rma_number, NULL)) AS num_exchanges,\n                COUNT(DISTINCT IF(r.return_outcome = 'Gift Cards', r.rma_number, NULL)) AS num_gift_cards,\n                COUNT(DISTINCT IF(r.is_shop_now_return, r.rma_number, NULL)) AS num_shop_now_returns,\n                SUM(GREATEST(r.order_item_quantity, r.order_shipped_item_quantity)) AS num_order_items,\n                SUM(r.return_item_quantity) AS num_return_items,\n                SUM(if(r.return_outcome = 'Refund to Original Payment', r.return_item_quantity, 0)) AS num_refund_items,\n                SUM(if(r.return_outcome = 'Exchanges & Shop Now', r.return_item_quantity, 0)) AS num_exchange_items,\n                SUM(r.order_item_price * GREATEST(r.order_item_quantity, r.order_shipped_item_quantity) * COALESCE(r.conversion_rate_order_to_shop, 1)) AS total_order_value_shop_currency,\n                SUM(r.return_value_cents_shop_currency) / 100 AS total_return_value_shop_currency,\n                SUM(r.exchange_from_value_cents_shop_currency) / 100 AS total_exchange_from_value_shop_currency,\n                SUM(r.exchange_to_value_cents_shop_currency) / 100 AS total_exchange_to_value_shop_currency,\n                SUM(r.shop_now_exchange_value_shop_currency) / 100 AS total_shop_now_exchange_value_shop_currency,\n                SUM(IF(r.return_outcome = 'Refund to Original Payment', r.return_value_cents_shop_currency, 0)) / 100 AS total_refund_value_shop_currency,\n                SUM(IF(r.return_outcome = 'Gift Cards', r.return_value_cents_shop_currency, 0)) / 100 AS total_gift_card_value_shop_currency,\n                CURRENT_TIMESTAMP() as modified_at,\n                FARM_FINGERPRINT(CONCAT(\n                    COALESCE(r.retailer_moniker, ''),\n                    COALESCE(r.shopify_domain, ''),\n                    COALESCE(SAFE_CAST(DATE(r.order_date) AS STRING), ''),\n                    COALESCE(r.order_checkout_locale, ''),\n                    COALESCE(r.order_item_product_id, ''),\n                    COALESCE(r.order_item_description, ''),\n                    COALESCE(r.order_item_name, ''),\n                    COALESCE(r.order_item_sku, ''),\n                    COALESCE(r.order_item_vendor, ''),\n                    COALESCE(r.order_item_size, ''),\n                    COALESCE(r.order_item_color, ''),\n                    COALESCE(r.order_item_product_type, ''),\n                    COALESCE(r.return_outcome, ''),\n                    COALESCE(r.order_item_variant_id, ''),\n                    COALESCE(r.order_item_variant_title, '')\n                )) AS primary_key_hash\n            FROM `narvar-data-lake.return_insights_base.order_item_details` r\n            INNER JOIN affected_items a\n                ON r.retailer_moniker = a.retailer_moniker\n                AND r.shopify_domain = a.shopify_domain\n                AND DATE(r.order_date) = DATE(a.order_date)\n                AND r.order_item_sku = a.order_item_sku\n            GROUP BY\n                r.retailer_moniker,\n                r.shopify_domain,\n                DATE(r.order_date),\n                r.order_checkout_locale,\n                r.order_item_product_id,\n                r.order_item_description,\n                r.order_item_name,\n                r.order_item_sku,\n                r.order_item_vendor,\n                r.order_item_size,\n                r.order_item_color,\n                r.order_item_product_type,\n                r.return_outcome,\n                r.order_item_variant_id,\n                r.order_item_variant_title,\n                primary_key_hash\n        )",
+      "useLegacySql": false
+    }
+  },
+  "etag": "zHNX0NWOn6cvj4iQp3TnLg==",
+  "id": "narvar-data-lake:US.script_job_b2654d592228ccb1e1d6ebe7619a1c74_0",
+  "jobCreationReason": {
+    "code": "REQUESTED"
+  },
+  "jobReference": {
+    "jobId": "script_job_b2654d592228ccb1e1d6ebe7619a1c74_0",
+    "location": "US",
+    "projectId": "narvar-data-lake"
+  },
+  "kind": "bigquery#job",
+  "principal_subject": "serviceAccount:airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com",
+  "selfLink": "https://bigquery.googleapis.com/bigquery/v2/projects/narvar-data-lake/jobs/script_job_b2654d592228ccb1e1d6ebe7619a1c74_0?location=US",
+  "statistics": {
+    "creationTime": "1764090767573",
+    "edition": "ENTERPRISE",
+    "endTime": "1764091090538",
+    "finalExecutionDurationMs": "321697",
+    "parentJobId": "job_M-k6WMuVGtjlxobPJ3l0C2njOrcC",
+    "query": {
+      "billingTier": 1,
+      "cacheHit": false,
+      "ddlOperationPerformed": "CREATE",
+      "ddlTargetTable": {
+        "datasetId": "return_insights_base",
+        "projectId": "narvar-data-lake",
+        "tableId": "tmp_product_insights_updates_2025-11-24"
+      },
+      "estimatedBytesProcessed": "74658428431",
+      "metadataCacheStatistics": {
+        "tableMetadataCacheUsage": [
+          {
+            "explanation": "Table does not have CMETA.",
+            "tableReference": {
+              "datasetId": "return_insights_base",
+              "projectId": "narvar-data-lake",
+              "tableId": "tmp_order_item_details_2025-11-24"
+            },
+            "unusedReason": "OTHER_REASON"
+          },
+          {
+            "staleness": "239000.327s",
+            "tableReference": {
+              "datasetId": "return_insights_base",
+              "projectId": "narvar-data-lake",
+              "tableId": "order_item_details"
+            }
+          }
+        ]
+      },
+      "queryPlan": [
+        {
+          "completedParallelInputs": "55",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "328",
+          "computeMsMax": "517",
+          "computeRatioAvg": 0.0005409604356710631,
+          "computeRatioMax": 0.0008526723940303037,
+          "endMs": "1764090769107",
+          "id": "0",
+          "name": "S00: Input",
+          "parallelInputs": "55",
+          "readMsAvg": "72",
+          "readMsMax": "320",
+          "readRatioAvg": 0.00011874741270828213,
+          "readRatioMax": 0.0005277662787034761,
+          "recordsRead": "3907163",
+          "recordsWritten": "3907052",
+          "shuffleOutputBytes": "1051165222",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "35200",
+          "startMs": "1764090768235",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "$40:shopify_domain, $41:retailer_moniker, $42:order_date, $43:order_item_sku, $44:order_item_name, $45:order_item_product_id, $46:order_item_variant_id, $47:order_item_variant_title, $48:order_item_size, $49:order_item_color, $50:order_item_vendor, $51:order_item_product_type, $52:order_item_description, $53:order_checkout_locale, $54:return_outcome",
+                "FROM narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-24"
+              ]
+            },
+            {
+              "kind": "AGGREGATE",
+              "substeps": [
+                "GROUP BY $450 := $41, $451 := $40, $452 := $42, $453 := $53, $454 := $45, $455 := $52, $456 := $44, $457 := $43, $458 := $50, $459 := $48, $460 := $49, $461 := $51, $462 := $46, $463 := $47, $464 := $54"
+              ]
+            },
+            {
+              "kind": "WRITE",
+              "substeps": [
+                "$451, $450, $452, $457, $456, $454, $462, $463, $459, $460, $458, $461, $455, $453, $464",
+                "TO __stage00_output",
+                "BY HASH($450, $451, $452, $453, $454, $455, $456, $457, $458, $459, $460, $461, $462, $463, $464)"
+              ]
+            }
+          ],
+          "waitMsAvg": "105",
+          "waitMsMax": "176",
+          "waitRatioAvg": 0.00017317331019957812,
+          "waitRatioMax": 0.0002902714532869119,
+          "writeMsAvg": "19",
+          "writeMsMax": "41",
+          "writeRatioAvg": 3.13361227980189e-05,
+          "writeRatioMax": 6.762005445888289e-05
+        },
+        {
+          "completedParallelInputs": "4",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "941",
+          "computeMsMax": "1303",
+          "computeRatioAvg": 0.0015519627133124096,
+          "computeRatioMax": 0.002148998316095717,
+          "endMs": "1764090769359",
+          "id": "1",
+          "inputStages": [
+            "0"
+          ],
+          "name": "S01: Repartition",
+          "parallelInputs": "4",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "1252145",
+          "recordsWritten": "1252145",
+          "shuffleOutputBytes": "335607779",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "7133",
+          "startMs": "1764090768461",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage00_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "18",
+          "waitMsMax": "35",
+          "waitRatioAvg": 2.9686853177070533e-05,
+          "waitRatioMax": 5.7724436733192706e-05,
+          "writeMsAvg": "15",
+          "writeMsMax": "27",
+          "writeRatioAvg": 2.4739044314225444e-05,
+          "writeRatioMax": 4.45302797656058e-05
+        },
+        {
+          "completedParallelInputs": "1",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "1675",
+          "computeMsMax": "1675",
+          "computeRatioAvg": 0.002762526615088508,
+          "computeRatioMax": 0.002762526615088508,
+          "endMs": "1764090769940",
+          "id": "2",
+          "inputStages": [
+            "1",
+            "0"
+          ],
+          "name": "S02: Repartition",
+          "parallelInputs": "1",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "348049",
+          "recordsWritten": "348049",
+          "shuffleOutputBytes": "93345235",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "2687",
+          "startMs": "1764090768487",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage01_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "208",
+          "waitMsMax": "208",
+          "waitRatioAvg": 0.0003430480811572595,
+          "waitRatioMax": 0.0003430480811572595,
+          "writeMsAvg": "43",
+          "writeMsMax": "43",
+          "writeRatioAvg": 7.091859370077961e-05,
+          "writeRatioMax": 7.091859370077961e-05
+        },
+        {
+          "completedParallelInputs": "50",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "279",
+          "computeMsMax": "451",
+          "computeRatioAvg": 0.0004601462242445933,
+          "computeRatioMax": 0.0007438205990477117,
+          "endMs": "1764090770468",
+          "id": "3",
+          "inputStages": [
+            "2",
+            "0"
+          ],
+          "name": "S03: Aggregate+",
+          "parallelInputs": "50",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "3907052",
+          "recordsWritten": "3890070",
+          "shuffleOutputBytes": "263918303",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "17829",
+          "startMs": "1764090769959",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "$451, $450, $452, $457, $456, $454, $462, $463, $459, $460, $458, $461, $455, $453, $464",
+                "FROM __stage00_output"
+              ]
+            },
+            {
+              "kind": "COMPUTE",
+              "substeps": [
+                "$440 := date($472)"
+              ]
+            },
+            {
+              "kind": "AGGREGATE",
+              "substeps": [
+                "GROUP BY $470 := $450, $471 := $451, $472 := $452, $473 := $453, $474 := $454, $475 := $455, $476 := $456, $477 := $457, $478 := $458, $479 := $459, $480 := $460, $481 := $461, $482 := $462, $483 := $463, $484 := $464"
+              ]
+            },
+            {
+              "kind": "WRITE",
+              "substeps": [
+                "$440, $470, $471, $477",
+                "TO __stage03_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "159",
+          "waitMsMax": "340",
+          "waitRatioAvg": 0.00026223386973078973,
+          "waitRatioMax": 0.0005607516711224434,
+          "writeMsAvg": "11",
+          "writeMsMax": "41",
+          "writeRatioAvg": 1.8141965830431994e-05,
+          "writeRatioMax": 6.762005445888289e-05
+        },
+        {
+          "completedParallelInputs": "2240",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "505",
+          "computeMsMax": "1922",
+          "computeRatioAvg": 0.0008328811585789234,
+          "computeRatioMax": 0.0031698962114627537,
+          "endMs": "1764090780280",
+          "id": "4",
+          "name": "S04: Input",
+          "parallelInputs": "2240",
+          "readMsAvg": "49",
+          "readMsMax": "808",
+          "readRatioAvg": 8.081421142646979e-05,
+          "readRatioMax": 0.0013326098537262774,
+          "recordsRead": "236340306",
+          "recordsWritten": "236340128",
+          "shuffleOutputBytes": "89126683895",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "1582740",
+          "startMs": "1764090769994",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "$1:shopify_domain, $2:retailer_moniker, $3:cdp_pii_hash, $4:order_number, $5:order_date, $6:order_item_sku, $7:order_item_quantity, $8:order_shipped_item_quantity, $9:order_item_price, $10:order_item_name, $11:order_item_product_id, $12:order_item_variant_id, $13:order_item_variant_title, $14:order_item_size, $15:order_item_color, $16:order_item_vendor",
+                "FROM narvar-data-lake.return_insights_base.order_item_details"
+              ]
+            },
+            {
+              "kind": "COMPUTE",
+              "substeps": [
+                "$430 := date($5)"
+              ]
+            },
+            {
+              "kind": "WRITE",
+              "substeps": [
+                "$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16",
+                "TO __stage04_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "5910",
+          "waitMsMax": "9732",
+          "waitRatioAvg": 0.009747183459804826,
+          "waitRatioMax": 0.01605069195106947,
+          "writeMsAvg": "11",
+          "writeMsMax": "50",
+          "writeRatioAvg": 1.8141965830431994e-05,
+          "writeRatioMax": 8.246348104741815e-05
+        },
+        {
+          "completedParallelInputs": "26",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "1165",
+          "computeMsMax": "1570",
+          "computeRatioAvg": 0.001921399108404843,
+          "computeRatioMax": 0.00258935330488893,
+          "endMs": "1764090780612",
+          "id": "5",
+          "inputStages": [
+            "4"
+          ],
+          "name": "S05: Repartition",
+          "parallelInputs": "26",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "9257447",
+          "recordsWritten": "9257447",
+          "shuffleOutputBytes": "3524621584",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "36050",
+          "startMs": "1764090779733",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage04_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "6504",
+          "waitMsMax": "6539",
+          "waitRatioAvg": 0.010726849614648154,
+          "waitRatioMax": 0.010784574051381345,
+          "writeMsAvg": "9",
+          "writeMsMax": "36",
+          "writeRatioAvg": 1.4843426588535267e-05,
+          "writeRatioMax": 5.937370635414107e-05
+        },
+        {
+          "completedParallelInputs": "26",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "49",
+          "computeMsMax": "72",
+          "computeRatioAvg": 8.081421142646979e-05,
+          "computeRatioMax": 0.00011874741270828213,
+          "endMs": "1764090773720",
+          "id": "6",
+          "inputStages": [
+            "3"
+          ],
+          "name": "S06: Repartition",
+          "parallelInputs": "26",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "992739",
+          "recordsWritten": "992739",
+          "shuffleOutputBytes": "67297213",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "1761",
+          "startMs": "1764090773293",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage03_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "195",
+          "waitMsMax": "419",
+          "waitRatioAvg": 0.0003216075760849308,
+          "waitRatioMax": 0.0006910439711773641,
+          "writeMsAvg": "4",
+          "writeMsMax": "17",
+          "writeRatioAvg": 6.597078483793452e-06,
+          "writeRatioMax": 2.8037583556122173e-05
+        },
+        {
+          "completedParallelInputs": "27",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "1166",
+          "computeMsMax": "1814",
+          "computeRatioAvg": 0.0019230483780257913,
+          "computeRatioMax": 0.0029917750924003303,
+          "endMs": "1764090780725",
+          "id": "7",
+          "inputStages": [
+            "5",
+            "4"
+          ],
+          "name": "S07: Repartition",
+          "parallelInputs": "27",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "10356425",
+          "recordsWritten": "10356425",
+          "shuffleOutputBytes": "3921226802",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "36864",
+          "startMs": "1764090779823",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage05_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "6473",
+          "waitMsMax": "6529",
+          "waitRatioAvg": 0.010675722256398753,
+          "waitRatioMax": 0.010768081355171863,
+          "writeMsAvg": "11",
+          "writeMsMax": "30",
+          "writeRatioAvg": 1.8141965830431994e-05,
+          "writeRatioMax": 4.947808862845089e-05
+        },
+        {
+          "completedParallelInputs": "27",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "51",
+          "computeMsMax": "77",
+          "computeRatioAvg": 8.411275066836651e-05,
+          "computeRatioMax": 0.00012699376081302396,
+          "endMs": "1764090774004",
+          "id": "8",
+          "inputStages": [
+            "3",
+            "6"
+          ],
+          "name": "S08: Repartition",
+          "parallelInputs": "27",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "1068558",
+          "recordsWritten": "1068558",
+          "shuffleOutputBytes": "72487666",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "2105",
+          "startMs": "1764090773690",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage03_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "420",
+          "waitMsMax": "556",
+          "waitRatioAvg": 0.0006926932407983125,
+          "waitRatioMax": 0.0009169939092472898,
+          "writeMsAvg": "7",
+          "writeMsMax": "22",
+          "writeRatioAvg": 1.1544887346638542e-05,
+          "writeRatioMax": 3.628393166086399e-05
+        },
+        {
+          "completedParallelInputs": "30",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "55",
+          "computeMsMax": "76",
+          "computeRatioAvg": 9.070982915215996e-05,
+          "computeRatioMax": 0.0001253444911920756,
+          "endMs": "1764090774220",
+          "id": "9",
+          "inputStages": [
+            "3",
+            "8"
+          ],
+          "name": "S09: Repartition",
+          "parallelInputs": "30",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "1166137",
+          "recordsWritten": "1166137",
+          "shuffleOutputBytes": "79038054",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "2201",
+          "startMs": "1764090773957",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage03_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "533",
+          "waitMsMax": "661",
+          "waitRatioAvg": 0.0008790607079654775,
+          "waitRatioMax": 0.001090167219446868,
+          "writeMsAvg": "4",
+          "writeMsMax": "12",
+          "writeRatioAvg": 6.597078483793452e-06,
+          "writeRatioMax": 1.9791235451380355e-05
+        },
+        {
+          "completedParallelInputs": "30",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "1347",
+          "computeMsMax": "2129",
+          "computeRatioAvg": 0.0022215661794174448,
+          "computeRatioMax": 0.0035112950229990647,
+          "endMs": "1764090781129",
+          "id": "10",
+          "inputStages": [
+            "4",
+            "7"
+          ],
+          "name": "S0A: Repartition",
+          "parallelInputs": "30",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "12594142",
+          "recordsWritten": "12594142",
+          "shuffleOutputBytes": "4767595425",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "48871",
+          "startMs": "1764090779926",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage04_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "6543",
+          "waitMsMax": "6717",
+          "waitRatioAvg": 0.01079117112986514,
+          "waitRatioMax": 0.011078144043910155,
+          "writeMsAvg": "11",
+          "writeMsMax": "30",
+          "writeRatioAvg": 1.8141965830431994e-05,
+          "writeRatioMax": 4.947808862845089e-05
+        },
+        {
+          "completedParallelInputs": "17",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "51",
+          "computeMsMax": "87",
+          "computeRatioAvg": 8.411275066836651e-05,
+          "computeRatioMax": 0.00014348645702250758,
+          "endMs": "1764090774328",
+          "id": "11",
+          "inputStages": [
+            "3",
+            "9"
+          ],
+          "name": "S0B: Repartition",
+          "parallelInputs": "17",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "662636",
+          "recordsWritten": "662636",
+          "shuffleOutputBytes": "45095370",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "1253",
+          "startMs": "1764090774194",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage03_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "403",
+          "waitMsMax": "439",
+          "waitRatioAvg": 0.0006646556572421902,
+          "waitRatioMax": 0.0007240293635963314,
+          "writeMsAvg": "4",
+          "writeMsMax": "12",
+          "writeRatioAvg": 6.597078483793452e-06,
+          "writeRatioMax": 1.9791235451380355e-05
+        },
+        {
+          "completedParallelInputs": "17",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "1266",
+          "computeMsMax": "1663",
+          "computeRatioAvg": 0.0020879753401206276,
+          "computeRatioMax": 0.0027427353796371278,
+          "endMs": "1764090781149",
+          "id": "12",
+          "inputStages": [
+            "4",
+            "10"
+          ],
+          "name": "S0C: Repartition",
+          "parallelInputs": "17",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "7783387",
+          "recordsWritten": "7783387",
+          "shuffleOutputBytes": "2947240223",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "25483",
+          "startMs": "1764090780257",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage04_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "6471",
+          "waitMsMax": "6522",
+          "waitRatioAvg": 0.010672423717156857,
+          "waitRatioMax": 0.010756536467825224,
+          "writeMsAvg": "6",
+          "writeMsMax": "8",
+          "writeRatioAvg": 9.895617725690177e-06,
+          "writeRatioMax": 1.3194156967586904e-05
+        },
+        {
+          "completedParallelInputs": "1000",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "17505",
+          "computeMsMax": "606329",
+          "computeRatioAvg": 0.028870464714701095,
+          "computeRatioMax": 1,
+          "endMs": "1764091075704",
+          "id": "13",
+          "inputStages": [
+            "3",
+            "4",
+            "12",
+            "11"
+          ],
+          "name": "S0D: Join+",
+          "parallelInputs": "1000",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "240230198",
+          "recordsWritten": "20720402",
+          "shuffleOutputBytes": "6647758967",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "38100985",
+          "startMs": "1764090780361",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16",
+                "FROM __stage04_output"
+              ]
+            },
+            {
+              "kind": "READ",
+              "substeps": [
+                "$440, $470, $471, $477",
+                "FROM __stage03_output"
+              ]
+            },
+            {
+              "kind": "AGGREGATE",
+              "substeps": [
+                "GROUP BY $530 := $491, $531 := $490, $532 := $411, $533 := $508, $534 := $500, $535 := $507, $536 := $499, $537 := $495, $538 := $505, $539 := $503, $540 := $504, $541 := $506, $542 := $513, $543 := $501, $544 := $502, $545 := $412",
+                "$360 := ARRAY_AGG($401 LIMIT 10)",
+                "$361 := ARRAY_AGG($400 LIMIT 10)",
+                "$362 := ARRAY_AGG($399 LIMIT 10)",
+                "$363 := SUM($398)",
+                "$364 := SUM($397)",
+                "$365 := SUM($396)",
+                "$366 := SUM($395)",
+                "$367 := SUM($394)",
+                "$368 := SUM($393)",
+                "$369 := SUM($392)",
+                "$370 := SUM($391)",
+                "$371 := SUM($390)",
+                "$372 := SUM($389)",
+                "$373 := SUM($388)"
+              ]
+            },
+            {
+              "kind": "COMPUTE",
+              "substeps": [
+                "$380 := if(equal($420, 1), $492, NULL)",
+                "$381 := if(equal($420, 2), $493, NULL)",
+                "$382 := if(equal($420, 3), $510, NULL)",
+                "$383 := if(equal($420, 4), $511, NULL)",
+                "$384 := if(equal($420, 8), if($517, $511, NULL), NULL)",
+                "$385 := if(equal($420, 7), if(equal($513, 'Gift Cards'), $511, NULL), NULL)",
+                "$386 := if(equal($420, 6), if(equal($513, 'Exchanges & Shop Now'), $511, NULL), NULL)",
+                "$387 := if(equal($420, 5), if(equal($513, 'Refund to Original Payment'), $511, NULL), NULL)",
+                "$388 := if(equal($420, 0), if(equal($513, 'Gift Cards'), $518, 0), NULL)",
+                "$389 := if(equal($420, 0), if(equal($513, 'Refund to Original Payment'), $518, 0), NULL)",
+                "$390 := if(equal($420, 0), $521, NULL)",
+                "$391 := if(equal($420, 0), $520, NULL)",
+                "$392 := if(equal($420, 0), $519, NULL)",
+                "$393 := if(equal($420, 0), $518, NULL)",
+                "$394 := if(equal($420, 0), multiply(multiply($498, CAST(greatest($496, $497) AS DOUBLE)), coalesce($509, 1)), NULL)",
+                "$395 := if(equal($420, 0), if(equal($513, 'Exchanges & Shop Now'), $512, 0), NULL)"
+              ]
+            },
+            {
+              "kind": "COMPUTE",
+              "substeps": [
+                "$410 := ARRAY<...>",
+                "$411 := date($494)",
+                "$412 := farm_fingerprint(concat(coalesce($491, ''), coalesce($490, ''), coalesce(SAFE_EXPR(CAST(date($494) AS STRING)), ''), coalesce($508, ''), ...))"
+              ]
+            },
+            {
+              "kind": "JOIN",
+              "substeps": [
+                "$490 := $1, $491 := $2, $492 := $3, $493 := $4, $494 := $5, $495 := $6, $496 := $7, $497 := $8, $498 := $9, $499 := $10, $500 := $11, $501 := $12, $502 := $13, $503 := $14, $504 := $15, $505 := $16",
+                "INNER HASH JOIN EACH  WITH EACH  ON $2 = $470, $1 = $471, $430 = $440, $6 = $477"
+              ]
+            },
+            {
+              "kind": "WRITE",
+              "substeps": [
+                "$531, $530, $537, $536, $534, $543, $544, $539, $540, $538, $541, $535, $533, $542, $360, $361",
+                "TO __stage0D_output",
+                "BY HASH($530, $531, $532, $533, $534, $535, $536, $537, $538, $539, $540, $541, $542, $543, $544, $545)"
+              ]
+            }
+          ],
+          "waitMsAvg": "13380",
+          "waitMsMax": "18506",
+          "waitRatioAvg": 0.022067227528289098,
+          "waitRatioMax": 0.030521383605270406,
+          "writeMsAvg": "16",
+          "writeMsMax": "1586",
+          "writeRatioAvg": 2.6388313935173808e-05,
+          "writeRatioMax": 0.002615741618824104
+        },
+        {
+          "completedParallelInputs": "224",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "1367",
+          "computeMsMax": "1983",
+          "computeRatioAvg": 0.0022545515718364125,
+          "computeRatioMax": 0.0032705016583406037,
+          "endMs": "1764091077107",
+          "id": "14",
+          "inputStages": [
+            "13"
+          ],
+          "name": "S0E: Aggregate+",
+          "parallelInputs": "224",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "20720402",
+          "recordsWritten": "18871745",
+          "shuffleOutputBytes": "7141532130",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "299405",
+          "startMs": "1764091075985",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "$531, $530, $537, $536, $534, $543, $544, $539, $540, $538, $541, $535, $533, $542, $360, $361",
+                "FROM __stage0D_output"
+              ]
+            },
+            {
+              "kind": "AGGREGATE",
+              "substeps": [
+                "GROUP BY $590 := $560, $591 := $561, $592 := $562, $593 := $563, $594 := $564, $595 := $565, $596 := $566, $597 := $567, $598 := $568, $599 := $569, $600 := $570, $601 := $571, $602 := $572, $603 := $573, $604 := $574, $605 := $575",
+                "$280 := COUNT($331)",
+                "$281 := COUNT($330)",
+                "$282 := COUNT($329)",
+                "$283 := COUNT($328)",
+                "$284 := COUNT($327)",
+                "$285 := COUNT($326)",
+                "$286 := COUNT($325)",
+                "$287 := COUNT($324)",
+                "$288 := ANY_VALUE($323)",
+                "$289 := ANY_VALUE($322)",
+                "$290 := ANY_VALUE($321)",
+                "$291 := ANY_VALUE($320)",
+                "$292 := ANY_VALUE($319)",
+                "$293 := ANY_VALUE($318)",
+                "$294 := ANY_VALUE($317)",
+                "$295 := ANY_VALUE($316)"
+              ]
+            },
+            {
+              "kind": "COMPUTE",
+              "substeps": [
+                "$310 := if(equal($576, 0), $353, NULL)",
+                "$311 := if(equal($576, 0), $352, NULL)",
+                "$312 := if(equal($576, 0), $351, NULL)",
+                "$313 := if(equal($576, 0), $350, NULL)",
+                "$314 := if(equal($576, 0), $349, NULL)",
+                "$315 := if(equal($576, 0), $348, NULL)",
+                "$316 := if(equal($576, 0), $347, NULL)",
+                "$317 := if(equal($576, 0), $346, NULL)",
+                "$318 := if(equal($576, 0), $345, NULL)",
+                "$319 := if(equal($576, 0), $344, NULL)",
+                "$320 := if(equal($576, 0), $343, NULL)",
+                "$321 := if(equal($576, 0), $342, NULL)",
+                "$322 := if(equal($576, 0), $341, NULL)",
+                "$323 := if(equal($576, 0), $340, NULL)",
+                "$324 := if(equal($576, 5), $584, NULL)",
+                "$325 := if(equal($576, 6), $583, NULL)"
+              ]
+            },
+            {
+              "kind": "AGGREGATE",
+              "substeps": [
+                "GROUP BY $560 := $530, $561 := $531, $562 := $532, $563 := $533, $564 := $534, $565 := $535, $566 := $536, $567 := $537, $568 := $538, $569 := $539, $570 := $540, $571 := $541, $572 := $542, $573 := $543, $574 := $544, $575 := $545",
+                "$340 := ARRAY_CONCAT_AGG_WITH_ELEM_INPUT($360 LIMIT 10)",
+                "$341 := ARRAY_CONCAT_AGG_WITH_ELEM_INPUT($361 LIMIT 10)",
+                "$342 := ARRAY_CONCAT_AGG_WITH_ELEM_INPUT($362 LIMIT 10)",
+                "$343 := SUM($363)",
+                "$344 := SUM($364)",
+                "$345 := SUM($365)",
+                "$346 := SUM($366)",
+                "$347 := SUM($367)",
+                "$348 := SUM($368)",
+                "$349 := SUM($369)",
+                "$350 := SUM($370)",
+                "$351 := SUM($371)",
+                "$352 := SUM($372)",
+                "$353 := SUM($373)"
+              ]
+            },
+            {
+              "kind": "WRITE",
+              "substeps": [
+                "$591, $590, $597, $596, $594, $603, $604, $599, $600, $598, $601, $595, $593, $602, $280, $281",
+                "TO __stage0E_output",
+                "BY HASH($590, $591, $592, $593, $594, $595, $596, $597, $598, $599, $600, $601, $602, $603, $604, $605)"
+              ]
+            }
+          ],
+          "waitMsAvg": "268",
+          "waitMsMax": "270",
+          "waitRatioAvg": 0.0004420042584141613,
+          "waitRatioMax": 0.000445302797656058,
+          "writeMsAvg": "38",
+          "writeMsMax": "294",
+          "writeRatioAvg": 6.26722455960378e-05,
+          "writeRatioMax": 0.00048488526855881874
+        },
+        {
+          "completedParallelInputs": "6",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "1833",
+          "computeMsMax": "2352",
+          "computeRatioAvg": 0.0030231112151983494,
+          "computeRatioMax": 0.00387908214847055,
+          "endMs": "1764091077515",
+          "id": "15",
+          "inputStages": [
+            "14"
+          ],
+          "name": "S0F: Repartition",
+          "parallelInputs": "6",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "2815661",
+          "recordsWritten": "2815661",
+          "shuffleOutputBytes": "1065720295",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "14768",
+          "startMs": "1764091076525",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage0E_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "25",
+          "waitMsMax": "32",
+          "waitRatioAvg": 4.123174052370908e-05,
+          "waitRatioMax": 5.2776627870347617e-05,
+          "writeMsAvg": "15",
+          "writeMsMax": "22",
+          "writeRatioAvg": 2.4739044314225444e-05,
+          "writeRatioMax": 3.628393166086399e-05
+        },
+        {
+          "completedParallelInputs": "12",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "2241",
+          "computeMsMax": "2745",
+          "computeRatioAvg": 0.0036960132205452814,
+          "computeRatioMax": 0.004527245109503256,
+          "endMs": "1764091077639",
+          "id": "16",
+          "inputStages": [
+            "15",
+            "14"
+          ],
+          "name": "S10: Repartition",
+          "parallelInputs": "12",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "6308057",
+          "recordsWritten": "6308057",
+          "shuffleOutputBytes": "2387299093",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "36109",
+          "startMs": "1764091076536",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage0F_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "19",
+          "waitMsMax": "24",
+          "waitRatioAvg": 3.13361227980189e-05,
+          "waitRatioMax": 3.958247090276071e-05,
+          "writeMsAvg": "14",
+          "writeMsMax": "30",
+          "writeRatioAvg": 2.3089774693277083e-05,
+          "writeRatioMax": 4.947808862845089e-05
+        },
+        {
+          "completedParallelInputs": "4",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "3038",
+          "computeMsMax": "3632",
+          "computeRatioAvg": 0.0050104811084411265,
+          "computeRatioMax": 0.0059901472632844545,
+          "endMs": "1764091078599",
+          "id": "17",
+          "inputStages": [
+            "16",
+            "14"
+          ],
+          "name": "S11: Repartition",
+          "parallelInputs": "4",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "2261185",
+          "recordsWritten": "2261185",
+          "shuffleOutputBytes": "855758236",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "13339",
+          "startMs": "1764091076548",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage10_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "15",
+          "waitMsMax": "58",
+          "waitRatioAvg": 2.4739044314225444e-05,
+          "waitRatioMax": 9.565763801500505e-05,
+          "writeMsAvg": "10",
+          "writeMsMax": "15",
+          "writeRatioAvg": 1.649269620948363e-05,
+          "writeRatioMax": 2.4739044314225444e-05
+        },
+        {
+          "completedParallelInputs": "220",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "1142",
+          "computeMsMax": "1662",
+          "computeRatioAvg": 0.0018834659071230305,
+          "computeRatioMax": 0.0027410861100161795,
+          "endMs": "1764091081870",
+          "id": "18",
+          "inputStages": [
+            "17",
+            "14"
+          ],
+          "name": "S12: Aggregate+",
+          "parallelInputs": "220",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "18871745",
+          "recordsWritten": "13617988",
+          "shuffleOutputBytes": "4286008359",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "336540",
+          "startMs": "1764091078617",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "$591, $590, $597, $596, $594, $603, $604, $599, $600, $598, $601, $595, $593, $602, $280, $281",
+                "FROM __stage0E_output"
+              ]
+            },
+            {
+              "kind": "AGGREGATE",
+              "substeps": [
+                "GROUP BY $630 := $610, $631 := $611, $632 := $612, $633 := $613, $634 := $614, $635 := $615, $636 := $616, $637 := $617, $638 := $618, $639 := $619, $640 := $620, $641 := $621, $642 := $622, $643 := $623, $644 := $624, $645 := $625",
+                "$180 := ANY_VALUE($241)",
+                "$181 := ANY_VALUE($240)",
+                "$182 := ANY_VALUE($239)",
+                "$183 := ANY_VALUE($238)",
+                "$184 := ANY_VALUE($237)",
+                "$185 := ANY_VALUE($236)",
+                "$186 := ANY_VALUE($235)",
+                "$187 := ANY_VALUE($234)",
+                "$188 := ANY_VALUE($233)",
+                "$189 := ANY_VALUE($232)",
+                "$190 := ANY_VALUE($231)",
+                "$191 := ANY_VALUE($230)",
+                "$192 := ANY_VALUE($229)",
+                "$193 := ANY_VALUE($228)",
+                "$194 := ANY_VALUE($227)",
+                "$195 := ANY_VALUE($226)"
+              ]
+            },
+            {
+              "kind": "COMPUTE",
+              "substeps": [
+                "$220 := if(equal($626, 0), $271, NULL)",
+                "$221 := if(equal($626, 0), $270, NULL)",
+                "$222 := if(equal($626, 0), $269, NULL)",
+                "$223 := if(equal($626, 0), $268, NULL)",
+                "$224 := if(equal($626, 0), $267, NULL)",
+                "$225 := if(equal($626, 0), $266, NULL)",
+                "$226 := if(equal($626, 0), $265, NULL)",
+                "$227 := if(equal($626, 0), $264, NULL)",
+                "$228 := if(equal($626, 0), $263, NULL)",
+                "$229 := if(equal($626, 0), $262, NULL)",
+                "$230 := if(equal($626, 0), $261, NULL)",
+                "$231 := if(equal($626, 0), $260, NULL)",
+                "$232 := if(equal($626, 0), $259, NULL)",
+                "$233 := if(equal($626, 0), $258, NULL)",
+                "$234 := if(equal($626, 5), $257, NULL)",
+                "$235 := if(equal($626, 6), $256, NULL)"
+              ]
+            },
+            {
+              "kind": "AGGREGATE",
+              "substeps": [
+                "GROUP BY $610 := $590, $611 := $591, $612 := $592, $613 := $593, $614 := $594, $615 := $595, $616 := $596, $617 := $597, $618 := $598, $619 := $599, $620 := $600, $621 := $601, $622 := $602, $623 := $603, $624 := $604, $625 := $605",
+                "$250 := SUM_OF_COUNTS($280)",
+                "$251 := SUM_OF_COUNTS($281)",
+                "$252 := SUM_OF_COUNTS($282)",
+                "$253 := SUM_OF_COUNTS($283)",
+                "$254 := SUM_OF_COUNTS($284)",
+                "$255 := SUM_OF_COUNTS($285)",
+                "$256 := SUM_OF_COUNTS($286)",
+                "$257 := SUM_OF_COUNTS($287)",
+                "$258 := ANY_VALUE($288)",
+                "$259 := ANY_VALUE($289)",
+                "$260 := ANY_VALUE($290)",
+                "$261 := ANY_VALUE($291)",
+                "$262 := ANY_VALUE($292)",
+                "$263 := ANY_VALUE($293)",
+                "$264 := ANY_VALUE($294)",
+                "$265 := ANY_VALUE($295)"
+              ]
+            },
+            {
+              "kind": "WRITE",
+              "substeps": [
+                "$631, $630, $637, $636, $634, $643, $644, $639, $640, $638, $641, $635, $633, $642, $180, $181",
+                "TO __stage12_output",
+                "BY HASH($630, $631, $632, $633, $634, $635, $636, $637, $638, $639, $640, $641, $642, $643, $644, $645)"
+              ]
+            }
+          ],
+          "waitMsAvg": "1582",
+          "waitMsMax": "2353",
+          "waitRatioAvg": 0.00260914454034031,
+          "waitRatioMax": 0.003880731418091498,
+          "writeMsAvg": "42",
+          "writeMsMax": "311",
+          "writeRatioAvg": 6.926932407983125e-05,
+          "writeRatioMax": 0.0005129228521149409
+        },
+        {
+          "completedParallelInputs": "1",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "3542",
+          "computeMsMax": "3542",
+          "computeRatioAvg": 0.0058417129973991015,
+          "computeRatioMax": 0.0058417129973991015,
+          "endMs": "1764091083174",
+          "id": "19",
+          "inputStages": [
+            "18"
+          ],
+          "name": "S13: Repartition",
+          "parallelInputs": "1",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "485141",
+          "recordsWritten": "485141",
+          "shuffleOutputBytes": "152761768",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "3635",
+          "startMs": "1764091081335",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage12_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "1520",
+          "waitMsMax": "1520",
+          "waitRatioAvg": 0.002506889823841512,
+          "waitRatioMax": 0.002506889823841512,
+          "writeMsAvg": "133",
+          "writeMsMax": "133",
+          "writeRatioAvg": 0.00021935285958613228,
+          "writeRatioMax": 0.00021935285958613228
+        },
+        {
+          "completedParallelInputs": "1",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "2916",
+          "computeMsMax": "2916",
+          "computeRatioAvg": 0.004809270214685427,
+          "computeRatioMax": 0.004809270214685427,
+          "endMs": "1764091082799",
+          "id": "20",
+          "inputStages": [
+            "19",
+            "18"
+          ],
+          "name": "S14: Repartition",
+          "parallelInputs": "1",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "504565",
+          "recordsWritten": "504565",
+          "shuffleOutputBytes": "158742270",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "3017",
+          "startMs": "1764091081359",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage13_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "1506",
+          "waitMsMax": "1506",
+          "waitRatioAvg": 0.0024838000491482345,
+          "waitRatioMax": 0.0024838000491482345,
+          "writeMsAvg": "48",
+          "writeMsMax": "48",
+          "writeRatioAvg": 7.916494180552142e-05,
+          "writeRatioMax": 7.916494180552142e-05
+        },
+        {
+          "completedParallelInputs": "7",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "2728",
+          "computeMsMax": "3340",
+          "computeRatioAvg": 0.004499207525947135,
+          "computeRatioMax": 0.0055085605339675325,
+          "endMs": "1764091083018",
+          "id": "21",
+          "inputStages": [
+            "20",
+            "18"
+          ],
+          "name": "S15: Repartition",
+          "parallelInputs": "7",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "3409713",
+          "recordsWritten": "3409713",
+          "shuffleOutputBytes": "1073054015",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "21218",
+          "startMs": "1764091081480",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage14_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "14",
+          "waitMsMax": "20",
+          "waitRatioAvg": 2.3089774693277083e-05,
+          "waitRatioMax": 3.298539241896726e-05,
+          "writeMsAvg": "15",
+          "writeMsMax": "24",
+          "writeRatioAvg": 2.4739044314225444e-05,
+          "writeRatioMax": 3.958247090276071e-05
+        },
+        {
+          "completedParallelInputs": "6",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "2955",
+          "computeMsMax": "3622",
+          "computeRatioAvg": 0.004873591729902413,
+          "computeRatioMax": 0.00597365456707497,
+          "endMs": "1764091083212",
+          "id": "22",
+          "inputStages": [
+            "21",
+            "18"
+          ],
+          "name": "S16: Repartition",
+          "parallelInputs": "6",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "3188397",
+          "recordsWritten": "3188397",
+          "shuffleOutputBytes": "1003370800",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "20740",
+          "startMs": "1764091081515",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage15_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "19",
+          "waitMsMax": "37",
+          "waitRatioAvg": 3.13361227980189e-05,
+          "waitRatioMax": 6.1022975975089435e-05,
+          "writeMsAvg": "24",
+          "writeMsMax": "41",
+          "writeRatioAvg": 3.958247090276071e-05,
+          "writeRatioMax": 6.762005445888289e-05
+        },
+        {
+          "completedParallelInputs": "6",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "3476",
+          "computeMsMax": "4031",
+          "computeRatioAvg": 0.0057328612024165095,
+          "computeRatioMax": 0.006648205842042851,
+          "endMs": "1764091084271",
+          "id": "23",
+          "inputStages": [
+            "18",
+            "22"
+          ],
+          "name": "S17: Repartition",
+          "parallelInputs": "6",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "3336133",
+          "recordsWritten": "3336133",
+          "shuffleOutputBytes": "1049994523",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "20805",
+          "startMs": "1764091081555",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage12_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "76",
+          "waitMsMax": "415",
+          "waitRatioAvg": 0.0001253444911920756,
+          "waitRatioMax": 0.0006844468926935707,
+          "writeMsAvg": "31",
+          "writeMsMax": "55",
+          "writeRatioAvg": 5.1127358249399256e-05,
+          "writeRatioMax": 9.070982915215996e-05
+        },
+        {
+          "completedParallelInputs": "1",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "1973",
+          "computeMsMax": "1973",
+          "computeRatioAvg": 0.00325400896213112,
+          "computeRatioMax": 0.00325400896213112,
+          "endMs": "1764091085304",
+          "id": "24",
+          "inputStages": [
+            "23",
+            "18"
+          ],
+          "name": "S18: Repartition",
+          "parallelInputs": "1",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "566196",
+          "recordsWritten": "566196",
+          "shuffleOutputBytes": "178290580",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "5413",
+          "startMs": "1764091081568",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage17_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "499",
+          "waitMsMax": "499",
+          "waitRatioAvg": 0.0008229855408532331,
+          "waitRatioMax": 0.0008229855408532331,
+          "writeMsAvg": "8",
+          "writeMsMax": "8",
+          "writeRatioAvg": 1.3194156967586904e-05,
+          "writeRatioMax": 1.3194156967586904e-05
+        },
+        {
+          "completedParallelInputs": "200",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "257",
+          "computeMsMax": "418",
+          "computeRatioAvg": 0.0004238622925837293,
+          "computeRatioMax": 0.0006893947015564158,
+          "endMs": "1764091085811",
+          "id": "25",
+          "inputStages": [
+            "18",
+            "24"
+          ],
+          "name": "S19: Aggregate+",
+          "parallelInputs": "200",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "13617988",
+          "recordsWritten": "1540389",
+          "shuffleOutputBytes": "702593223",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "55895",
+          "startMs": "1764091085328",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "$631, $630, $637, $636, $634, $643, $644, $639, $640, $638, $641, $635, $633, $642, $180, $181",
+                "FROM __stage12_output"
+              ]
+            },
+            {
+              "kind": "COMPUTE",
+              "substeps": [
+                "$60 := MAKE_STRUCT($71, $70)",
+                "$61 := MAKE_STRUCT($81, $80)",
+                "$62 := MAKE_STRUCT($131, $130)",
+                "$63 := divide($116, 100)",
+                "$64 := divide($117, 100)",
+                "$65 := divide($118, 100)",
+                "$66 := divide($119, 100)",
+                "$67 := divide($120, 100)",
+                "$68 := divide($121, 100)",
+                "$69 := 1764090767.852023000"
+              ]
+            },
+            {
+              "kind": "AGGREGATE",
+              "substeps": [
+                "GROUP BY $650 := $630, $651 := $631, $652 := $632, $653 := $633, $654 := $634, $655 := $635, $656 := $636, $657 := $637, $658 := $638, $659 := $639, $660 := $640, $661 := $641, $662 := $642, $663 := $643, $664 := $644, $665 := $645",
+                "$100 := ANY_VALUE($180)",
+                "$101 := ANY_VALUE($181)",
+                "$102 := ANY_VALUE($182)",
+                "$103 := ANY_VALUE($183)",
+                "$104 := ANY_VALUE($184)",
+                "$105 := ANY_VALUE($185)",
+                "$106 := ANY_VALUE($186)",
+                "$107 := ANY_VALUE($187)",
+                "$108 := ANY_VALUE($188)",
+                "$109 := ANY_VALUE($189)",
+                "$110 := ANY_VALUE($190)",
+                "$111 := ANY_VALUE($191)",
+                "$112 := ANY_VALUE($192)",
+                "$113 := ANY_VALUE($193)",
+                "$114 := ANY_VALUE($194)",
+                "$115 := ANY_VALUE($195)"
+              ]
+            },
+            {
+              "kind": "AGGREGATE",
+              "substeps": [
+                "GROUP BY $670 := $210",
+                "$160 := COUNT_STAR()"
+              ]
+            },
+            {
+              "kind": "AGGREGATE",
+              "substeps": [
+                "GROUP BY $680 := $170",
+                "$140 := COUNT_STAR()"
+              ]
+            },
+            {
+              "kind": "AGGREGATE",
+              "substeps": [
+                "GROUP BY $690 := $150",
+                "$90 := COUNT_STAR()"
+              ]
+            },
+            {
+              "kind": "WRITE",
+              "substeps": [
+                "$651, $650, $657, $656, $654, $663, $664, $659, $660, $658, $661, $655, $653, $662, $60, $61",
+                "TO __stage19_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "87",
+          "waitMsMax": "227",
+          "waitRatioAvg": 0.00014348645702250758,
+          "waitRatioMax": 0.0003743842039552784,
+          "writeMsAvg": "11",
+          "writeMsMax": "50",
+          "writeRatioAvg": 1.8141965830431994e-05,
+          "writeRatioMax": 8.246348104741815e-05
+        },
+        {
+          "completedParallelInputs": "50",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "174",
+          "computeMsMax": "249",
+          "computeRatioAvg": 0.00028697291404501516,
+          "computeRatioMax": 0.0004106681356161424,
+          "endMs": "1764091087011",
+          "id": "26",
+          "inputStages": [
+            "25"
+          ],
+          "name": "S1A: Coalesce",
+          "parallelInputs": "50",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "1540389",
+          "recordsWritten": "1540389",
+          "shuffleOutputBytes": "702593223",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "15271",
+          "startMs": "1764091086051",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "FROM __stage19_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "515",
+          "waitMsMax": "812",
+          "waitRatioAvg": 0.000849373854788407,
+          "waitRatioMax": 0.0013392069322100708,
+          "writeMsAvg": "44",
+          "writeMsMax": "212",
+          "writeRatioAvg": 7.256786332172797e-05,
+          "writeRatioMax": 0.00034964515964105297
+        },
+        {
+          "completedParallelInputs": "17",
+          "computeMode": "BIGQUERY",
+          "computeMsAvg": "2271",
+          "computeMsMax": "3213",
+          "computeRatioAvg": 0.0037454913091737323,
+          "computeRatioMax": 0.005299103292107091,
+          "endMs": "1764091089569",
+          "id": "27",
+          "inputStages": [
+            "26"
+          ],
+          "name": "S1B: Output",
+          "parallelInputs": "17",
+          "readMsAvg": "0",
+          "readMsMax": "0",
+          "readRatioAvg": 0,
+          "readRatioMax": 0,
+          "recordsRead": "1540389",
+          "recordsWritten": "1540389",
+          "shuffleOutputBytes": "0",
+          "shuffleOutputBytesSpilled": "0",
+          "slotMs": "85195",
+          "startMs": "1764091086886",
+          "status": "COMPLETE",
+          "steps": [
+            {
+              "kind": "READ",
+              "substeps": [
+                "$651, $650, $657, $656, $654, $663, $664, $659, $660, $658, $661, $655, $653, $662, $60, $61",
+                "FROM __stage1A_output"
+              ]
+            },
+            {
+              "kind": "WRITE",
+              "substeps": [
+                "$651, $650, $657, $656, $654, $663, $664, $659, $660, $658, $661, $655, $653, $662, $60, $61",
+                "TO __stage1B_output"
+              ]
+            }
+          ],
+          "waitMsAvg": "1102",
+          "waitMsMax": "1145",
+          "waitRatioAvg": 0.001817495122285096,
+          "waitRatioMax": 0.0018884137159858756,
+          "writeMsAvg": "227",
+          "writeMsMax": "430",
+          "writeRatioAvg": 0.0003743842039552784,
+          "writeRatioMax": 0.0007091859370077961
+        }
+      ],
+      "referencedRoutines": [
+        {
+          "datasetId": "return_insights_base",
+          "projectId": "narvar-data-lake",
+          "routineId": "histogram"
+        }
+      ],
+      "referencedTables": [
+        {
+          "datasetId": "return_insights_base",
+          "projectId": "narvar-data-lake",
+          "tableId": "tmp_order_item_details_2025-11-24"
+        },
+        {
+          "datasetId": "return_insights_base",
+          "projectId": "narvar-data-lake",
+          "tableId": "order_item_details"
+        }
+      ],
+      "schema": {
+        "fields": [
+          {
+            "name": "retailer_moniker",
+            "type": "STRING"
+          },
+          {
+            "name": "shopify_domain",
+            "type": "STRING"
+          },
+          {
+            "name": "order_date",
+            "type": "DATE"
+          },
+          {
+            "name": "order_checkout_locale",
+            "type": "STRING"
+          },
+          {
+            "name": "order_item_product_id",
+            "type": "STRING"
+          },
+          {
+            "name": "order_item_description",
+            "type": "STRING"
+          },
+          {
+            "name": "order_item_name",
+            "type": "STRING"
+          },
+          {
+            "name": "order_item_sku",
+            "type": "STRING"
+          },
+          {
+            "name": "order_item_vendor",
+            "type": "STRING"
+          },
+          {
+            "name": "order_item_size",
+            "type": "STRING"
+          },
+          {
+            "name": "order_item_color",
+            "type": "STRING"
+          },
+          {
+            "name": "order_item_product_type",
+            "type": "STRING"
+          },
+          {
+            "name": "order_item_variant_id",
+            "type": "STRING"
+          },
+          {
+            "name": "order_item_variant_title",
+            "type": "STRING"
+          },
+          {
+            "name": "return_outcome",
+            "type": "STRING"
+          },
+          {
+            "fields": [
+              {
+                "name": "val",
+                "type": "STRING"
+              },
+              {
+                "name": "count",
+                "type": "INTEGER"
+              }
+            ],
+            "mode": "REPEATED",
+            "name": "return_reason_summary",
+            "type": "RECORD"
+          },
+          {
+            "fields": [
+              {
+                "name": "val",
+                "type": "STRING"
+              },
+              {
+                "name": "count",
+                "type": "INTEGER"
+              }
+            ],
+            "mode": "REPEATED",
+            "name": "child_return_reason_summary",
+            "type": "RECORD"
+          },
+          {
+            "fields": [
+              {
+                "name": "val",
+                "type": "STRING"
+              },
+              {
+                "name": "count",
+                "type": "INTEGER"
+              }
+            ],
+            "mode": "REPEATED",
+            "name": "return_method_summary",
+            "type": "RECORD"
+          },
+          {
+            "name": "num_customers",
+            "type": "INTEGER"
+          },
+          {
+            "name": "num_orders",
+            "type": "INTEGER"
+          },
+          {
+            "name": "num_return_orders",
+            "type": "INTEGER"
+          },
+          {
+            "name": "num_rmas",
+            "type": "INTEGER"
+          },
+          {
+            "name": "num_refunds",
+            "type": "INTEGER"
+          },
+          {
+            "name": "num_exchanges",
+            "type": "INTEGER"
+          },
+          {
+            "name": "num_gift_cards",
+            "type": "INTEGER"
+          },
+          {
+            "name": "num_shop_now_returns",
+            "type": "INTEGER"
+          },
+          {
+            "name": "num_order_items",
+            "type": "INTEGER"
+          },
+          {
+            "name": "num_return_items",
+            "type": "INTEGER"
+          },
+          {
+            "name": "num_refund_items",
+            "type": "INTEGER"
+          },
+          {
+            "name": "num_exchange_items",
+            "type": "INTEGER"
+          },
+          {
+            "name": "total_order_value_shop_currency",
+            "type": "FLOAT"
+          },
+          {
+            "name": "total_return_value_shop_currency",
+            "type": "FLOAT"
+          },
+          {
+            "name": "total_exchange_from_value_shop_currency",
+            "type": "FLOAT"
+          },
+          {
+            "name": "total_exchange_to_value_shop_currency",
+            "type": "FLOAT"
+          },
+          {
+            "name": "total_shop_now_exchange_value_shop_currency",
+            "type": "FLOAT"
+          },
+          {
+            "name": "total_refund_value_shop_currency",
+            "type": "FLOAT"
+          },
+          {
+            "name": "total_gift_card_value_shop_currency",
+            "type": "FLOAT"
+          },
+          {
+            "name": "modified_at",
+            "type": "TIMESTAMP"
+          },
+          {
+            "name": "primary_key_hash",
+            "type": "INTEGER"
+          }
+        ]
+      },
+      "statementType": "CREATE_TABLE_AS_SELECT",
+      "timeline": [
+        {
+          "activeUnits": "0",
+          "completedUnits": "0",
+          "elapsedMs": "170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "0",
+          "totalSlotMs": "1000"
+        },
+        {
+          "activeUnits": "11",
+          "completedUnits": "52",
+          "elapsedMs": "1170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "8",
+          "totalSlotMs": "40966"
+        },
+        {
+          "activeUnits": "1",
+          "completedUnits": "59",
+          "elapsedMs": "2170",
+          "estimatedRunnableUnits": "1",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.0003368839835728953,
+          "totalSlotMs": "61740"
+        },
+        {
+          "activeUnits": "29",
+          "completedUnits": "142",
+          "elapsedMs": "3170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "2208",
+          "shuffleRamUsageRatio": 0.00038501026694045176,
+          "totalSlotMs": "128262"
+        },
+        {
+          "activeUnits": "29",
+          "completedUnits": "206",
+          "elapsedMs": "4170",
+          "estimatedRunnableUnits": "1000",
+          "pendingUnits": "2144",
+          "shuffleRamUsageRatio": 0.0006577258726899384,
+          "totalSlotMs": "208546"
+        },
+        {
+          "activeUnits": "97",
+          "completedUnits": "347",
+          "elapsedMs": "5170",
+          "estimatedRunnableUnits": "1000",
+          "pendingUnits": "2003",
+          "shuffleRamUsageRatio": 0.0009620318111852232,
+          "totalSlotMs": "366883"
+        },
+        {
+          "activeUnits": "97",
+          "completedUnits": "597",
+          "elapsedMs": "6170",
+          "estimatedRunnableUnits": "1000",
+          "pendingUnits": "1953",
+          "shuffleRamUsageRatio": 0.0016835556695741405,
+          "totalSlotMs": "491829"
+        },
+        {
+          "activeUnits": "76",
+          "completedUnits": "918",
+          "elapsedMs": "7170",
+          "estimatedRunnableUnits": "1000",
+          "pendingUnits": "2632",
+          "shuffleRamUsageRatio": 0.002677655207798871,
+          "totalSlotMs": "759230"
+        },
+        {
+          "activeUnits": "82",
+          "completedUnits": "1204",
+          "elapsedMs": "8170",
+          "estimatedRunnableUnits": "1000",
+          "pendingUnits": "2346",
+          "shuffleRamUsageRatio": 0.003928296562339661,
+          "totalSlotMs": "927068"
+        },
+        {
+          "activeUnits": "79",
+          "completedUnits": "1500",
+          "elapsedMs": "9170",
+          "estimatedRunnableUnits": "1000",
+          "pendingUnits": "2050",
+          "shuffleRamUsageRatio": 0.005082734735761929,
+          "totalSlotMs": "1035456"
+        },
+        {
+          "activeUnits": "84",
+          "completedUnits": "1798",
+          "elapsedMs": "10170",
+          "estimatedRunnableUnits": "999",
+          "pendingUnits": "1752",
+          "shuffleRamUsageRatio": 0.0062692406362237045,
+          "totalSlotMs": "1332181"
+        },
+        {
+          "activeUnits": "84",
+          "completedUnits": "2121",
+          "elapsedMs": "11170",
+          "estimatedRunnableUnits": "987",
+          "pendingUnits": "1429",
+          "shuffleRamUsageRatio": 0.007503848127244741,
+          "totalSlotMs": "1515937"
+        },
+        {
+          "activeUnits": "77",
+          "completedUnits": "2433",
+          "elapsedMs": "12170",
+          "estimatedRunnableUnits": "1000",
+          "pendingUnits": "1117",
+          "shuffleRamUsageRatio": 0.008802591072344792,
+          "totalSlotMs": "1703485"
+        },
+        {
+          "activeUnits": "89",
+          "completedUnits": "2540",
+          "elapsedMs": "13170",
+          "estimatedRunnableUnits": "1000",
+          "pendingUnits": "1010",
+          "shuffleRamUsageRatio": 0.01021357106208312,
+          "totalSlotMs": "1876292"
+        },
+        {
+          "activeUnits": "91",
+          "completedUnits": "2565",
+          "elapsedMs": "14170",
+          "estimatedRunnableUnits": "1000",
+          "pendingUnits": "985",
+          "shuffleRamUsageRatio": 0.011640584915341201,
+          "totalSlotMs": "2045939"
+        },
+        {
+          "activeUnits": "110",
+          "completedUnits": "2592",
+          "elapsedMs": "15170",
+          "estimatedRunnableUnits": "897",
+          "pendingUnits": "958",
+          "shuffleRamUsageRatio": 0.011672652642380708,
+          "totalSlotMs": "2272794"
+        },
+        {
+          "activeUnits": "137",
+          "completedUnits": "2627",
+          "elapsedMs": "16170",
+          "estimatedRunnableUnits": "847",
+          "pendingUnits": "923",
+          "shuffleRamUsageRatio": 0.01172075423293997,
+          "totalSlotMs": "2641555"
+        },
+        {
+          "activeUnits": "135",
+          "completedUnits": "2665",
+          "elapsedMs": "17170",
+          "estimatedRunnableUnits": "847",
+          "pendingUnits": "885",
+          "shuffleRamUsageRatio": 0.01176885582349923,
+          "totalSlotMs": "2903621"
+        },
+        {
+          "activeUnits": "154",
+          "completedUnits": "2707",
+          "elapsedMs": "18170",
+          "estimatedRunnableUnits": "768",
+          "pendingUnits": "843",
+          "shuffleRamUsageRatio": 0.011832991277578244,
+          "totalSlotMs": "3282585"
+        },
+        {
+          "activeUnits": "174",
+          "completedUnits": "2739",
+          "elapsedMs": "19170",
+          "estimatedRunnableUnits": "720",
+          "pendingUnits": "811",
+          "shuffleRamUsageRatio": 0.01189712673165726,
+          "totalSlotMs": "3570816"
+        },
+        {
+          "activeUnits": "225",
+          "completedUnits": "2773",
+          "elapsedMs": "20170",
+          "estimatedRunnableUnits": "680",
+          "pendingUnits": "777",
+          "shuffleRamUsageRatio": 0.011945228322216521,
+          "totalSlotMs": "3928544"
+        },
+        {
+          "activeUnits": "288",
+          "completedUnits": "2811",
+          "elapsedMs": "21170",
+          "estimatedRunnableUnits": "640",
+          "pendingUnits": "739",
+          "shuffleRamUsageRatio": 0.011977296049256028,
+          "totalSlotMs": "4529329"
+        },
+        {
+          "activeUnits": "328",
+          "completedUnits": "2865",
+          "elapsedMs": "22170",
+          "estimatedRunnableUnits": "523",
+          "pendingUnits": "685",
+          "shuffleRamUsageRatio": 0.012041431503335044,
+          "totalSlotMs": "5183587"
+        },
+        {
+          "activeUnits": "383",
+          "completedUnits": "2921",
+          "elapsedMs": "23170",
+          "estimatedRunnableUnits": "410",
+          "pendingUnits": "629",
+          "shuffleRamUsageRatio": 0.012121600820933812,
+          "totalSlotMs": "5910003"
+        },
+        {
+          "activeUnits": "423",
+          "completedUnits": "2997",
+          "elapsedMs": "24170",
+          "estimatedRunnableUnits": "294",
+          "pendingUnits": "553",
+          "shuffleRamUsageRatio": 0.012233837865572089,
+          "totalSlotMs": "6860899"
+        },
+        {
+          "activeUnits": "463",
+          "completedUnits": "3099",
+          "elapsedMs": "25170",
+          "estimatedRunnableUnits": "255",
+          "pendingUnits": "451",
+          "shuffleRamUsageRatio": 0.012362108773730118,
+          "totalSlotMs": "7990207"
+        },
+        {
+          "activeUnits": "405",
+          "completedUnits": "3197",
+          "elapsedMs": "26170",
+          "estimatedRunnableUnits": "86",
+          "pendingUnits": "353",
+          "shuffleRamUsageRatio": 0.012490379681888148,
+          "totalSlotMs": "9033213"
+        },
+        {
+          "activeUnits": "317",
+          "completedUnits": "3278",
+          "elapsedMs": "27170",
+          "estimatedRunnableUnits": "1",
+          "pendingUnits": "272",
+          "shuffleRamUsageRatio": 0.012634684453565932,
+          "totalSlotMs": "9845466"
+        },
+        {
+          "activeUnits": "245",
+          "completedUnits": "3340",
+          "elapsedMs": "28170",
+          "estimatedRunnableUnits": "1",
+          "pendingUnits": "210",
+          "shuffleRamUsageRatio": 0.012730887634684454,
+          "totalSlotMs": "10427477"
+        },
+        {
+          "activeUnits": "300",
+          "completedUnits": "3373",
+          "elapsedMs": "29170",
+          "estimatedRunnableUnits": "1",
+          "pendingUnits": "177",
+          "shuffleRamUsageRatio": 0.012795023088763468,
+          "totalSlotMs": "10871154"
+        },
+        {
+          "activeUnits": "282",
+          "completedUnits": "3397",
+          "elapsedMs": "30170",
+          "estimatedRunnableUnits": "34",
+          "pendingUnits": "153",
+          "shuffleRamUsageRatio": 0.012827090815802977,
+          "totalSlotMs": "11537998"
+        },
+        {
+          "activeUnits": "298",
+          "completedUnits": "3407",
+          "elapsedMs": "31170",
+          "estimatedRunnableUnits": "8",
+          "pendingUnits": "143",
+          "shuffleRamUsageRatio": 0.01284312467932273,
+          "totalSlotMs": "12003602"
+        },
+        {
+          "activeUnits": "269",
+          "completedUnits": "3424",
+          "elapsedMs": "32170",
+          "estimatedRunnableUnits": "10",
+          "pendingUnits": "126",
+          "shuffleRamUsageRatio": 0.012859158542842484,
+          "totalSlotMs": "12351443"
+        },
+        {
+          "activeUnits": "244",
+          "completedUnits": "3436",
+          "elapsedMs": "33170",
+          "estimatedRunnableUnits": "1",
+          "pendingUnits": "114",
+          "shuffleRamUsageRatio": 0.01289122626988199,
+          "totalSlotMs": "12895343"
+        },
+        {
+          "activeUnits": "226",
+          "completedUnits": "3445",
+          "elapsedMs": "34170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "105",
+          "shuffleRamUsageRatio": 0.012907260133401745,
+          "totalSlotMs": "13739733"
+        },
+        {
+          "activeUnits": "215",
+          "completedUnits": "3450",
+          "elapsedMs": "35170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "100",
+          "shuffleRamUsageRatio": 0.012907260133401745,
+          "totalSlotMs": "14217420"
+        },
+        {
+          "activeUnits": "284",
+          "completedUnits": "3452",
+          "elapsedMs": "36170",
+          "estimatedRunnableUnits": "64",
+          "pendingUnits": "98",
+          "shuffleRamUsageRatio": 0.012907260133401745,
+          "totalSlotMs": "14682439"
+        },
+        {
+          "activeUnits": "282",
+          "completedUnits": "3456",
+          "elapsedMs": "37170",
+          "estimatedRunnableUnits": "71",
+          "pendingUnits": "94",
+          "shuffleRamUsageRatio": 0.012923293996921497,
+          "totalSlotMs": "15037288"
+        },
+        {
+          "activeUnits": "258",
+          "completedUnits": "3464",
+          "elapsedMs": "38170",
+          "estimatedRunnableUnits": "8",
+          "pendingUnits": "86",
+          "shuffleRamUsageRatio": 0.012923293996921497,
+          "totalSlotMs": "15681440"
+        },
+        {
+          "activeUnits": "240",
+          "completedUnits": "3470",
+          "elapsedMs": "39170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "80",
+          "shuffleRamUsageRatio": 0.012939327860441252,
+          "totalSlotMs": "16273494"
+        },
+        {
+          "activeUnits": "234",
+          "completedUnits": "3472",
+          "elapsedMs": "40170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "78",
+          "shuffleRamUsageRatio": 0.012939327860441252,
+          "totalSlotMs": "16824897"
+        },
+        {
+          "activeUnits": "228",
+          "completedUnits": "3474",
+          "elapsedMs": "41170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "76",
+          "shuffleRamUsageRatio": 0.012939327860441252,
+          "totalSlotMs": "17360042"
+        },
+        {
+          "activeUnits": "216",
+          "completedUnits": "3478",
+          "elapsedMs": "42170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "72",
+          "shuffleRamUsageRatio": 0.012955361723961006,
+          "totalSlotMs": "17883763"
+        },
+        {
+          "activeUnits": "201",
+          "completedUnits": "3483",
+          "elapsedMs": "43170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "67",
+          "shuffleRamUsageRatio": 0.012955361723961006,
+          "totalSlotMs": "18378816"
+        },
+        {
+          "activeUnits": "189",
+          "completedUnits": "3487",
+          "elapsedMs": "44170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "63",
+          "shuffleRamUsageRatio": 0.012955361723961006,
+          "totalSlotMs": "18836648"
+        },
+        {
+          "activeUnits": "180",
+          "completedUnits": "3490",
+          "elapsedMs": "45170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "60",
+          "shuffleRamUsageRatio": 0.012971395587480759,
+          "totalSlotMs": "19290642"
+        },
+        {
+          "activeUnits": "174",
+          "completedUnits": "3492",
+          "elapsedMs": "46170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "58",
+          "shuffleRamUsageRatio": 0.012971395587480759,
+          "totalSlotMs": "19717070"
+        },
+        {
+          "activeUnits": "165",
+          "completedUnits": "3495",
+          "elapsedMs": "47170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "55",
+          "shuffleRamUsageRatio": 0.012971395587480759,
+          "totalSlotMs": "20103510"
+        },
+        {
+          "activeUnits": "162",
+          "completedUnits": "3496",
+          "elapsedMs": "48170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "54",
+          "shuffleRamUsageRatio": 0.012971395587480759,
+          "totalSlotMs": "20420743"
+        },
+        {
+          "activeUnits": "156",
+          "completedUnits": "3498",
+          "elapsedMs": "49170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "52",
+          "shuffleRamUsageRatio": 0.012971395587480759,
+          "totalSlotMs": "20770459"
+        },
+        {
+          "activeUnits": "150",
+          "completedUnits": "3500",
+          "elapsedMs": "50170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "50",
+          "shuffleRamUsageRatio": 0.012971395587480759,
+          "totalSlotMs": "21410963"
+        },
+        {
+          "activeUnits": "147",
+          "completedUnits": "3501",
+          "elapsedMs": "51170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "49",
+          "shuffleRamUsageRatio": 0.012980769230769231,
+          "totalSlotMs": "21702981"
+        },
+        {
+          "activeUnits": "147",
+          "completedUnits": "3501",
+          "elapsedMs": "52170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "49",
+          "shuffleRamUsageRatio": 0.012980769230769231,
+          "totalSlotMs": "22016910"
+        },
+        {
+          "activeUnits": "141",
+          "completedUnits": "3503",
+          "elapsedMs": "53170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "47",
+          "shuffleRamUsageRatio": 0.012980769230769231,
+          "totalSlotMs": "22318173"
+        },
+        {
+          "activeUnits": "132",
+          "completedUnits": "3506",
+          "elapsedMs": "54170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "44",
+          "shuffleRamUsageRatio": 0.012980769230769231,
+          "totalSlotMs": "22758334"
+        },
+        {
+          "activeUnits": "132",
+          "completedUnits": "3506",
+          "elapsedMs": "55170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "44",
+          "shuffleRamUsageRatio": 0.012980769230769231,
+          "totalSlotMs": "22892374"
+        },
+        {
+          "activeUnits": "129",
+          "completedUnits": "3507",
+          "elapsedMs": "56170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "43",
+          "shuffleRamUsageRatio": 0.012980769230769231,
+          "totalSlotMs": "23355848"
+        },
+        {
+          "activeUnits": "123",
+          "completedUnits": "3509",
+          "elapsedMs": "57170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "41",
+          "shuffleRamUsageRatio": 0.012980769230769231,
+          "totalSlotMs": "23464999"
+        },
+        {
+          "activeUnits": "123",
+          "completedUnits": "3509",
+          "elapsedMs": "58170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "41",
+          "shuffleRamUsageRatio": 0.012980769230769231,
+          "totalSlotMs": "23737748"
+        },
+        {
+          "activeUnits": "123",
+          "completedUnits": "3509",
+          "elapsedMs": "59170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "41",
+          "shuffleRamUsageRatio": 0.012980769230769231,
+          "totalSlotMs": "24009809"
+        },
+        {
+          "activeUnits": "120",
+          "completedUnits": "3510",
+          "elapsedMs": "60170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "40",
+          "shuffleRamUsageRatio": 0.012980769230769231,
+          "totalSlotMs": "24264301"
+        },
+        {
+          "activeUnits": "114",
+          "completedUnits": "3512",
+          "elapsedMs": "61170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "38",
+          "shuffleRamUsageRatio": 0.012980769230769231,
+          "totalSlotMs": "24512723"
+        },
+        {
+          "activeUnits": "111",
+          "completedUnits": "3513",
+          "elapsedMs": "62170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "37",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "24759034"
+        },
+        {
+          "activeUnits": "108",
+          "completedUnits": "3514",
+          "elapsedMs": "63170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "36",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "25004446"
+        },
+        {
+          "activeUnits": "108",
+          "completedUnits": "3514",
+          "elapsedMs": "64170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "36",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "25245540"
+        },
+        {
+          "activeUnits": "105",
+          "completedUnits": "3515",
+          "elapsedMs": "65170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "35",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "25484161"
+        },
+        {
+          "activeUnits": "99",
+          "completedUnits": "3517",
+          "elapsedMs": "66170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "33",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "25708714"
+        },
+        {
+          "activeUnits": "99",
+          "completedUnits": "3517",
+          "elapsedMs": "67170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "33",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "25932240"
+        },
+        {
+          "activeUnits": "96",
+          "completedUnits": "3518",
+          "elapsedMs": "68170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "32",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "26149970"
+        },
+        {
+          "activeUnits": "96",
+          "completedUnits": "3518",
+          "elapsedMs": "69170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "32",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "26366201"
+        },
+        {
+          "activeUnits": "93",
+          "completedUnits": "3519",
+          "elapsedMs": "70170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "31",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "26577874"
+        },
+        {
+          "activeUnits": "90",
+          "completedUnits": "3520",
+          "elapsedMs": "71170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "30",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "26783686"
+        },
+        {
+          "activeUnits": "90",
+          "completedUnits": "3520",
+          "elapsedMs": "72170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "30",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "26988522"
+        },
+        {
+          "activeUnits": "87",
+          "completedUnits": "3521",
+          "elapsedMs": "73170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "29",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "27184673"
+        },
+        {
+          "activeUnits": "84",
+          "completedUnits": "3522",
+          "elapsedMs": "74170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "28",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "27376058"
+        },
+        {
+          "activeUnits": "84",
+          "completedUnits": "3522",
+          "elapsedMs": "75170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "28",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "27561811"
+        },
+        {
+          "activeUnits": "81",
+          "completedUnits": "3523",
+          "elapsedMs": "76170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "27",
+          "shuffleRamUsageRatio": 0.012996794871794871,
+          "totalSlotMs": "27742237"
+        },
+        {
+          "activeUnits": "81",
+          "completedUnits": "3523",
+          "elapsedMs": "77170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "27",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "27925696"
+        },
+        {
+          "activeUnits": "78",
+          "completedUnits": "3524",
+          "elapsedMs": "78170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "26",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "28101304"
+        },
+        {
+          "activeUnits": "78",
+          "completedUnits": "3524",
+          "elapsedMs": "79170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "26",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "28277140"
+        },
+        {
+          "activeUnits": "78",
+          "completedUnits": "3524",
+          "elapsedMs": "80170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "26",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "28451694"
+        },
+        {
+          "activeUnits": "78",
+          "completedUnits": "3524",
+          "elapsedMs": "81170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "26",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "28451694"
+        },
+        {
+          "activeUnits": "78",
+          "completedUnits": "3524",
+          "elapsedMs": "82170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "26",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "28625465"
+        },
+        {
+          "activeUnits": "78",
+          "completedUnits": "3524",
+          "elapsedMs": "83170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "26",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "28973551"
+        },
+        {
+          "activeUnits": "78",
+          "completedUnits": "3524",
+          "elapsedMs": "84170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "26",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "29144650"
+        },
+        {
+          "activeUnits": "75",
+          "completedUnits": "3525",
+          "elapsedMs": "85170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "25",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "29310972"
+        },
+        {
+          "activeUnits": "75",
+          "completedUnits": "3525",
+          "elapsedMs": "86170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "25",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "29310972"
+        },
+        {
+          "activeUnits": "75",
+          "completedUnits": "3525",
+          "elapsedMs": "87170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "25",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "29644731"
+        },
+        {
+          "activeUnits": "75",
+          "completedUnits": "3525",
+          "elapsedMs": "88170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "25",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "29811200"
+        },
+        {
+          "activeUnits": "75",
+          "completedUnits": "3525",
+          "elapsedMs": "89170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "25",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "29978579"
+        },
+        {
+          "activeUnits": "75",
+          "completedUnits": "3525",
+          "elapsedMs": "90170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "25",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "30145048"
+        },
+        {
+          "activeUnits": "75",
+          "completedUnits": "3525",
+          "elapsedMs": "91170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "25",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "30233227"
+        },
+        {
+          "activeUnits": "75",
+          "completedUnits": "3525",
+          "elapsedMs": "92170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "25",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "30478138"
+        },
+        {
+          "activeUnits": "75",
+          "completedUnits": "3525",
+          "elapsedMs": "93170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "25",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "30644813"
+        },
+        {
+          "activeUnits": "75",
+          "completedUnits": "3525",
+          "elapsedMs": "94170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "25",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "30644813"
+        },
+        {
+          "activeUnits": "75",
+          "completedUnits": "3525",
+          "elapsedMs": "95170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "25",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "30856797"
+        },
+        {
+          "activeUnits": "72",
+          "completedUnits": "3526",
+          "elapsedMs": "96170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "24",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "31084690"
+        },
+        {
+          "activeUnits": "69",
+          "completedUnits": "3527",
+          "elapsedMs": "97170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "23",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "31136538"
+        },
+        {
+          "activeUnits": "69",
+          "completedUnits": "3527",
+          "elapsedMs": "98170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "23",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "31290678"
+        },
+        {
+          "activeUnits": "69",
+          "completedUnits": "3527",
+          "elapsedMs": "99170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "23",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "31445095"
+        },
+        {
+          "activeUnits": "69",
+          "completedUnits": "3527",
+          "elapsedMs": "100170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "23",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "31746047"
+        },
+        {
+          "activeUnits": "63",
+          "completedUnits": "3529",
+          "elapsedMs": "101170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "21",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "31753163"
+        },
+        {
+          "activeUnits": "60",
+          "completedUnits": "3530",
+          "elapsedMs": "102170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "20",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "31991424"
+        },
+        {
+          "activeUnits": "54",
+          "completedUnits": "3532",
+          "elapsedMs": "103170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "18",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "32018105"
+        },
+        {
+          "activeUnits": "54",
+          "completedUnits": "3532",
+          "elapsedMs": "104170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "18",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "32139101"
+        },
+        {
+          "activeUnits": "54",
+          "completedUnits": "3532",
+          "elapsedMs": "105170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "18",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "32261648"
+        },
+        {
+          "activeUnits": "54",
+          "completedUnits": "3532",
+          "elapsedMs": "106170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "18",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "32384426"
+        },
+        {
+          "activeUnits": "54",
+          "completedUnits": "3532",
+          "elapsedMs": "107170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "18",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "32507131"
+        },
+        {
+          "activeUnits": "54",
+          "completedUnits": "3532",
+          "elapsedMs": "108170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "18",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "32630255"
+        },
+        {
+          "activeUnits": "54",
+          "completedUnits": "3532",
+          "elapsedMs": "109170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "18",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "32753548"
+        },
+        {
+          "activeUnits": "54",
+          "completedUnits": "3532",
+          "elapsedMs": "110170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "18",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "32875548"
+        },
+        {
+          "activeUnits": "54",
+          "completedUnits": "3532",
+          "elapsedMs": "111170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "18",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "32999238"
+        },
+        {
+          "activeUnits": "51",
+          "completedUnits": "3533",
+          "elapsedMs": "112170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "17",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "33122436"
+        },
+        {
+          "activeUnits": "51",
+          "completedUnits": "3533",
+          "elapsedMs": "113170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "17",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "33238107"
+        },
+        {
+          "activeUnits": "51",
+          "completedUnits": "3533",
+          "elapsedMs": "114170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "17",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "33353755"
+        },
+        {
+          "activeUnits": "51",
+          "completedUnits": "3533",
+          "elapsedMs": "115170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "17",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "33469422"
+        },
+        {
+          "activeUnits": "51",
+          "completedUnits": "3533",
+          "elapsedMs": "116170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "17",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "33584620"
+        },
+        {
+          "activeUnits": "51",
+          "completedUnits": "3533",
+          "elapsedMs": "117170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "17",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "33744628"
+        },
+        {
+          "activeUnits": "51",
+          "completedUnits": "3533",
+          "elapsedMs": "118170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "17",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "34018823"
+        },
+        {
+          "activeUnits": "51",
+          "completedUnits": "3533",
+          "elapsedMs": "119170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "17",
+          "shuffleRamUsageRatio": 0.013012820512820513,
+          "totalSlotMs": "34222150"
+        },
+        {
+          "activeUnits": "48",
+          "completedUnits": "3534",
+          "elapsedMs": "120170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "16",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "34323925"
+        },
+        {
+          "activeUnits": "48",
+          "completedUnits": "3534",
+          "elapsedMs": "121170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "16",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "34425845"
+        },
+        {
+          "activeUnits": "48",
+          "completedUnits": "3534",
+          "elapsedMs": "122170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "16",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "34527692"
+        },
+        {
+          "activeUnits": "48",
+          "completedUnits": "3534",
+          "elapsedMs": "123170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "16",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "34629571"
+        },
+        {
+          "activeUnits": "48",
+          "completedUnits": "3534",
+          "elapsedMs": "124170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "16",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "34725256"
+        },
+        {
+          "activeUnits": "48",
+          "completedUnits": "3534",
+          "elapsedMs": "125170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "16",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "34815511"
+        },
+        {
+          "activeUnits": "45",
+          "completedUnits": "3535",
+          "elapsedMs": "126170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "15",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "34905889"
+        },
+        {
+          "activeUnits": "42",
+          "completedUnits": "3536",
+          "elapsedMs": "127170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "14",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "34996617"
+        },
+        {
+          "activeUnits": "42",
+          "completedUnits": "3536",
+          "elapsedMs": "128170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "14",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "35087166"
+        },
+        {
+          "activeUnits": "42",
+          "completedUnits": "3536",
+          "elapsedMs": "129170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "14",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "35177367"
+        },
+        {
+          "activeUnits": "42",
+          "completedUnits": "3536",
+          "elapsedMs": "130170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "14",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "35278090"
+        },
+        {
+          "activeUnits": "42",
+          "completedUnits": "3536",
+          "elapsedMs": "131170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "14",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "35368057"
+        },
+        {
+          "activeUnits": "42",
+          "completedUnits": "3536",
+          "elapsedMs": "132170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "14",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "35450785"
+        },
+        {
+          "activeUnits": "42",
+          "completedUnits": "3536",
+          "elapsedMs": "133170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "14",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "35530461"
+        },
+        {
+          "activeUnits": "42",
+          "completedUnits": "3536",
+          "elapsedMs": "134170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "14",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "35609023"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "135170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "35686371"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "136170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "35763101"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "137170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "35839232"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "138170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "35914736"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "139170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "35989354"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "140170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36063217"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "141170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36136432"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "142170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36209213"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "143170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36281918"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "144170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36354578"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "145170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36426701"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "146170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36498431"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "147170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36563716"
+        },
+        {
+          "activeUnits": "39",
+          "completedUnits": "3537",
+          "elapsedMs": "148170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36629007"
+        },
+        {
+          "activeUnits": "36",
+          "completedUnits": "3538",
+          "elapsedMs": "149170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "12",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36699102"
+        },
+        {
+          "activeUnits": "36",
+          "completedUnits": "3538",
+          "elapsedMs": "150170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "12",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36760280"
+        },
+        {
+          "activeUnits": "36",
+          "completedUnits": "3538",
+          "elapsedMs": "151170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "12",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36815362"
+        },
+        {
+          "activeUnits": "33",
+          "completedUnits": "3539",
+          "elapsedMs": "152170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "11",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36864833"
+        },
+        {
+          "activeUnits": "33",
+          "completedUnits": "3539",
+          "elapsedMs": "153170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "11",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36912377"
+        },
+        {
+          "activeUnits": "27",
+          "completedUnits": "3541",
+          "elapsedMs": "154170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "9",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "36958131"
+        },
+        {
+          "activeUnits": "27",
+          "completedUnits": "3541",
+          "elapsedMs": "155170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "9",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37002327"
+        },
+        {
+          "activeUnits": "24",
+          "completedUnits": "3542",
+          "elapsedMs": "156170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "8",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37049354"
+        },
+        {
+          "activeUnits": "24",
+          "completedUnits": "3542",
+          "elapsedMs": "157170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "8",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37094376"
+        },
+        {
+          "activeUnits": "24",
+          "completedUnits": "3542",
+          "elapsedMs": "158170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "8",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37139172"
+        },
+        {
+          "activeUnits": "24",
+          "completedUnits": "3542",
+          "elapsedMs": "159170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "8",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37182853"
+        },
+        {
+          "activeUnits": "24",
+          "completedUnits": "3542",
+          "elapsedMs": "160170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "8",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37221513"
+        },
+        {
+          "activeUnits": "24",
+          "completedUnits": "3542",
+          "elapsedMs": "161170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "8",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37260148"
+        },
+        {
+          "activeUnits": "21",
+          "completedUnits": "3543",
+          "elapsedMs": "162170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "7",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37298184"
+        },
+        {
+          "activeUnits": "21",
+          "completedUnits": "3543",
+          "elapsedMs": "163170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "7",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37336039"
+        },
+        {
+          "activeUnits": "21",
+          "completedUnits": "3543",
+          "elapsedMs": "164170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "7",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37373783"
+        },
+        {
+          "activeUnits": "21",
+          "completedUnits": "3543",
+          "elapsedMs": "165170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "7",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37409437"
+        },
+        {
+          "activeUnits": "21",
+          "completedUnits": "3543",
+          "elapsedMs": "166170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "7",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37444483"
+        },
+        {
+          "activeUnits": "21",
+          "completedUnits": "3543",
+          "elapsedMs": "167170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "7",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37474115"
+        },
+        {
+          "activeUnits": "18",
+          "completedUnits": "3544",
+          "elapsedMs": "168170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "6",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37502363"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "169170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013028846153846153,
+          "totalSlotMs": "37530566"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "170170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37558716"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "171170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37590397"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "172170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37618569"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "173170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37646636"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "174170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37674705"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "175170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37702747"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "176170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37730681"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "177170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37758532"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "178170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37786367"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "179170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37814135"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "180170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37841864"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "181170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37869562"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "182170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37897239"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "183170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37924990"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "184170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37952735"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "185170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "37980466"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "186170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38008214"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "187170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38036039"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "188170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38063639"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "189170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38091342"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "190170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38119267"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "191170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38146870"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "192170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38174447"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "193170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38202031"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "194170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38229639"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "195170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38257246"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "196170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38284858"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "197170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38312723"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "198170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38340299"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "199170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38368007"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "200170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38395698"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "201170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38423376"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "202170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38451047"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "203170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38478626"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "204170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38506179"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "205170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38533722"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "206170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38561275"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "207170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38588823"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "208170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38616423"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "209170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38644111"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "210170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38671808"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "211170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38699599"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "212170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38727606"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "213170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38756503"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "214170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38789040"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "215170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38789040"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "216170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38823317"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "217170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38857948"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "218170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38894042"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "219170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38930124"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "220170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "38966903"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "221170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39002946"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "222170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39038268"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "223170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39073590"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "224170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39107233"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "225170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39140609"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "226170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39174644"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "227170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39207763"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "228170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39240127"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "229170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39272412"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "230170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39334468"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "231170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39367726"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "232170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39403625"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "233170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39435694"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "234170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39460972"
+        },
+        {
+          "activeUnits": "15",
+          "completedUnits": "3545",
+          "elapsedMs": "235170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "5",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39480149"
+        },
+        {
+          "activeUnits": "12",
+          "completedUnits": "3546",
+          "elapsedMs": "236170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "4",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39493880"
+        },
+        {
+          "activeUnits": "9",
+          "completedUnits": "3547",
+          "elapsedMs": "237170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "3",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39507147"
+        },
+        {
+          "activeUnits": "6",
+          "completedUnits": "3548",
+          "elapsedMs": "238170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "2",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39519952"
+        },
+        {
+          "activeUnits": "6",
+          "completedUnits": "3548",
+          "elapsedMs": "239170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "2",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39532748"
+        },
+        {
+          "activeUnits": "6",
+          "completedUnits": "3548",
+          "elapsedMs": "240170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "2",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39545604"
+        },
+        {
+          "activeUnits": "6",
+          "completedUnits": "3548",
+          "elapsedMs": "241170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "2",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39558505"
+        },
+        {
+          "activeUnits": "6",
+          "completedUnits": "3548",
+          "elapsedMs": "242170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "2",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39569299"
+        },
+        {
+          "activeUnits": "6",
+          "completedUnits": "3548",
+          "elapsedMs": "243170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "2",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39574730"
+        },
+        {
+          "activeUnits": "6",
+          "completedUnits": "3548",
+          "elapsedMs": "244170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "2",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39580964"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "245170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39586883"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "246170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39592549"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "247170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39598469"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "248170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39604536"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "249170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39610254"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "250170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39615986"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "251170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39621815"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "252170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39627712"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "253170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39633700"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "254170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39639874"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "255170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39639874"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "256170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39651716"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "257170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39657514"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "258170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39663536"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "259170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39669555"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "260170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39675215"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "261170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39681539"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "262170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39687266"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "263170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39692768"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "264170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39698354"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "265170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39703859"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "266170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39709355"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "267170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39714862"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "268170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39720369"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "269170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39725864"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "270170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39731344"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "271170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39736768"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "272170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39742130"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "273170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39747405"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "274170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39752607"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "275170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39758335"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "276170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39763718"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "277170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39769036"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "278170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39773914"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "279170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39779443"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "280170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39784495"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "281170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39789405"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "282170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39794234"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "283170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39799001"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "284170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39803737"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "285170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39808478"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "286170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39813252"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "287170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39817899"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "288170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39822532"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "289170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39827155"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "290170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39831762"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "291170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39836394"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "292170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39841093"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "293170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39845819"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "294170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39850437"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "295170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39855034"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "296170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39859610"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "297170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39864166"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "298170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39868705"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "299170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39873970"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "300170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39878741"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "301170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39878741"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "302170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39878741"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "303170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39891975"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "304170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39896474"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "305170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "39901166"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "306170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "40189469"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3549",
+          "elapsedMs": "307170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.013044871794871795,
+          "totalSlotMs": "40259508"
+        },
+        {
+          "activeUnits": "0",
+          "completedUnits": "3550",
+          "elapsedMs": "308170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "224",
+          "shuffleRamUsageRatio": 0.0017948717948717949,
+          "totalSlotMs": "40270038"
+        },
+        {
+          "activeUnits": "56",
+          "completedUnits": "3757",
+          "elapsedMs": "309170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "39",
+          "shuffleRamUsageRatio": 0.003926282051282051,
+          "totalSlotMs": "40301884"
+        },
+        {
+          "activeUnits": "3",
+          "completedUnits": "3794",
+          "elapsedMs": "310170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "2",
+          "shuffleRamUsageRatio": 0.0045673076923076926,
+          "totalSlotMs": "40337327"
+        },
+        {
+          "activeUnits": "32",
+          "completedUnits": "3796",
+          "elapsedMs": "311170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "220",
+          "shuffleRamUsageRatio": 0.004647435897435897,
+          "totalSlotMs": "40557131"
+        },
+        {
+          "activeUnits": "66",
+          "completedUnits": "3808",
+          "elapsedMs": "312170",
+          "estimatedRunnableUnits": "218",
+          "pendingUnits": "210",
+          "shuffleRamUsageRatio": 0.004727564102564102,
+          "totalSlotMs": "40657320"
+        },
+        {
+          "activeUnits": "183",
+          "completedUnits": "3830",
+          "elapsedMs": "313170",
+          "estimatedRunnableUnits": "218",
+          "pendingUnits": "188",
+          "shuffleRamUsageRatio": 0.004727564102564102,
+          "totalSlotMs": "40670588"
+        },
+        {
+          "activeUnits": "22",
+          "completedUnits": "4016",
+          "elapsedMs": "314170",
+          "estimatedRunnableUnits": "200",
+          "pendingUnits": "22",
+          "shuffleRamUsageRatio": 0.0048397435897435895,
+          "totalSlotMs": "40672567"
+        },
+        {
+          "activeUnits": "11",
+          "completedUnits": "4025",
+          "elapsedMs": "315170",
+          "estimatedRunnableUnits": "33",
+          "pendingUnits": "13",
+          "shuffleRamUsageRatio": 0.005945512820512821,
+          "totalSlotMs": "40710649"
+        },
+        {
+          "activeUnits": "2",
+          "completedUnits": "4036",
+          "elapsedMs": "316170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "2",
+          "shuffleRamUsageRatio": 0.006474358974358974,
+          "totalSlotMs": "40741919"
+        },
+        {
+          "activeUnits": "2",
+          "completedUnits": "4037",
+          "elapsedMs": "317170",
+          "estimatedRunnableUnits": "3",
+          "pendingUnits": "1",
+          "shuffleRamUsageRatio": 0.00655448717948718,
+          "totalSlotMs": "40758534"
+        },
+        {
+          "activeUnits": "0",
+          "completedUnits": "4238",
+          "elapsedMs": "318170",
+          "estimatedRunnableUnits": "1",
+          "pendingUnits": "67",
+          "shuffleRamUsageRatio": 0.00655448717948718,
+          "totalSlotMs": "40808200"
+        },
+        {
+          "activeUnits": "23",
+          "completedUnits": "4283",
+          "elapsedMs": "319170",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "22",
+          "shuffleRamUsageRatio": 0.006746794871794872,
+          "totalSlotMs": "40832524"
+        },
+        {
+          "activeUnits": "28",
+          "completedUnits": "4288",
+          "elapsedMs": "320170",
+          "estimatedRunnableUnits": "50",
+          "pendingUnits": "17",
+          "shuffleRamUsageRatio": 0.006939102564102564,
+          "totalSlotMs": "40832524"
+        },
+        {
+          "activeUnits": "11",
+          "completedUnits": "4305",
+          "elapsedMs": "321804",
+          "estimatedRunnableUnits": "0",
+          "pendingUnits": "0",
+          "shuffleRamUsageRatio": 0.006939102564102564,
+          "totalSlotMs": "40832524"
+        }
+      ],
+      "totalBytesBilled": "74658611200",
+      "totalBytesProcessed": "74658428431",
+      "totalPartitionsProcessed": "695",
+      "totalSlotMs": "40832524",
+      "transferredBytes": "0"
+    },
+    "reservationGroupPath": [
+      ""
+    ],
+    "reservation_id": "bq-narvar-admin:US.default",
+    "scriptStatistics": {
+      "evaluationKind": "STATEMENT",
+      "stackFrames": [
+        {
+          "endColumn": 10,
+          "endLine": 106,
+          "startColumn": 9,
+          "startLine": 3,
+          "text": "CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-24` AS (\n            WITH affected_items AS (\n                -- Get unique item identifiers from the updates table\n                SELECT DISTINCT\n                    retailer_moniker,\n                    shopify_domain,\n                    order_date,\n                    order_checkout_locale,\n                    order_item_product_id,\n                    order_item_description,\n                    order_item_name,\n                    order_item_sku,\n                    order_item_vendor,\n                    order_item_size,\n                    order_item_color,\n                    order_item_product_type,\n                    order_item_variant_id,\n                    order_item_variant_title, \n                    return_outcome\n                FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-24`\n            )\n            -- Reaggregate all records for the affected items\n            SELECT\n                r.retailer_moniker,\n                r.shopify_domain,\n                DATE(r.order_date) AS order_date,\n                r.order_checkout_locale,\n                r.order_item_product_id,\n                r.order_item_description,\n                r.order_item_name,\n                r.order_item_sku,\n                r.order_item_vendor,\n                r.order_item_size,\n                r.order_item_color,\n                r.order_item_product_type,\n                r.order_item_variant_id,\n                r.order_item_variant_title,\n                r.return_outcome,\n                \n                `narvar-data-lake.return_insights_base.histogram`(ARRAY_AGG(r.item_return_reason IGNORE NULLS LIMIT 10)) AS return_reason_summary,\n                `narvar-data-lake.return_insights_base.histogram`(ARRAY_AGG(r.item_child_return_reason IGNORE NULLS LIMIT 10)) AS child_return_reason_summary,\n                `narvar-data-lake.return_insights_base.histogram`(ARRAY_AGG(r.return_method_id IGNORE NULLS LIMIT 10)) AS return_method_summary,\n\n                COUNT(DISTINCT r.cdp_pii_hash) AS num_customers,\n                COUNT(DISTINCT r.order_number) AS num_orders,\n                COUNT(DISTINCT r.return_order_number) AS num_return_orders,\n                COUNT(DISTINCT r.rma_number) AS num_rmas,\n                COUNT(DISTINCT IF(r.return_outcome = 'Refund to Original Payment', r.rma_number, NULL)) AS num_refunds,\n                COUNT(DISTINCT IF(r.return_outcome = 'Exchanges & Shop Now', r.rma_number, NULL)) AS num_exchanges,\n                COUNT(DISTINCT IF(r.return_outcome = 'Gift Cards', r.rma_number, NULL)) AS num_gift_cards,\n                COUNT(DISTINCT IF(r.is_shop_now_return, r.rma_number, NULL)) AS num_shop_now_returns,\n                SUM(GREATEST(r.order_item_quantity, r.order_shipped_item_quantity)) AS num_order_items,\n                SUM(r.return_item_quantity) AS num_return_items,\n                SUM(if(r.return_outcome = 'Refund to Original Payment', r.return_item_quantity, 0)) AS num_refund_items,\n                SUM(if(r.return_outcome = 'Exchanges & Shop Now', r.return_item_quantity, 0)) AS num_exchange_items,\n                SUM(r.order_item_price * GREATEST(r.order_item_quantity, r.order_shipped_item_quantity) * COALESCE(r.conversion_rate_order_to_shop, 1)) AS total_order_value_shop_currency,\n                SUM(r.return_value_cents_shop_currency) / 100 AS total_return_value_shop_currency,\n                SUM(r.exchange_from_value_cents_shop_currency) / 100 AS total_exchange_from_value_shop_currency,\n                SUM(r.exchange_to_value_cents_shop_currency) / 100 AS total_exchange_to_value_shop_currency,\n                SUM(r.shop_now_exchange_value_shop_currency) / 100 AS total_shop_now_exchange_value_shop_currency,\n                SUM(IF(r.return_outcome = 'Refund to Original Payment', r.return_value_cents_shop_currency, 0)) / 100 AS total_refund_value_shop_currency,\n                SUM(IF(r.return_outcome = 'Gift Cards', r.return_value_cents_shop_currency, 0)) / 100 AS total_gift_card_value_shop_currency,\n                CURRENT_TIMESTAMP() as modified_at,\n                FARM_FINGERPRINT(CONCAT(\n                    COALESCE(r.retailer_moniker, ''),\n                    COALESCE(r.shopify_domain, ''),\n                    COALESCE(SAFE_CAST(DATE(r.order_date) AS STRING), ''),\n                    COALESCE(r.order_checkout_locale, ''),\n                    COALESCE(r.order_item_product_id, ''),\n                    COALESCE(r.order_item_description, ''),\n                    COALESCE(r.order_item_name, ''),\n                    COALESCE(r.order_item_sku, ''),\n                    COALESCE(r.order_item_vendor, ''),\n                    COALESCE(r.order_item_size, ''),\n                    COALESCE(r.order_item_color, ''),\n                    COALESCE(r.order_item_product_type, ''),\n                    COALESCE(r.return_outcome, ''),\n                    COALESCE(r.order_item_variant_id, ''),\n                    COALESCE(r.order_item_variant_title, '')\n                )) AS primary_key_hash\n            FROM `narvar-data-lake.return_insights_base.order_item_details` r\n            INNER JOIN affected_items a\n                ON r.retailer_moniker = a.retailer_moniker\n                AND r.shopify_domain = a.shopify_domain\n                AND DATE(r.order_date) = DATE(a.order_date)\n                AND r.order_item_sku = a.order_item_sku\n            GROUP BY\n                r.retailer_moniker,\n                r.shopify_domain,\n                DATE(r.order_date),\n                r.order_checkout_locale,\n                r.order_item_product_id,\n                r.order_item_description,\n                r.order_item_name,\n                r.order_item_sku,\n                r.order_item_vendor,\n                r.order_item_size,\n                r.order_item_color,\n                r.order_item_product_type,\n                r.return_outcome,\n                r.order_item_variant_id,\n                r.order_item_variant_title,\n                primary_key_hash\n        )"
+        }
+      ]
+    },
+    "startTime": "1764090767830",
+    "totalBytesProcessed": "74658428431",
+    "totalSlotMs": "40832524"
+  },
+  "status": {
+    "state": "DONE"
+  },
+  "user_email": "airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com"
+}

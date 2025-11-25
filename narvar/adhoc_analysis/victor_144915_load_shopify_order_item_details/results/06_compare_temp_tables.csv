@@ -1,0 +1,4 @@
+BigQuery error in query operation: Error processing job 'narvar-data-
+lake:bqjob_r63e677de2f319fcc_0000019abc24f3a4_1': Not found: Table narvar-data-
+lake:return_insights_base.tmp_order_item_details_2025-11-24 was not found in
+location US

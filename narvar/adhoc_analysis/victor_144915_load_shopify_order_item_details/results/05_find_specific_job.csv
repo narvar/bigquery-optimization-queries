@@ -1,0 +1,935 @@
+Waiting on bqjob_r27336251dd8bd016_0000019abc236a7a_1 ... (0s) Current status: RUNNING                                                                                      Waiting on bqjob_r27336251dd8bd016_0000019abc236a7a_1 ... (1s) Current status: RUNNING                                                                                      Waiting on bqjob_r27336251dd8bd016_0000019abc236a7a_1 ... (1s) Current status: DONE   
+creation_time,job_id,user_email,statement_type,total_slot_ms,slot_hours,total_bytes_processed,gb_processed,start_time,end_time,duration_seconds,duration_minutes,state,error_reason,error_message_preview,query_preview
+2025-11-25 17:24:42,script_job_3272a8d01a2ee70644509f88a2fbacfa_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,87851695,24.4,,,2025-11-25 17:24:43,,,,RUNNING,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-20` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-25 17:24:42,job_WJ5ekIHNOgbjzR6WyFH-J0CkYRzO,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,,,,,2025-11-25 17:24:42,,,,RUNNING,,,"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-20` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-25 17:19:09,script_job_56b0b197ea6c2fdda8fd2442b0f79d16_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,DROP_TABLE,,,0,0.0,2025-11-25 17:19:10,2025-11-25 17:19:10,0,0.0,DONE,,,DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-24`
+2025-11-25 17:19:09,job_1zkKHJkoV9X2I-EreeiClsHpn2ix,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,,,0,0.0,2025-11-25 17:19:09,2025-11-25 17:19:10,1,0.0,DONE,,,"
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-24`;  
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-24`;
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_customer_insights_updates_2025-11-24`;
+    "
+2025-11-25 17:18:13,script_job_66f8b510377d72e5731fc5dc0f3f8dc5_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,MERGE,6267271,1.74,32419135752,30.19,2025-11-25 17:18:13,2025-11-25 17:18:32,19,0.0,DONE,,,"MERGE `narvar-data-lake.return_insights_base.product_insights` T
+        USING `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-24` S
+        ON T.retailer_moniker = S.retailer_moniker
+           AND T.primary_key_hash = S.primary_key_hash
+        WHEN MATCHED THEN
+            UPDATE SET
+                retailer_moniker = S.retailer_moniker,order_date = S.order_date,order_checkout_locale = S.order_checkout_locale,order_item_product_id = S.order_item_product_id,order_it"
+2025-11-25 17:12:47,script_job_b2654d592228ccb1e1d6ebe7619a1c74_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,40832524,11.34,74658428431,69.53,2025-11-25 17:12:47,2025-11-25 17:18:10,322,5.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-24` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-25 17:12:47,job_M-k6WMuVGtjlxobPJ3l0C2njOrcC,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,47099795,13.08,107077564183,99.72,2025-11-25 17:12:47,2025-11-25 17:18:33,345,5.0,DONE,,,"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-24` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-25 17:11:35,script_job_fc2f549796b4f7c17804b2bd0e4fd03e_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,2315395,0.64,12757357494,11.88,2025-11-25 17:11:35,2025-11-25 17:11:45,9,0.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-24` AS (
+            SELECT s.*
+            FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-24` s
+            INNER JOIN (
+                SELECT 
+                    s.retailer_moniker,
+                    s.shopify_domain,
+                    s.order_number_sku_hash,
+                    s.return_items_id,
+                    COUNT(t.retailer_moniker) as match_count
+         "
+2025-11-25 17:06:47,script_job_27841378c184186006636a1e32cf2d1c_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,134876532,37.47,4102886649708,3821.11,2025-11-25 17:06:48,2025-11-25 17:11:33,285,4.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-24` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+                o.order_item_sku_hash,
+                COALESCE(o.order_item_qua"
+2025-11-25 17:06:47,job_aHZw4_NfRFqdK-dsphRXdMm7wyAd,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,143178444,39.77,4161799485923,3875.98,2025-11-25 17:06:47,2025-11-25 17:12:31,343,5.0,DONE,,,"
+        -- First, create a temporary table with the source data
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-24` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+       "
+2025-11-25 17:01:13,script_job_c564805ff48d83b022895e10547d8b3a_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,104038770,28.9,,,2025-11-25 17:01:13,,,,RUNNING,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-19` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-25 17:01:12,job_j419oob_2_HyWyBY45RYsegbYKgJ,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,,,,,2025-11-25 17:01:13,,,,RUNNING,,,"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-19` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-21 06:38:30,script_job_39dbaa9ec3c4e9362f13d9774bb0151e_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,309102626,85.86,,,2025-11-21 06:38:30,2025-11-21 12:38:30,21600,360.0,DONE,timeout,Operation timed out after 6.0 hours. Consider reducing the amount of work performed by your operation so that it can complete within this limit.,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-20` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-21 06:38:30,job_GfBO-8zBmqLqbOcAErnuRkaa0LQO,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,309102626,85.86,0,0.0,2025-11-21 06:38:30,2025-11-21 12:38:30,21600,360.0,DONE,timeout,Request timed out. Please try again. at [3:9],"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-20` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-21 00:32:43,script_job_6daf76d91047484b19e5e1311911240e_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,233930580,64.98,,,2025-11-21 00:32:43,2025-11-21 06:32:43,21600,360.0,DONE,timeout,Operation timed out after 6.0 hours. Consider reducing the amount of work performed by your operation so that it can complete within this limit.,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-20` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-21 00:32:43,job_RJqlqB05dKtu4tpLG6e5Xae1ykJ0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,233930580,64.98,0,0.0,2025-11-21 00:32:43,2025-11-21 06:32:46,21603,360.0,DONE,timeout,Request timed out. Please try again. at [3:9],"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-20` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-21 00:30:16,script_job_5e13ffcc851da508a5e0465d36a0b00f_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,4496191,1.25,12819030767,11.94,2025-11-21 00:30:16,2025-11-21 00:30:57,41,0.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-20` AS (
+            SELECT s.*
+            FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-20` s
+            INNER JOIN (
+                SELECT 
+                    s.retailer_moniker,
+                    s.shopify_domain,
+                    s.order_number_sku_hash,
+                    s.return_items_id,
+                    COUNT(t.retailer_moniker) as match_count
+         "
+2025-11-21 00:15:35,script_job_391410bb1ddee48f15268bef20533423_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,124858051,34.68,4071397314818,3791.78,2025-11-21 00:15:36,2025-11-21 00:30:15,879,14.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-20` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+                o.order_item_sku_hash,
+                COALESCE(o.order_item_qua"
+2025-11-21 00:15:35,job_D_maavURf4eg45E8qQmLaloB6eei,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,134429548,37.34,4130944466366,3847.24,2025-11-21 00:15:35,2025-11-21 00:32:06,991,16.0,DONE,,,"
+        -- First, create a temporary table with the source data
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-20` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+       "
+2025-11-20 18:40:14,script_job_1fff0eae5eb7517c16e88621344b0866_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,323913787,89.98,,,2025-11-20 18:40:14,2025-11-21 00:40:14,21600,360.0,DONE,timeout,Operation timed out after 6.0 hours. Consider reducing the amount of work performed by your operation so that it can complete within this limit.,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-19` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-20 18:40:14,job_s6sJ9_blGH6ZgNFFS2zMO6j4mATV,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,323913787,89.98,0,0.0,2025-11-20 18:40:14,2025-11-21 00:40:16,21601,360.0,DONE,timeout,Request timed out. Please try again. at [3:9],"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-19` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-20 12:34:48,script_job_f497b114b28bd34fd8f808e424d13900_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,287185028,79.77,,,2025-11-20 12:34:48,2025-11-20 18:34:48,21600,360.0,DONE,timeout,Operation timed out after 6.0 hours. Consider reducing the amount of work performed by your operation so that it can complete within this limit.,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-19` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-20 12:34:48,job_KaXz5GqUT4AoJhwDFg8RMm1XUQPY,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,287185028,79.77,0,0.0,2025-11-20 12:34:48,2025-11-20 18:34:49,21600,360.0,DONE,timeout,Request timed out. Please try again. at [3:9],"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-19` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-20 06:23:57,script_job_9c599ce1b62c4987f8abd6d264f43d3b_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,289229791,80.34,,,2025-11-20 06:23:57,2025-11-20 12:23:57,21600,360.0,DONE,timeout,Operation timed out after 6.0 hours. Consider reducing the amount of work performed by your operation so that it can complete within this limit.,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-19` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-20 06:23:57,job_uGCk9mLHF5NP2TNo2GtVxlBZluXj,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,289229791,80.34,0,0.0,2025-11-20 06:23:57,2025-11-20 12:23:58,21601,360.0,DONE,timeout,Request timed out. Please try again. at [3:9],"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-19` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-20 00:17:57,script_job_53e88c3726bd7bc2c171d2bdecfa2be9_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,289966337,80.55,,,2025-11-20 00:17:57,2025-11-20 06:18:16,21619,360.0,DONE,timeout,Operation timed out after 6.0 hours. Consider reducing the amount of work performed by your operation so that it can complete within this limit.,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-19` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-20 00:17:57,job_Wi2G9fWfLVPbs-EpgkjU7AfugSoG,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,289966337,80.55,0,0.0,2025-11-20 00:17:57,2025-11-20 06:18:17,21620,360.0,DONE,timeout,Request timed out. Please try again. at [3:9],"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-19` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-20 00:16:39,script_job_05f6b7f86876865d8c77ffeb524dba1a_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,2638464,0.73,12646909064,11.78,2025-11-20 00:16:39,2025-11-20 00:16:50,10,0.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-19` AS (
+            SELECT s.*
+            FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-19` s
+            INNER JOIN (
+                SELECT 
+                    s.retailer_moniker,
+                    s.shopify_domain,
+                    s.order_number_sku_hash,
+                    s.return_items_id,
+                    COUNT(t.retailer_moniker) as match_count
+         "
+2025-11-20 00:11:16,script_job_2eb9ba54166dbb786418eff15be0b353_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,135853824,37.74,4065453674828,3786.25,2025-11-20 00:11:17,2025-11-20 00:16:37,320,5.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-19` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+                o.order_item_sku_hash,
+                COALESCE(o.order_item_qua"
+2025-11-20 00:11:16,job_kLfJHPL6z_hehdspnRVbz6asIuqk,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,144819565,40.23,4124155800730,3840.92,2025-11-20 00:11:16,2025-11-20 00:17:41,384,6.0,DONE,,,"
+        -- First, create a temporary table with the source data
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-19` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+       "
+2025-11-19 02:15:46,script_job_1c69dd4a39f92911c96b6f9733bb3c05_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,DROP_TABLE,,,0,0.0,2025-11-19 02:15:46,2025-11-19 02:15:46,0,0.0,DONE,,,DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-18`
+2025-11-19 02:15:45,job_77HVRK5zXqqK4rQPl3FfcqKOPssh,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,,,0,0.0,2025-11-19 02:15:45,2025-11-19 02:15:47,1,0.0,DONE,,,"
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-18`;  
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-18`;
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_customer_insights_updates_2025-11-18`;
+    "
+2025-11-19 02:14:13,script_job_fcdc92197ee2e318412d6748aaa9740e_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,MERGE,6941175,1.93,32165871145,29.96,2025-11-19 02:14:14,2025-11-19 02:14:30,16,0.0,DONE,,,"MERGE `narvar-data-lake.return_insights_base.product_insights` T
+        USING `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-18` S
+        ON T.retailer_moniker = S.retailer_moniker
+           AND T.primary_key_hash = S.primary_key_hash
+        WHEN MATCHED THEN
+            UPDATE SET
+                retailer_moniker = S.retailer_moniker,order_date = S.order_date,order_checkout_locale = S.order_checkout_locale,order_item_product_id = S.order_item_product_id,order_it"
+2025-11-19 00:20:57,script_job_8285f5268083a9d46c1194b0ee7a84b2_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,98493892,27.36,18463301142,17.2,2025-11-19 00:20:57,2025-11-19 02:14:12,6794,113.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-18` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-19 00:20:57,job_cgyA-u-wp9uqeDCYv5UcTgTwTHJZ,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,105435067,29.29,50629172287,47.15,2025-11-19 00:20:57,2025-11-19 02:14:30,6813,113.0,DONE,,,"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-18` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-19 00:18:49,script_job_28a677131b485ad4086a45121378864d_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,1997147,0.55,12068470310,11.24,2025-11-19 00:18:49,2025-11-19 00:19:05,15,0.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-18` AS (
+            SELECT s.*
+            FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-18` s
+            INNER JOIN (
+                SELECT 
+                    s.retailer_moniker,
+                    s.shopify_domain,
+                    s.order_number_sku_hash,
+                    s.return_items_id,
+                    COUNT(t.retailer_moniker) as match_count
+         "
+2025-11-19 00:08:09,script_job_27c4f1b4a051ad23d588e148ca60e5e2_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,136209014,37.84,4059112340048,3780.34,2025-11-19 00:08:10,2025-11-19 00:18:48,638,10.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-18` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+                o.order_item_sku_hash,
+                COALESCE(o.order_item_qua"
+2025-11-19 00:08:09,job_50bKI84gvl6z-8L9z3ks_Dop_fCU,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,144297687,40.08,4115769644122,3833.11,2025-11-19 00:08:09,2025-11-19 00:19:56,706,11.0,DONE,,,"
+        -- First, create a temporary table with the source data
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-18` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+       "
+2025-11-18 01:08:09,script_job_fbb80dbe2ca70b4c36718a5ee8febf0d_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,DROP_TABLE,,,0,0.0,2025-11-18 01:08:09,2025-11-18 01:08:10,0,0.0,DONE,,,DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-17`
+2025-11-18 01:08:09,job_cRuR57Niu7Dnf9Y-GTVbFiEye5BS,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,,,0,0.0,2025-11-18 01:08:09,2025-11-18 01:08:10,1,0.0,DONE,,,"
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-17`;  
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-17`;
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_customer_insights_updates_2025-11-17`;
+    "
+2025-11-18 01:07:03,script_job_e5925f9f82c14b3a75cf26d97f917909_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,MERGE,6211705,1.73,32065627427,29.86,2025-11-18 01:07:03,2025-11-18 01:07:45,42,0.0,DONE,,,"MERGE `narvar-data-lake.return_insights_base.product_insights` T
+        USING `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-17` S
+        ON T.retailer_moniker = S.retailer_moniker
+           AND T.primary_key_hash = S.primary_key_hash
+        WHEN MATCHED THEN
+            UPDATE SET
+                retailer_moniker = S.retailer_moniker,order_date = S.order_date,order_checkout_locale = S.order_checkout_locale,order_item_product_id = S.order_item_product_id,order_it"
+2025-11-18 00:21:05,script_job_a8b314ffe77ae0d819f07dfc26644b72_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,60086793,16.69,18312424227,17.05,2025-11-18 00:21:06,2025-11-18 01:07:02,2756,45.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-17` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-18 00:21:05,job_rJ0MT-ynGLvaULuaEGZa8CGBxSlc,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,66298498,18.42,50378051654,46.92,2025-11-18 00:21:05,2025-11-18 01:07:45,2800,46.0,DONE,,,"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-17` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-18 00:19:07,script_job_d8ca2da51b861ff5e8c450b7cafe0654_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,1741697,0.48,11820108836,11.01,2025-11-18 00:19:07,2025-11-18 00:19:21,13,0.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-17` AS (
+            SELECT s.*
+            FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-17` s
+            INNER JOIN (
+                SELECT 
+                    s.retailer_moniker,
+                    s.shopify_domain,
+                    s.order_number_sku_hash,
+                    s.return_items_id,
+                    COUNT(t.retailer_moniker) as match_count
+         "
+2025-11-18 00:10:41,script_job_48337b71172a8ca89ba60350a3288f6e_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,136546718,37.93,4053135896563,3774.78,2025-11-18 00:10:41,2025-11-18 00:19:07,505,8.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-17` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+                o.order_item_sku_hash,
+                COALESCE(o.order_item_qua"
+2025-11-18 00:10:41,job_lVkDAPiVc2zuNoOmx3m9Xu8DjrHy,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,143425274,39.84,4108526215034,3826.36,2025-11-18 00:10:41,2025-11-18 00:20:24,582,9.0,DONE,,,"
+        -- First, create a temporary table with the source data
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-17` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+       "
+2025-11-17 00:59:39,script_job_780e25d067593f0582099121e1a79d75_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,DROP_TABLE,,,0,0.0,2025-11-17 00:59:39,2025-11-17 00:59:39,0,0.0,DONE,,,DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-16`
+2025-11-17 00:59:38,job_IotMISVCuJ000PhEU5OvsYeLVGAk,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,,,0,0.0,2025-11-17 00:59:38,2025-11-17 00:59:40,1,0.0,DONE,,,"
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-16`;  
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-16`;
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_customer_insights_updates_2025-11-16`;
+    "
+2025-11-17 00:57:59,script_job_7478797a702d287cc20caf2cc8dc6da0_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,MERGE,5237149,1.45,32007357003,29.81,2025-11-17 00:57:59,2025-11-17 00:58:13,14,0.0,DONE,,,"MERGE `narvar-data-lake.return_insights_base.product_insights` T
+        USING `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-16` S
+        ON T.retailer_moniker = S.retailer_moniker
+           AND T.primary_key_hash = S.primary_key_hash
+        WHEN MATCHED THEN
+            UPDATE SET
+                retailer_moniker = S.retailer_moniker,order_date = S.order_date,order_checkout_locale = S.order_checkout_locale,order_item_product_id = S.order_item_product_id,order_it"
+2025-11-17 00:20:42,script_job_11448855ee1ec26b4b0fcfa4722c14d8_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,41428928,11.51,17836031670,16.61,2025-11-17 00:20:42,2025-11-17 00:57:58,2236,37.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-16` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-17 00:20:42,job_UctFDCW41uw72w3Nt0g4kGUKJ1Ny,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,46666077,12.96,49843388673,46.42,2025-11-17 00:20:42,2025-11-17 00:58:14,2251,37.0,DONE,,,"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-16` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-17 00:18:04,script_job_f440d88a5e88f0ecee051ba0d749eabc_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,3299268,0.92,11774788722,10.97,2025-11-17 00:18:05,2025-11-17 00:18:17,12,0.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-16` AS (
+            SELECT s.*
+            FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-16` s
+            INNER JOIN (
+                SELECT 
+                    s.retailer_moniker,
+                    s.shopify_domain,
+                    s.order_number_sku_hash,
+                    s.return_items_id,
+                    COUNT(t.retailer_moniker) as match_count
+         "
+2025-11-17 00:11:09,script_job_4b5b4907de30c59f11c4c053b60e2761_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,126412617,35.11,4046601742263,3768.69,2025-11-17 00:11:09,2025-11-17 00:18:04,414,6.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-16` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+                o.order_item_sku_hash,
+                COALESCE(o.order_item_qua"
+2025-11-17 00:11:09,job_OM5LIErg3mEBrINOYbPFKrQrz2L_,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,136198109,37.83,4102178653869,3820.45,2025-11-17 00:11:09,2025-11-17 00:19:26,496,8.0,DONE,,,"
+        -- First, create a temporary table with the source data
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-16` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+       "
+2025-11-16 00:55:08,script_job_b2c7f8df2b7156de95ac4aea943921be_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,DROP_TABLE,,,0,0.0,2025-11-16 00:55:08,2025-11-16 00:55:08,0,0.0,DONE,,,DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-15`
+2025-11-16 00:55:07,job_jZmeH5DOsaZ86vAKPnBGz3L1N-NG,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,,,0,0.0,2025-11-16 00:55:07,2025-11-16 00:55:09,1,0.0,DONE,,,"
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-15`;  
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-15`;
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_customer_insights_updates_2025-11-15`;
+    "
+2025-11-16 00:54:19,script_job_d4a21d5943cb68d45407ec25be184784_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,MERGE,5609322,1.56,31994407292,29.8,2025-11-16 00:54:19,2025-11-16 00:54:45,25,0.0,DONE,,,"MERGE `narvar-data-lake.return_insights_base.product_insights` T
+        USING `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-15` S
+        ON T.retailer_moniker = S.retailer_moniker
+           AND T.primary_key_hash = S.primary_key_hash
+        WHEN MATCHED THEN
+            UPDATE SET
+                retailer_moniker = S.retailer_moniker,order_date = S.order_date,order_checkout_locale = S.order_checkout_locale,order_item_product_id = S.order_item_product_id,order_it"
+2025-11-16 00:19:35,script_job_1fb035c820b050e00a8025228f98a5b5_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,27717694,7.7,18207941544,16.96,2025-11-16 00:19:36,2025-11-16 00:54:17,2081,34.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-15` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-16 00:19:35,job_jEuDPteiIm_83C-cI9fMZf9sjpDU,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,33327016,9.26,50202348836,46.75,2025-11-16 00:19:35,2025-11-16 00:54:45,2109,35.0,DONE,,,"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-15` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-16 00:18:18,script_job_0f9fca77e87794c086ade2d6f5d8abd1_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,2314084,0.64,11719426712,10.91,2025-11-16 00:18:18,2025-11-16 00:18:27,9,0.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-15` AS (
+            SELECT s.*
+            FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-15` s
+            INNER JOIN (
+                SELECT 
+                    s.retailer_moniker,
+                    s.shopify_domain,
+                    s.order_number_sku_hash,
+                    s.return_items_id,
+                    COUNT(t.retailer_moniker) as match_count
+         "
+2025-11-16 00:10:16,script_job_2c6340fb1120391491bec714b6ac416a_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,123265348,34.24,4040815559998,3763.3,2025-11-16 00:10:17,2025-11-16 00:18:16,479,7.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-15` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+                o.order_item_sku_hash,
+                COALESCE(o.order_item_qua"
+2025-11-16 00:10:16,job_bZyOQsO-h3rGOAcfJkqN5GSHFvcY,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,131164343,36.43,4096352402264,3815.03,2025-11-16 00:10:16,2025-11-16 00:19:02,525,8.0,DONE,,,"
+        -- First, create a temporary table with the source data
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-15` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+       "
+2025-11-15 01:13:32,script_job_563c753427669a9913af1d8c58198771_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,DROP_TABLE,,,0,0.0,2025-11-15 01:13:32,2025-11-15 01:13:33,0,0.0,DONE,,,DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-14`
+2025-11-15 01:13:32,job_ywUrxAttz8wCHMUMCmEsP2NFcyvB,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,,,0,0.0,2025-11-15 01:13:32,2025-11-15 01:13:33,1,0.0,DONE,,,"
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-14`;  
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-14`;
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_customer_insights_updates_2025-11-14`;
+    "
+2025-11-15 01:11:39,script_job_e1bf4fff961aaa01c1e60962c2be7986_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,MERGE,4975027,1.38,31974724878,29.78,2025-11-15 01:11:39,2025-11-15 01:12:04,25,0.0,DONE,,,"MERGE `narvar-data-lake.return_insights_base.product_insights` T
+        USING `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-14` S
+        ON T.retailer_moniker = S.retailer_moniker
+           AND T.primary_key_hash = S.primary_key_hash
+        WHEN MATCHED THEN
+            UPDATE SET
+                retailer_moniker = S.retailer_moniker,order_date = S.order_date,order_checkout_locale = S.order_checkout_locale,order_item_product_id = S.order_item_product_id,order_it"
+2025-11-15 00:22:52,script_job_d15fd112827fcbf1e1a2a827f55285a4_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,26858816,7.46,18336992199,17.08,2025-11-15 00:22:53,2025-11-15 01:11:38,2925,48.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-14` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-15 00:22:52,job_dekF3kfz0Siwur2gQFvB0ML0Rutq,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,31833843,8.84,50311717077,46.86,2025-11-15 00:22:52,2025-11-15 01:12:05,2952,49.0,DONE,,,"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-14` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-15 00:21:35,script_job_5fd8d24a91c4b678fb3d953fb079eba7_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,3294064,0.92,11741687066,10.94,2025-11-15 00:21:35,2025-11-15 00:21:43,8,0.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-14` AS (
+            SELECT s.*
+            FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-14` s
+            INNER JOIN (
+                SELECT 
+                    s.retailer_moniker,
+                    s.shopify_domain,
+                    s.order_number_sku_hash,
+                    s.return_items_id,
+                    COUNT(t.retailer_moniker) as match_count
+         "
+2025-11-15 00:08:59,script_job_95a961af4c841bb6e9c6f542dc639e3d_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,131489709,36.52,4037778357542,3760.47,2025-11-15 00:08:59,2025-11-15 00:21:33,753,12.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-14` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+                o.order_item_sku_hash,
+                COALESCE(o.order_item_qua"
+2025-11-15 00:08:59,job_CjubNiiuUm4sYxXXIOzLPb11Nrvc,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,142120780,39.48,4094657982127,3813.45,2025-11-15 00:08:59,2025-11-15 00:22:21,802,13.0,DONE,,,"
+        -- First, create a temporary table with the source data
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-14` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+       "
+2025-11-14 00:48:51,script_job_f3bb6397d60063124fc0d730a04fd2f6_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,DROP_TABLE,,,0,0.0,2025-11-14 00:48:51,2025-11-14 00:48:51,0,0.0,DONE,,,DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-13`
+2025-11-14 00:48:51,job_iJ7t2pHjuhAjPl0JQjTRM3yTa1Pj,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,,,0,0.0,2025-11-14 00:48:51,2025-11-14 00:48:52,1,0.0,DONE,,,"
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-13`;  
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-13`;
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_customer_insights_updates_2025-11-13`;
+    "
+2025-11-14 00:47:58,script_job_5f83384c8b5d2359c3fced1fa9e66149_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,MERGE,6137570,1.7,31941866879,29.75,2025-11-14 00:47:58,2025-11-14 00:48:16,18,0.0,DONE,,,"MERGE `narvar-data-lake.return_insights_base.product_insights` T
+        USING `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-13` S
+        ON T.retailer_moniker = S.retailer_moniker
+           AND T.primary_key_hash = S.primary_key_hash
+        WHEN MATCHED THEN
+            UPDATE SET
+                retailer_moniker = S.retailer_moniker,order_date = S.order_date,order_checkout_locale = S.order_checkout_locale,order_item_product_id = S.order_item_product_id,order_it"
+2025-11-14 00:16:58,script_job_ca2661fdf86e4c199edf9f1814b5a0b0_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,20248363,5.62,18275760333,17.02,2025-11-14 00:16:58,2025-11-14 00:47:56,1857,30.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-13` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-14 00:16:58,job_atu_eeeZdRjxHyVeh4Oc9X3HvTa3,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,26385933,7.33,50217627212,46.77,2025-11-14 00:16:58,2025-11-14 00:48:17,1878,31.0,DONE,,,"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-13` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-14 00:15:27,script_job_f0429dcdc000ea26eaa831ac2d7f7051_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,2865484,0.8,11752478296,10.95,2025-11-14 00:15:27,2025-11-14 00:15:40,13,0.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-13` AS (
+            SELECT s.*
+            FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-13` s
+            INNER JOIN (
+                SELECT 
+                    s.retailer_moniker,
+                    s.shopify_domain,
+                    s.order_number_sku_hash,
+                    s.return_items_id,
+                    COUNT(t.retailer_moniker) as match_count
+         "
+2025-11-14 00:08:46,script_job_0e027b9d1a55eef4eb87be966e0e6aa2_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,118064340,32.8,4029313550659,3752.59,2025-11-14 00:08:47,2025-11-14 00:15:27,399,6.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-13` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+                o.order_item_sku_hash,
+                COALESCE(o.order_item_qua"
+2025-11-14 00:08:46,job_6bSFnJiFIjWxIiyRuH6G5xT_TkcG,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,126830194,35.23,4085783342837,3805.18,2025-11-14 00:08:46,2025-11-14 00:16:38,472,7.0,DONE,,,"
+        -- First, create a temporary table with the source data
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-13` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+       "
+2025-11-13 00:52:07,script_job_cd247dca8d7ec004daa88979de53f6f0_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,DROP_TABLE,,,0,0.0,2025-11-13 00:52:07,2025-11-13 00:52:07,0,0.0,DONE,,,DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-12`
+2025-11-13 00:52:06,job_XWcik3lQnYIlZbgo2aIu8ijxkoit,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,,,0,0.0,2025-11-13 00:52:06,2025-11-13 00:52:08,1,0.0,DONE,,,"
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-12`;  
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-12`;
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_customer_insights_updates_2025-11-12`;
+    "
+2025-11-13 00:50:57,script_job_b3bf12510ed611984758a5f2470d1c35_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,MERGE,5667271,1.57,31874464294,29.69,2025-11-13 00:50:57,2025-11-13 00:51:17,19,0.0,DONE,,,"MERGE `narvar-data-lake.return_insights_base.product_insights` T
+        USING `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-12` S
+        ON T.retailer_moniker = S.retailer_moniker
+           AND T.primary_key_hash = S.primary_key_hash
+        WHEN MATCHED THEN
+            UPDATE SET
+                retailer_moniker = S.retailer_moniker,order_date = S.order_date,order_checkout_locale = S.order_checkout_locale,order_item_product_id = S.order_item_product_id,order_it"
+2025-11-13 00:21:53,script_job_92d467157f0865b590f6c6dced89c925_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,20650860,5.74,18237171520,16.98,2025-11-13 00:21:53,2025-11-13 00:50:54,1741,29.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-12` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-13 00:21:53,job_T-KIb_zGSR2jNeUaBiV8v49VNUae,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,26318131,7.31,50111635814,46.67,2025-11-13 00:21:53,2025-11-13 00:51:17,1764,29.0,DONE,,,"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-12` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-13 00:20:07,script_job_456b48f23e21cba7abbcaa893ded4fe9_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,1982540,0.55,11710422482,10.91,2025-11-13 00:20:07,2025-11-13 00:20:19,12,0.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-12` AS (
+            SELECT s.*
+            FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-12` s
+            INNER JOIN (
+                SELECT 
+                    s.retailer_moniker,
+                    s.shopify_domain,
+                    s.order_number_sku_hash,
+                    s.return_items_id,
+                    COUNT(t.retailer_moniker) as match_count
+         "
+2025-11-13 00:09:44,script_job_5e635ee2ed5406a41ae71f515a5d9de4_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,133373890,37.05,4024693880118,3748.29,2025-11-13 00:09:44,2025-11-13 00:20:07,622,10.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-12` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+                o.order_item_sku_hash,
+                COALESCE(o.order_item_qua"
+2025-11-13 00:09:44,job_YiToL1Hy0RPFhFRpSUaiGSqFzkVo,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,141150852,39.21,4080834171963,3800.57,2025-11-13 00:09:44,2025-11-13 00:21:17,693,11.0,DONE,,,"
+        -- First, create a temporary table with the source data
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-12` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+       "
+2025-11-12 00:22:40,script_job_6d83b7057a2405083e3774ad7c1471a8_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,DROP_TABLE,,,0,0.0,2025-11-12 00:22:40,2025-11-12 00:22:40,0,0.0,DONE,,,DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-11`
+2025-11-12 00:22:39,job_ReIFTssgBl4oBmlLdsqo-5BReCGI,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,,,0,0.0,2025-11-12 00:22:39,2025-11-12 00:22:40,1,0.0,DONE,,,"
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-11`;  
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-11`;
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_customer_insights_updates_2025-11-11`;
+    "
+2025-11-12 00:21:45,script_job_11d668666ff1b54a787abdda6b42a67c_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,MERGE,6711485,1.86,31788109467,29.6,2025-11-12 00:21:45,2025-11-12 00:22:18,33,0.0,DONE,,,"MERGE `narvar-data-lake.return_insights_base.product_insights` T
+        USING `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-11` S
+        ON T.retailer_moniker = S.retailer_moniker
+           AND T.primary_key_hash = S.primary_key_hash
+        WHEN MATCHED THEN
+            UPDATE SET
+                retailer_moniker = S.retailer_moniker,order_date = S.order_date,order_checkout_locale = S.order_checkout_locale,order_item_product_id = S.order_item_product_id,order_it"
+2025-11-12 00:18:17,script_job_9f1c70f6f88b7ba64908c71e182648e7_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,7843344,2.18,18086545703,16.84,2025-11-12 00:18:17,2025-11-12 00:21:44,207,3.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-11` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-12 00:18:17,job_TGNIWNUcKJWDQX2Fb6OKcoHD7P5R,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,14554829,4.04,49874655170,46.45,2025-11-12 00:18:17,2025-11-12 00:22:19,242,4.0,DONE,,,"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-11` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-12 00:15:44,script_job_b5c84683c0cbe099b58fd43db1f04a52_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,4062579,1.13,11529570815,10.74,2025-11-12 00:15:44,2025-11-12 00:16:21,37,0.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-11` AS (
+            SELECT s.*
+            FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-11` s
+            INNER JOIN (
+                SELECT 
+                    s.retailer_moniker,
+                    s.shopify_domain,
+                    s.order_number_sku_hash,
+                    s.return_items_id,
+                    COUNT(t.retailer_moniker) as match_count
+         "
+2025-11-12 00:09:34,script_job_299df0b7aafc66de9e67caa7ff48579c_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,135212580,37.56,4018779048125,3742.78,2025-11-12 00:09:34,2025-11-12 00:15:43,368,6.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-11` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+                o.order_item_sku_hash,
+                COALESCE(o.order_item_qua"
+2025-11-12 00:09:34,job_ad84Uuy7wYBKBag20OC-lVsW2Qcm,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,145466059,40.41,4074252258212,3794.44,2025-11-12 00:09:34,2025-11-12 00:17:09,455,7.0,DONE,,,"
+        -- First, create a temporary table with the source data
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-11` AS (
+            SELECT DISTINCT
+                o.store_name as shopify_domain,
+                o.retailer_moniker,
+                '' as cdp_pii_hash,
+                '' as pii_type,
+                o.order_number,
+                o.order_date,
+                o.order_number_sku_hash,
+                o.order_item_sku,
+       "
+2025-11-11 00:24:19,script_job_de6f9688257d5a698ca092b621a66b78_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,DROP_TABLE,,,0,0.0,2025-11-11 00:24:19,2025-11-11 00:24:19,0,0.0,DONE,,,DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-10`
+2025-11-11 00:24:18,job_L82Yp4lcpnig1k02nw8CKEV1ULOW,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,,,0,0.0,2025-11-11 00:24:18,2025-11-11 00:24:20,1,0.0,DONE,,,"
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-10`;  
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-10`;
+        DROP TABLE IF EXISTS `narvar-data-lake.return_insights_base.tmp_customer_insights_updates_2025-11-10`;
+    "
+2025-11-11 00:23:06,script_job_d88fa62a289041026beccc519cba31ea_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,MERGE,6063682,1.68,31719049597,29.54,2025-11-11 00:23:07,2025-11-11 00:23:34,27,0.0,DONE,,,"MERGE `narvar-data-lake.return_insights_base.product_insights` T
+        USING `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-10` S
+        ON T.retailer_moniker = S.retailer_moniker
+           AND T.primary_key_hash = S.primary_key_hash
+        WHEN MATCHED THEN
+            UPDATE SET
+                retailer_moniker = S.retailer_moniker,order_date = S.order_date,order_checkout_locale = S.order_checkout_locale,order_item_product_id = S.order_item_product_id,order_it"
+2025-11-11 00:19:58,script_job_97346e7c1f8a5ac75888167700eaac60_0,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,7509745,2.09,17958759627,16.73,2025-11-11 00:19:58,2025-11-11 00:23:06,188,3.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-10` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+                    order_item_product_id,
+                    order_item_description,
+                "
+2025-11-11 00:19:57,job_4_Xez0TR0Sh8CCH79QotLU8xW47x,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,SCRIPT,13573427,3.77,49677809224,46.27,2025-11-11 00:19:57,2025-11-11 00:23:34,216,3.0,DONE,,,"
+        -- Create temp table with changed items using the persisted updates table
+        CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_product_insights_updates_2025-11-10` AS (
+            WITH affected_items AS (
+                -- Get unique item identifiers from the updates table
+                SELECT DISTINCT
+                    retailer_moniker,
+                    shopify_domain,
+                    order_date,
+                    order_checkout_locale,
+            "
+2025-11-11 00:17:59,script_job_fe510e8c9cb08430f88a6f3020421a87_1,airflow-bq-job-user-2@narvar-data-lake.iam.gserviceaccount.com,CREATE_TABLE_AS_SELECT,2027642,0.56,11454829716,10.67,2025-11-11 00:17:59,2025-11-11 00:18:15,15,0.0,DONE,,,"CREATE OR REPLACE TABLE `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-10` AS (
+            SELECT s.*
+            FROM `narvar-data-lake.return_insights_base.tmp_order_item_details_2025-11-10` s
+            INNER JOIN (
+                SELECT 
+                    s.retailer_moniker,
+                    s.shopify_domain,
+                    s.order_number_sku_hash,
+                    s.return_items_id,
+                    COUNT(t.retailer_moniker) as match_count
+         "
