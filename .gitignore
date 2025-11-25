@@ -7,5 +7,6 @@ narvar/analysis_peak_2025_sonnet45/results/hub_analytics_api_full_analysis_*.csv
 narvar/analysis_peak_2025_sonnet45/results/hub_analytics_api_retailer_summary_*.csv
 narvar/analysis_peak_2025_sonnet45/results/monitor_retailer_performance_*.csv
 narvar/analysis_peak_2025_sonnet45/results/monitor_reservation_breakdown_*.csv
-# Sophia's handoff letters (managed separately)
-narvar/analysis_peak_2025_sonnet45/LETTER_TO_TOMORROW.md
+# Sophia's context documents (local only, not tracked in git)
+LETTER_TO_TOMORROW.md
+SESSION_HISTORY.md
