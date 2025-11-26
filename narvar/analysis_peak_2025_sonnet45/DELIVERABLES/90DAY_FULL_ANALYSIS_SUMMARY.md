@@ -11,13 +11,15 @@
 
 ## 🎯 Executive Summary
 
-The Monitor platform serves **1,724 retailers** with a **massive zombie data problem**:
+The Monitor platform serves **1,724 retailers** with a **moderate zombie data problem**:
 
-- **1,518 retailers (88%) have ZERO consumption** - zombie data
-- **$109K/year wasted** on retailers who never query their data (45% of platform costs)
+- **928 retailers (54%) have ZERO consumption** - zombie data  
+- **$31.8K/year wasted** on retailers who never query their data (13% of platform costs)
 - **94% of retailers cost <$100 per 90 days** (<$400/year) - extreme long tail
-- **Only 206 retailers (12%) actively use Monitor**
-- **Top 106 retailers account for 73% of costs** - focus monetization here
+- **796 retailers (46%) actively use Monitor** - much better engagement than initially thought
+- **Top 105 retailers account for 73% of costs** - focus monetization here
+
+**Data Source:** Audit logs (Aug 27-Nov 25, 2025) - includes Nov data missing from traffic_classification table
 
 ---
 
@@ -72,33 +74,39 @@ The Monitor platform serves **1,724 retailers** with a **massive zombie data pro
 
 | Rank | Retailer | Production | Consumption | Total | Queries | Active Days | Avg/Day | Status |
 |------|----------|------------|-------------|-------|---------|-------------|---------|--------|
-| 1 | **Gap** | $2,962 | $0.00 | **$2,962** | 0 | - | 0 | 🔴 Zombie |
-| 2 | **QVC** | $2,617 | $0.07 | **$2,617** | 2 | 1 | 2.0 | ✅ Minimal |
-| 3 | **Kohls** | $2,479 | $0.00 | **$2,479** | 0 | - | 0 | 🔴 Zombie |
-| 4 | **FashionNova** | $1,497 | **$581** | **$2,079** | 4,189 | **61** | 68.7 | 🟠 Heavy |
-| 5 | **Fanatics** | $1,367 | $0.00 | **$1,367** | 0 | - | 0 | 🔴 Zombie |
-| 6 | **Sephora** | $1,323 | $17 | **$1,339** | 864 | **61** | 14.2 | ✅ Active |
-| 7 | **Centerwell** | $1,245 | $2 | **$1,247** | 1,995 | **61** | 32.7 | ✅ Active |
-| 8 | **AE** | $1,219 | $0.15 | **$1,219** | 17 | 1 | 17.0 | ✅ Light |
-| 9 | **Nike** | $1,157 | $4 | **$1,160** | 167 | 52 | 3.2 | ✅ Active |
-| 10 | **Medline** | $1,057 | $0.00 | **$1,057** | 0 | - | 0 | 🔴 Zombie |
-| 11 | **Lululemon** | $1,021 | $3 | **$1,024** | 1,219 | 58 | 21.0 | ✅ Active |
-| 12 | **Ulta** | $915 | $0.67 | **$915** | 97 | 15 | 6.5 | ✅ Light |
-| 13 | **511Tactical** | $33 | **$859** | **$891** | 707 | 59 | 12.0 | 🚨 Anomaly |
-| 14 | **Shutterfly** | $825 | $0.00 | **$825** | 0 | - | 0 | 🔴 Zombie |
-| 15 | **Dick's** | $738 | $0.00 | **$738** | 0 | - | 0 | 🔴 Zombie |
-| 16 | **Victoria's Secret** | $689 | $0.00 | **$689** | 0 | - | 0 | 🔴 Zombie |
-| 17 | **Bath & Body Works** | $640 | $0.00 | **$640** | 0 | - | 0 | 🔴 Zombie |
-| 18 | **Dell** | $626 | $0.00 | **$626** | 0 | - | 0 | 🔴 Zombie |
-| 19 | **Urban Outfitters** | $592 | $0.00 | **$592** | 0 | - | 0 | 🔴 Zombie |
-| 20 | **JCPenney** | $573 | $3 | **$576** | 122 | 61 | 2.0 | ✅ Light |
+| 1 | **Gap** | $2,962 | **$138** | **$3,100** | 1,194 | 89 | 13.4 | ✅ Active |
+| 2 | **QVC** | $2,617 | **$17** | **$2,634** | 1,400 | 91 | 15.4 | ✅ Active |
+| 3 | **Kohls** | $2,479 | **$126** | **$2,604** | 2,110 | 34 | 62.1 | ✅ Active |
+| 4 | **FashionNova** | $1,497 | **$843** | **$2,340** | 6,459 | 91 | 71.0 | 🟠 Heavy |
+| 5 | **Fanatics** | $1,367 | $4 | **$1,371** | 249 | 91 | 2.7 | ✅ Light |
+| 6 | **Sephora** | $1,323 | $0 | **$1,323** | 509 | 91 | 5.6 | ✅ Light |
+| 7 | **Centerwell** | $1,245 | $6 | **$1,251** | 3,824 | 91 | 42.0 | ✅ Active |
+| 8 | **AE** | $1,219 | $2 | **$1,220** | 198 | 91 | 2.2 | ✅ Light |
+| 9 | **Nike** | $1,157 | $7 | **$1,164** | 1,271 | 62 | 20.5 | ✅ Active |
+| 10 | **Medline** | $1,057 | $9 | **$1,066** | 1,759 | 91 | 19.3 | ✅ Active |
+| 11 | **Lululemon** | $1,021 | $5 | **$1,026** | 1,608 | 91 | 17.7 | ✅ Active |
+| 12 | **Ulta** | $915 | $0 | **$915** | 2 | 2 | 1.0 | ✅ Light |
+| 13 | **Shutterfly** | $825 | $0 | **$825** | 0 | - | 0 | 🔴 Zombie |
+| 14 | **Dell** | $626 | **$174** | **$801** | 6,483 | 91 | 71.2 | ✅ Active |
+| 15 | **Dick's** | $738 | $1 | **$739** | 279 | 90 | 3.1 | ✅ Light |
+| 16 | **Victoria's Secret** | $689 | $0 | **$689** | 217 | 91 | 2.4 | ✅ Light |
+| 17 | **Bath & Body Works** | $640 | $0 | **$641** | 347 | 91 | 3.8 | ✅ Light |
+| 18 | **Urban Outfitters** | $592 | $0 | **$592** | 11 | 10 | 1.1 | ✅ Light |
+| 19 | **JCPenney** | $573 | $5 | **$578** | 509 | 91 | 5.6 | ✅ Light |
+| 20 | **Lululemon-Intl** | $570 | $0 | **$570** | 487 | 91 | 5.3 | ✅ Light |
 
-**Note:** "Active Days" = days with at least one query in the 90-day window. Zombies show "-" (no query activity).
+**Note:** "Active Days" = days with at least one query in the 90-day window. Data corrected using audit logs (Aug 27-Nov 25, 2025).
+
+**Key Insights (CORRECTED):**
+- Gap: 1,194 queries over 89 days = active user (was incorrectly labeled zombie)
+- Kohls: 2,110 queries over 34 days = heavy burst usage (was incorrectly labeled zombie)
+- FashionNova: 6,459 queries over 91 days = heaviest user (consumption 56% of production)
+- Dell: 6,483 queries = very active (was incorrectly labeled zombie)
 
 **Annualized Top 3:**
-1. Gap: **$12,008/year** (100% zombie - 0 queries)
-2. QVC: **$10,608/year** (nearly zombie - 2 queries on 1 day)
-3. Kohls: **$10,050/year** (100% zombie - 0 queries)
+1. Gap: **$12,574/year** (✅ active - 1,194 queries, $561 consumption/year)
+2. QVC: **$10,681/year** (✅ active - 1,400 queries, $69 consumption/year)
+3. Kohls: **$10,563/year** (✅ active - 2,110 queries, $509 consumption/year)
 
 ---
 
@@ -107,24 +115,23 @@ The Monitor platform serves **1,724 retailers** with a **massive zombie data pro
 ### Definition
 Retailers with production costs (data ingestion + storage) but **ZERO query consumption**.
 
-### High-Value Zombies (Top 10)
+### True Zombies (Verified via Audit Logs)
 
-These retailers cost **$51K/year** but NO ONE queries their data:
+Only **9 retailers in top 100** actually have zero consumption (verified against source audit logs):
 
 | Retailer | 90-Day Cost | Annualized | Status |
 |----------|-------------|------------|--------|
-| Gap | $2,962 | **$12,008** | 🔴 No queries |
-| Kohls | $2,479 | **$10,050** | 🔴 No queries |
-| Fanatics | $1,367 | **$5,542** | 🔴 No queries |
-| Medline | $1,057 | **$4,286** | 🔴 No queries |
-| Shutterfly | $825 | **$3,345** | 🔴 No queries |
-| Dick's Sporting Goods | $738 | **$2,993** | 🔴 No queries |
-| Victoria's Secret | $689 | **$2,794** | 🔴 No queries |
-| Bath & Body Works | $640 | **$2,595** | 🔴 No queries |
-| Dell | $626 | **$2,539** | 🔴 No queries |
-| Urban Outfitters | $592 | **$2,400** | 🔴 No queries |
+| Shutterfly | $825 | **$3,345** | 🔴 Confirmed zero queries |
+| And 8 others from mid/lower tiers | Various | **~$10K total** | 🔴 Confirmed zombies |
 
-**These are actively ingesting millions of shipments and orders but NO ONE is querying the data!**
+**Total True Zombies:** 928 retailers (54%), $31.8K/year
+
+**Previously Misidentified as Zombies (Now CORRECTED):**
+- ✅ **Gap:** 1,194 queries, $138 consumption (was shown as $0)
+- ✅ **Kohls:** 2,110 queries, $126 consumption (was shown as $0)
+- ✅ **Medline:** 1,759 queries, $9 consumption (was shown as $0)
+- ✅ **Dell:** 6,483 queries, $174 consumption (was shown as $0)
+- ✅ **Victoria's Secret, Bath & Body Works, Dick's, etc.:** All have activity
 
 ### Small Retailers (<$100 per 90 days)
 
@@ -140,47 +147,53 @@ These retailers cost **$51K/year** but NO ONE queries their data:
 - Active (with queries): 161 retailers (10.0%)
 - Zombie (no queries): 1,457 retailers (90.0%)
 
-### Total Zombie Impact
+### Total Zombie Impact (CORRECTED)
 
 | Segment | Retailers | Annual Cost | % of Platform |
 |---------|-----------|-------------|---------------|
-| **High-value zombies** (>$500/year) | ~10 | $51K | 21% |
-| **Small zombies** (<$400/year) | ~1,457 | $58K | 24% |
-| **Total zombie cost** | **1,518 (88%)** | **~$109K** | **45%** |
+| **High-value zombies** (>$500/year) | ~3 | $10K | 4% |
+| **Small zombies** (<$400/year) | ~925 | $22K | 9% |
+| **Total zombie cost** | **928 (54%)** | **~$32K** | **13%** |
 
-**This represents a crisis-level waste of platform resources.**
+**This is a manageable issue, not a crisis.** The platform has much better engagement than initially calculated (46% active vs 12%).
 
 ---
 
 ## 🔍 Outliers
 
-### 1. 511Tactical - Super Consumer 🚨
+### 1. FashionNova - Heaviest User 🟠
 
-| Metric | Value |
-|--------|-------|
-| Production cost | $33 (90 days) |
-| Consumption cost | **$859** (90 days) |
-| Total cost | $891 (90 days) = $3,613/year |
-| Query count | 707 queries (12/day) |
-| Consumption ratio | **2,634%** (26x production!) |
-
-**This is the ONLY retailer consuming 26x more than they produce.**
-
-**Action Required:** Immediate investigation into query patterns - potential bug, misconfiguration, or abuse.
-
-### 2. FashionNova - Heavy User 🟠
-
-| Metric | Value |
-|--------|-------|
+| Metric | Value (CORRECTED) |
+|--------|-------------------|
 | Production cost | $1,497 (90 days) |
-| Consumption cost | $581 (90 days) |
-| Total cost | $2,079 (90 days) = $8,428/year |
-| Query count | 4,189 queries (69/day) |
-| Consumption ratio | **39%** |
+| Consumption cost | **$843** (90 days) |
+| Total cost | $2,340 (90 days) = $9,491/year |
+| Query count | 6,459 queries (71/day) |
+| Consumption ratio | **56%** |
+| Active days | 91 (every day) |
 
-**This is expected behavior for a power user** with heavy query activity.
+**FashionNova is the heaviest user** - consumption is 56% of production cost (vs 3% platform average).
 
 **Action Required:** Usage-based pricing tier with overage fees for consumption >10% of production.
+
+### 2. Dell - Discovered Active User ✅
+
+| Metric | Value (CORRECTED) |
+|--------|-------------------|
+| Production cost | $626 (90 days) |
+| Consumption cost | **$174** (90 days) |
+| Total cost | $801 (90 days) = $3,249/year |
+| Query count | 6,483 queries (71/day) |
+| Consumption ratio | **28%** |
+
+**Dell was misidentified as zombie** due to incomplete data. They're actually a very active user with 6,483 queries.
+
+### 3. 511Tactical - No Longer Anomalous ✅
+
+**Previous (INCORRECT):** 26x over-consumption  
+**Corrected:** Normal consumption ratio after hash mapping
+
+This retailer is no longer an outlier - the extreme ratio was due to incomplete data/mapping issues.
 
 ---
 
